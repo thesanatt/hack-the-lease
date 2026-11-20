@@ -177,9 +177,9 @@ test('mode choice by generalized minutes: a lighter walk weight never removes wa
     for (let i = 0; i < a.length; i++) {
       assert.ok(b[i].walkMin >= a[i].walkMin - 1e-9, `${h} ${a[i].day} ${a[i].label}`);
       if (b[i].mode !== a[i].mode) changed++;
-      // caps still bind whatever the weight
+      // caps still bind whatever the weight; they apply to each walking leg (CONTRACTS)
       const cap = b[i].arrive > parseHM('22:00') ? 12 : 25;
-      if (!b[i].stranded) assert.ok(b[i].walkMin <= cap + 1e-9);
+      if (!b[i].stranded) assert.ok(b[i].longestWalkMin <= cap + 1e-9, `${h} ${b[i].day} longest walk ${b[i].longestWalkMin}`);
     }
   }
   assert.ok(changed > 0, 'some transit trips switch to walking when walking weighs 0.3x');

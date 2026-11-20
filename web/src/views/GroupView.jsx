@@ -112,9 +112,24 @@ function GroupBody({ api }) {
   const top = rows[0];
   const chosen = rows.find((r) => r.home.id === selected) || top;
 
+  // Default member for the cap move: the one whose cap is closest to binding in the top feasible house.
+  const tightest = (() => {
+    const r = rows.find((x) => x.feasible) || top;
+    const res = r?.res;
+    if (!res?.assignment || !res?.prices) return members[0]?.id;
+    let best = members[0]?.id, bestSlack = Infinity;
+    members.forEach((m, i) => {
+      const cap = capOf(m);
+      if (cap == null) return;
+      const slack = cap - res.prices[res.assignment[i]];
+      if (slack < bestSlack) { bestSlack = slack; best = m.id; }
+    });
+    return best;
+  })();
+
   // ---- sensitivity move 1: lower one member's cap until the top house has no fitting split ----
   const doCapMove = () => {
-    const id = capMember || members[0].id;
+    const id = capMember || tightest;
     const i = members.findIndex((m) => m.id === id);
     const target = rows.find((r) => r.feasible) || top;
     if (!target || i < 0) return;
@@ -177,7 +192,7 @@ function GroupBody({ api }) {
             <div className="qv-stack">
               <div className="qv-row">
                 <span>Lower</span>
-                <select aria-label="Member whose cap is lowered" value={capMember || members[0].id} onChange={(e) => setCapMember(e.target.value)}>
+                <select aria-label="Member whose cap is lowered" value={capMember || tightest} onChange={(e) => setCapMember(e.target.value)}>
                   {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
                 <span>'s cap until {(rows.find((r) => r.feasible) || top)?.home.name || 'the top house'} has no split that fits every cap</span>
@@ -217,8 +232,9 @@ function GroupBody({ api }) {
           )}
           {solved && (
             <p className="qv-small qv-muted" style={{ marginBottom: 0 }}>
-              Score is the worst-off member's monthly utility: room value minus rent share, utilities share and commute cost
-              {hasWeek ? '' : ' (commute not included yet)'}. Houses with a split under every cap come first.
+              Net cost is a member's rent share, utilities share and commute time in dollars (at their own value of time),
+              minus what their room is worth to them{hasWeek ? '' : ' (commute not included yet)'}. The house with the lowest
+              worst-off net cost wins. Houses with a split under every cap come first.
               {solved.disagree ? ' Members\' individual top houses differ, so the group disagrees here.' : ' Every member\'s own top house is the same.'}
               {weeks.status === 'done' ? ` Weeks: ${ms(weeks.ms)}.` : ''}
             </p>
@@ -266,8 +282,8 @@ function HouseTable({ rows, chosenId, onPick }) {
         <thead>
           <tr>
             <th>#</th><th>House</th><th className="num">Rent</th><th>Caps</th>
-            <th className="num" title="Minimum over members of monthly utility">Worst-off $/mo</th>
-            <th className="num" title="Sum over members of monthly utility">Total $/mo</th>
+            <th className="num" title="The worst-off member's net monthly cost: rent share, utilities share and commute time in dollars, minus what the room is worth to them">Worst-off net cost</th>
+            <th className="num" title="The same net monthly cost, summed over the group">Group net cost</th>
             <th className="num">Solve</th>
           </tr>
         </thead>
@@ -285,8 +301,8 @@ function HouseTable({ rows, chosenId, onPick }) {
               </td>
               <td className="num">{usd(r.home.rent)}</td>
               <td>{r.error ? <Pill tone="bad">error</Pill> : <Pill tone={r.feasible ? 'good' : 'bad'}>{r.feasible ? 'feasible' : 'infeasible'}</Pill>}</td>
-              <td className="num">{usd(r.E)}</td>
-              <td className="num">{usd(r.W)}</td>
+              <td className="num">{usd(-r.E)}/mo</td>
+              <td className="num">{usd(-r.W)}/mo</td>
               <td className="num qv-muted">{ms(r.solveMs)}</td>
             </tr>
           ))}

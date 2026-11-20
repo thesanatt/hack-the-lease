@@ -1,6 +1,6 @@
 {
  "test": "R2 independent reference router",
- "ran_at": "2026-11-19T22:06:53-05:00",
+ "ran_at": "2026-11-19T22:13:18-05:00",
  "seed": 2026,
  "day": "tue",
  "service_date": "2026-12-01",
@@ -15,404 +15,11 @@
  ],
  "queries": 3000,
  "pair_sampling": "uniform random distinct pairs among stops served on the date, numpy default_rng(seed)",
- "equal": 2996,
+ "equal": 3000,
  "equal_both_unreachable": 138,
- "mismatches": 4,
- "pass": false,
- "mismatch_classes": {
-  "engine ignores GTFS pickup_type/drop_off_type = 1": {
-   "count": 4,
-   "examples": [
-    {
-     "src": 735,
-     "dst": 1144,
-     "t": "06:30:00",
-     "src_name": "Geddes + Walnut",
-     "dst_name": "Cram Circle Outbound",
-     "reference": "07:37:11",
-     "engine": "07:27:11",
-     "diff_s": -600,
-     "reference_legs": [
-      {
-       "type": "ride",
-       "route": "A:64",
-       "trip": "A:712020",
-       "from": 735,
-       "to": 736,
-       "dep": 25297,
-       "arr": 25321
-      },
-      {
-       "type": "transfer",
-       "from": 736,
-       "to": 358,
-       "dur": 372
-      },
-      {
-       "type": "ride",
-       "route": "A:4",
-       "trip": "A:2877020",
-       "from": 358,
-       "to": 276,
-       "dep": 25898,
-       "arr": 25947
-      },
-      {
-       "type": "transfer",
-       "from": 276,
-       "to": 1092,
-       "dur": 190
-      },
-      {
-       "type": "ride",
-       "route": "U:NW",
-       "trip": "U:551020",
-       "from": 1092,
-       "to": 1144,
-       "dep": 26700,
-       "arr": 27431
-      }
-     ],
-     "engine_legs": [
-      {
-       "type": "ride",
-       "route": "A:64",
-       "from": 735,
-       "to": 736,
-       "dep": 25297,
-       "arr": 25321,
-       "trip": 3824
-      },
-      {
-       "type": "transfer",
-       "from": 736,
-       "to": 358,
-       "dur": 372
-      },
-      {
-       "type": "ride",
-       "route": "A:4",
-       "from": 358,
-       "to": 276,
-       "dep": 25898,
-       "arr": 25947,
-       "trip": 2127
-      },
-      {
-       "type": "transfer",
-       "from": 276,
-       "to": 242,
-       "dur": 152
-      },
-      {
-       "type": "ride",
-       "route": "A:63",
-       "from": 242,
-       "to": 258,
-       "dep": 26100,
-       "arr": 26211,
-       "trip": 3800
-      },
-      {
-       "type": "transfer",
-       "from": 258,
-       "to": 1189,
-       "dur": 61
-      },
-      {
-       "type": "ride",
-       "route": "U:NW",
-       "from": 1189,
-       "to": 1144,
-       "dep": 26294,
-       "arr": 26831,
-       "trip": 7420
-      }
-     ],
-     "reference_ignoring_pickup_dropoff": "07:27:11"
-    },
-    {
-     "src": 878,
-     "dst": 1042,
-     "t": "17:30:00",
-     "src_name": "State + Parkcrest",
-     "dst_name": "Pontiac Trail + Polson",
-     "reference": "18:14:54",
-     "engine": "18:03:08",
-     "diff_s": -706,
-     "reference_legs": [
-      {
-       "type": "ride",
-       "route": "A:62",
-       "trip": "A:3743020",
-       "from": 878,
-       "to": 81,
-       "dep": 63184,
-       "arr": 63660
-      },
-      {
-       "type": "transfer",
-       "from": 81,
-       "to": 242,
-       "dur": 83
-      },
-      {
-       "type": "ride",
-       "route": "A:61",
-       "trip": "A:3154020",
-       "from": 242,
-       "to": 272,
-       "dep": 64320,
-       "arr": 64475
-      },
-      {
-       "type": "ride",
-       "route": "A:22",
-       "trip": "A:2725020",
-       "from": 272,
-       "to": 1043,
-       "dep": 64925,
-       "arr": 65624
-      },
-      {
-       "type": "transfer",
-       "from": 1043,
-       "to": 1042,
-       "dur": 70
-      }
-     ],
-     "engine_legs": [
-      {
-       "type": "ride",
-       "route": "A:62",
-       "from": 878,
-       "to": 81,
-       "dep": 63184,
-       "arr": 63660,
-       "trip": 3706
-      },
-      {
-       "type": "transfer",
-       "from": 81,
-       "to": 242,
-       "dur": 83
-      },
-      {
-       "type": "ride",
-       "route": "A:63",
-       "from": 242,
-       "to": 1043,
-       "dep": 63900,
-       "arr": 64918,
-       "trip": 3801
-      },
-      {
-       "type": "transfer",
-       "from": 1043,
-       "to": 1042,
-       "dur": 70
-      }
-     ],
-     "reference_ignoring_pickup_dropoff": "18:03:08"
-    },
-    {
-     "src": 735,
-     "dst": 360,
-     "t": "06:30:00",
-     "src_name": "Geddes + Walnut",
-     "dst_name": "EB Fuller + Fuller Park",
-     "reference": "07:28:19",
-     "engine": "07:27:39",
-     "diff_s": -40,
-     "reference_legs": [
-      {
-       "type": "ride",
-       "route": "A:64",
-       "trip": "A:712020",
-       "from": 735,
-       "to": 736,
-       "dep": 25297,
-       "arr": 25321
-      },
-      {
-       "type": "transfer",
-       "from": 736,
-       "to": 358,
-       "dur": 372
-      },
-      {
-       "type": "ride",
-       "route": "A:4",
-       "trip": "A:2877020",
-       "from": 358,
-       "to": 276,
-       "dep": 25898,
-       "arr": 25947
-      },
-      {
-       "type": "transfer",
-       "from": 276,
-       "to": 1091,
-       "dur": 136
-      },
-      {
-       "type": "ride",
-       "route": "U:BB",
-       "trip": "U:4976020",
-       "from": 1091,
-       "to": 1125,
-       "dep": 26100,
-       "arr": 26566
-      },
-      {
-       "type": "transfer",
-       "from": 1125,
-       "to": 360,
-       "dur": 333
-      }
-     ],
-     "engine_legs": [
-      {
-       "type": "ride",
-       "route": "A:64",
-       "from": 735,
-       "to": 736,
-       "dep": 25297,
-       "arr": 25321,
-       "trip": 3824
-      },
-      {
-       "type": "transfer",
-       "from": 736,
-       "to": 358,
-       "dur": 372
-      },
-      {
-       "type": "ride",
-       "route": "A:4",
-       "from": 358,
-       "to": 276,
-       "dep": 25898,
-       "arr": 25947,
-       "trip": 2127
-      },
-      {
-       "type": "transfer",
-       "from": 276,
-       "to": 242,
-       "dur": 152
-      },
-      {
-       "type": "ride",
-       "route": "A:63",
-       "from": 242,
-       "to": 258,
-       "dep": 26100,
-       "arr": 26211,
-       "trip": 3800
-      },
-      {
-       "type": "transfer",
-       "from": 258,
-       "to": 1189,
-       "dur": 61
-      },
-      {
-       "type": "ride",
-       "route": "U:NW",
-       "from": 1189,
-       "to": 1125,
-       "dep": 26294,
-       "arr": 26526,
-       "trip": 7420
-      },
-      {
-       "type": "transfer",
-       "from": 1125,
-       "to": 360,
-       "dur": 333
-      }
-     ],
-     "reference_ignoring_pickup_dropoff": "07:27:39"
-    },
-    {
-     "src": 529,
-     "dst": 1110,
-     "t": "17:30:00",
-     "src_name": "E- State north of Packard",
-     "dst_name": "Biomedical Science Research Bldg",
-     "reference": "17:49:04",
-     "engine": "17:47:46",
-     "diff_s": -78,
-     "reference_legs": [
-      {
-       "type": "ride",
-       "route": "A:5",
-       "trip": "A:4013020",
-       "from": 529,
-       "to": 530,
-       "dep": 63445,
-       "arr": 63476
-      },
-      {
-       "type": "transfer",
-       "from": 530,
-       "to": 1187,
-       "dur": 19
-      },
-      {
-       "type": "ride",
-       "route": "U:CN",
-       "trip": "U:1960020",
-       "from": 1187,
-       "to": 1109,
-       "dep": 63675,
-       "arr": 64089
-      },
-      {
-       "type": "transfer",
-       "from": 1109,
-       "to": 1110,
-       "dur": 55
-      }
-     ],
-     "engine_legs": [
-      {
-       "type": "ride",
-       "route": "A:62",
-       "from": 529,
-       "to": 81,
-       "dep": 63475,
-       "arr": 63660,
-       "trip": 3706
-      },
-      {
-       "type": "transfer",
-       "from": 81,
-       "to": 242,
-       "dur": 83
-      },
-      {
-       "type": "ride",
-       "route": "A:63",
-       "from": 242,
-       "to": 258,
-       "dep": 63900,
-       "arr": 64011,
-       "trip": 3801
-      },
-      {
-       "type": "transfer",
-       "from": 258,
-       "to": 1110,
-       "dur": 55
-      }
-     ],
-     "reference_ignoring_pickup_dropoff": "17:47:46"
-    }
-   ]
-  }
- },
+ "mismatches": 0,
+ "pass": true,
+ "mismatch_classes": {},
  "reference": {
   "file": "pipeline/validate_router.py",
   "algorithm": "time-dependent Dijkstra on ready-to-board time, per-trip lowest boarded position",
@@ -431,20 +38,20 @@
   "horizon": 172800,
   "day": "tue",
   "conn_file": "conn_mon.bin",
-  "meta_sha1": "c020ff30aee0",
-  "conn_sha1": "8552208b8927"
+  "meta_sha1": "949dacf67490",
+  "conn_sha1": "603872a64ab5"
  },
- "meta_sha1": "c020ff30aee0",
+ "meta_sha1": "949dacf67490",
  "timing": {
-  "reference_build_s": 0.88,
-  "reference_total_s": 41.63,
-  "reference_ms_per_query": 13.88,
-  "engine_wall_s_including_node_start": 1.19,
+  "reference_build_s": 0.89,
+  "reference_total_s": 48.34,
+  "reference_ms_per_query": 16.11,
+  "engine_wall_s_including_node_start": 1.3,
   "engine": {
-   "load_ms": 11.6,
+   "load_ms": 14.1,
    "scans": 3000,
-   "query_ms": 1034.3,
-   "ms_per_scan": 0.345
+   "query_ms": 1140.3,
+   "ms_per_scan": 0.38
   }
  },
  "harness_sensitivity": {
@@ -454,11 +61,11 @@
   },
   "change time +30 s": {
    "queries": 600,
-   "mismatches": 3
+   "mismatches": 1
   },
   "every footpath +1 s": {
    "queries": 600,
-   "mismatches": 242
+   "mismatches": 241
   },
   "no footpaths": {
    "queries": 600,
@@ -557,75 +164,18 @@
  "all_targets": {
   "scans": 3000,
   "stop_comparisons": 3549000,
-  "equal": 3547545,
-  "mismatches": 1455,
-  "pass": false,
-  "mismatch_classes": {
-   "engine ignores GTFS pickup_type/drop_off_type = 1": {
-    "count": 1455,
-    "distinct_targets": 126,
-    "examples": [
-     {
-      "src": 735,
-      "dst": 48,
-      "t": "06:30:00",
-      "src_name": "Geddes + Walnut",
-      "dst_name": "Glen + Catherine",
-      "reference": "07:19:19",
-      "engine": "07:19:18",
-      "reference_ignoring_pickup_dropoff": "07:19:18"
-     },
-     {
-      "src": 735,
-      "dst": 49,
-      "t": "06:30:00",
-      "src_name": "Geddes + Walnut",
-      "dst_name": "Fuller + Medical Center Dr",
-      "reference": "07:26:11",
-      "engine": "07:23:48",
-      "reference_ignoring_pickup_dropoff": "07:23:48"
-     },
-     {
-      "src": 735,
-      "dst": 50,
-      "t": "06:30:00",
-      "src_name": "Geddes + Walnut",
-      "dst_name": "Fuller + Maiden",
-      "reference": "07:25:07",
-      "engine": "07:23:18",
-      "reference_ignoring_pickup_dropoff": "07:23:18"
-     },
-     {
-      "src": 735,
-      "dst": 52,
-      "t": "06:30:00",
-      "src_name": "Geddes + Walnut",
-      "dst_name": "Glazier Way + UM Day Care Cent",
-      "reference": "07:37:37",
-      "engine": "07:34:33",
-      "reference_ignoring_pickup_dropoff": "07:34:33"
-     },
-     {
-      "src": 735,
-      "dst": 53,
-      "t": "06:30:00",
-      "src_name": "Geddes + Walnut",
-      "dst_name": "Glazier Way + Huron",
-      "reference": "07:37:47",
-      "engine": "07:34:00",
-      "reference_ignoring_pickup_dropoff": "07:34:00"
-     }
-    ]
-   }
-  },
+  "equal": 3549000,
+  "mismatches": 0,
+  "pass": true,
+  "mismatch_classes": {},
   "timing": {
-   "reference_one_to_all_ms": 21.4,
-   "engine_wall_s_including_node_start": 2.06,
+   "reference_one_to_all_ms": 24.9,
+   "engine_wall_s_including_node_start": 2.09,
    "engine": {
-    "load_ms": 12.1,
+    "load_ms": 12.4,
     "scans": 3000,
-    "query_ms": 1083.1,
-    "ms_per_scan": 0.361
+    "query_ms": 1102.6,
+    "ms_per_scan": 0.368
    }
   }
  },

@@ -141,6 +141,7 @@ def main():
     shapes_used = {}
     raw_transfers = []  # (from_key, to_key, transfer_type, min_transfer_time or None)
 
+    mid_flags = {p: 0 for p, _, _ in FEEDS}  # pickup or drop-off limits in the middle of a trip (not modeled)
     for prefix, folder, display in FEEDS:
         info = (read(folder, "feed_info.txt") or [{}])[0]
         feeds_meta.append({
@@ -206,6 +207,17 @@ def main():
                     arr[i] = dep[i] = v
             first, last = known[0], known[-1]
             seq, arr, dep = seq[first:last + 1], arr[first:last + 1], dep[first:last + 1]
+            # GTFS pickup_type 1 = no pickup, drop_off_type 1 = no drop off. Leading stops where nobody may
+            # board and trailing stops where nobody may alight are trimmed, so the scan cannot use them.
+            # (Found by the independent router check: route 63 starts at Geddes + CCTC with no pickup.)
+            flag = lambda r, k: (r.get(k) or "0").strip() == "1"
+            while len(seq) >= 2 and flag(seq[0], "pickup_type"):
+                seq, arr, dep = seq[1:], arr[1:], dep[1:]
+            while len(seq) >= 2 and flag(seq[-1], "drop_off_type"):
+                seq, arr, dep = seq[:-1], arr[:-1], dep[:-1]
+            if len(seq) < 2:
+                continue
+            mid_flags[prefix] += sum(flag(r, "pickup_type") for r in seq[1:-1]) + sum(flag(r, "drop_off_type") for r in seq[1:-1])
 
             key = f"{prefix}:{tid}"
             trip_index[key] = len(trips)
@@ -319,6 +331,7 @@ def main():
             old.unlink()
 
     print(f"stops {len(stops)}, routes {len(routes)}, trips {len(trips)}, footpaths {len(foot)}, shapes {len(features)}")
+    print(f"mid-trip pickup or drop-off limits left unmodeled: {mid_flags}")
     for f in sorted(OUT.iterdir()):
         print(f"  {f.name}: {f.stat().st_size / 1e6:.2f} MB")
 

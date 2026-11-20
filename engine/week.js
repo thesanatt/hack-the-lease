@@ -5,7 +5,7 @@
 // least homeBreakMin and the round trip plus homeBreakFitMin fits, and the last entry to home (leave at its end).
 // Mode choice per trip: the allowed option with the fewest generalized minutes
 //   gen = ride + slackWeight*slack + mWalk*walk + mWait*wait + mBike*bike.
-// Walking (transit access, transfers and egress included) above maxWalkMin is not allowed; on a trip that ends
+// A single walking leg (access, transfer or egress, or a walk-only trip) above maxWalkMin is not allowed; on a trip that ends
 // after lateHour the cap is maxLateWalkMin. A trip with no allowed option is stranded: it is costed at the
 // best disallowed option and listed in `stranded`.
 // Darkness: walk, bike and long-wait minutes outside civil daylight, averaged over cfg.termDates. The December
@@ -86,12 +86,21 @@ function query(planner, cfg, dir, day, placeId, t, fromIds) {
     const res = dir === 'arr' ? planner.arriveBy(day, placeId, t, missing) : planner.leaveAt(day, placeId, t, missing);
     for (const h of missing) {
       const r = res.get(h), p = pointOf(planner, h);
-      entry.set(h, {
+      const rec = {
         lat: p.lat, lon: p.lon,
         walk: simpleOption('walk', r.walk),
-        bike: simpleOption('bike', r.bike),
         transit: r.transit ? transitOption(planner, dir, day, placeId, h, t, r.transit) : null,
+      };
+      // Bike is read only when the routine allows biking; computing it builds a bike Dijkstra per home.
+      Object.defineProperty(rec, 'bike', {
+        enumerable: true, configurable: true,
+        get() {
+          const v = simpleOption('bike', r.bike);
+          Object.defineProperty(rec, 'bike', { value: v, enumerable: true, writable: true, configurable: true });
+          return v;
+        },
       });
+      entry.set(h, rec);
     }
   }
   const out = new Map();
@@ -249,6 +258,19 @@ function genSec(o, cfg) {
   return o.rideSec + cfg.slackWeight * o.slackSec + cfg.mWalk * o.walkSec + cfg.mWait * o.waitSec + cfg.mBike * o.bikeSec;
 }
 
+// Longest single continuous walk of an option, in seconds. The walk caps apply per walking leg (CONTRACTS),
+// so a 7 min walk to the bus plus a 7 min walk from it passes a 12 min cap. Touching intervals are one walk.
+function longestWalkSec(o) {
+  const iv = [...(o.walks || [])].sort((a, b) => a[0] - b[0]);
+  let best = 0, cur = null;
+  for (const [a, z] of iv) {
+    if (cur && a <= cur[1] + 1) cur[1] = Math.max(cur[1], z);
+    else { if (cur) best = Math.max(best, cur[1] - cur[0]); cur = [a, z]; }
+  }
+  if (cur) best = Math.max(best, cur[1] - cur[0]);
+  return best;
+}
+
 // Returns { opt, stranded, capMin } for one origin's OptionSet.
 function choose(set, modes, cfg, filter) {
   const lateS = parseHM(modes.lateHour);
@@ -257,7 +279,7 @@ function choose(set, modes, cfg, filter) {
   for (const o of cands) {
     const g = genSec(o, cfg);
     const capMin = o.arrive > lateS ? modes.maxLateWalkMin : modes.maxWalkMin;
-    const ok = o.walkSec <= capMin * 60 + 1e-9;
+    const ok = longestWalkSec(o) <= capMin * 60 + 1e-9;
     if (ok && g < bestG) { best = o; bestG = g; }
     if (g < anyG) { anyBest = o; anyG = g; anyCap = capMin; }
   }
@@ -342,8 +364,9 @@ export function evaluateWeek(planner, routine, homeIds, opts = {}) {
     R.darkWalkMin += dW / 60; R.darkBikeMin += dB / 60; R.darkLongWaitMin += dL / 60;
     const trip = {
       ...info, time: fmtHM(info.timeS), mode: o.mode, depart: o.depart, arrive: o.arrive, sec: o.sec,
-      walkMin: o.walkSec / 60, bikeMin: o.bikeSec / 60, rideMin: o.rideSec / 60, waitMin: o.waitSec / 60,
-      slackMin: o.slackSec / 60, genMin: g, darkMin: dMix, routes: o.routes, rides: o.rides, stranded: ch.stranded,
+      walkMin: o.walkSec / 60, longestWalkMin: longestWalkSec(o) / 60, bikeMin: o.bikeSec / 60, rideMin: o.rideSec / 60,
+      waitMin: o.waitSec / 60, slackMin: o.slackSec / 60, genMin: g, darkMin: dMix, routes: o.routes, rides: o.rides,
+      stranded: ch.stranded,
     };
     R.trips.push(trip);
     if (ch.stranded) {

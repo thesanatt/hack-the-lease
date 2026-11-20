@@ -1,6 +1,6 @@
 {
  "test": "R6 r5py door-to-door comparison",
- "ran_at": "2026-11-19T22:09:02-05:00",
+ "ran_at": "2026-11-19T22:15:27-05:00",
  "r5py_version": "1.1.7",
  "settings": {
   "osm": "data/raw/osm/ann_arbor.osm.pbf",
@@ -52,10 +52,10 @@
   "pairs": 720,
   "both_reachable": 690,
   "median_abs_error_min": 1.0,
-  "mean_abs_error_min": 1.19,
+  "mean_abs_error_min": 1.14,
   "p90_abs_error_min": 3.0,
-  "share_within_2_min": 0.865,
-  "mean_signed_error_min_quorum_minus_r5": -0.89,
+  "share_within_2_min": 0.875,
+  "mean_signed_error_min_quorum_minus_r5": -0.84,
   "unreachable_both": 0,
   "reachable_only_in_quorum": 30,
   "reachable_only_in_r5": 0,
@@ -65,11 +65,11 @@
   "fractional_minutes_not_floored": {
    "pairs": 720,
    "both_reachable": 690,
-   "median_abs_error_min": 0.69,
-   "mean_abs_error_min": 1.07,
-   "p90_abs_error_min": 2.61,
-   "share_within_2_min": 0.851,
-   "mean_signed_error_min_quorum_minus_r5": -0.44,
+   "median_abs_error_min": 0.68,
+   "mean_abs_error_min": 1.02,
+   "p90_abs_error_min": 2.47,
+   "share_within_2_min": 0.861,
+   "mean_signed_error_min_quorum_minus_r5": -0.39,
    "unreachable_both": 0,
    "reachable_only_in_quorum": 30,
    "reachable_only_in_r5": 0,
@@ -79,10 +79,10 @@
    "pairs": 720,
    "both_reachable": 690,
    "median_abs_error_min": 1.0,
-   "mean_abs_error_min": 1.24,
+   "mean_abs_error_min": 1.2,
    "p90_abs_error_min": 3.0,
-   "share_within_2_min": 0.848,
-   "mean_signed_error_min_quorum_minus_r5": -0.97,
+   "share_within_2_min": 0.858,
+   "mean_signed_error_min_quorum_minus_r5": -0.92,
    "unreachable_both": 0,
    "reachable_only_in_quorum": 30,
    "reachable_only_in_r5": 0,
@@ -92,10 +92,10 @@
    "pairs": 720,
    "both_reachable": 690,
    "median_abs_error_min": 1.0,
-   "mean_abs_error_min": 1.55,
+   "mean_abs_error_min": 1.5,
    "p90_abs_error_min": 4.0,
-   "share_within_2_min": 0.794,
-   "mean_signed_error_min_quorum_minus_r5": -0.47,
+   "share_within_2_min": 0.804,
+   "mean_signed_error_min_quorum_minus_r5": -0.42,
    "unreachable_both": 0,
    "reachable_only_in_quorum": 30,
    "reachable_only_in_r5": 0,
@@ -111,30 +111,6 @@
    "dest": "h13",
    "quorum_min": 20.0,
    "r5_min": 29.0
-  },
-  {
-   "origin": "ugli",
-   "dest": "h15",
-   "quorum_min": 23.0,
-   "r5_min": 31.0
-  },
-  {
-   "origin": "ugli",
-   "dest": "h29",
-   "quorum_min": 20.0,
-   "r5_min": 28.0
-  },
-  {
-   "origin": "ugli",
-   "dest": "h3",
-   "quorum_min": 18.0,
-   "r5_min": 25.0
-  },
-  {
-   "origin": "hatcher",
-   "dest": "h15",
-   "quorum_min": 24.0,
-   "r5_min": 31.0
   },
   {
    "origin": "beyster",
@@ -165,6 +141,30 @@
    "dest": "h13",
    "quorum_min": 19.0,
    "r5_min": 25.0
+  },
+  {
+   "origin": "ugli",
+   "dest": "h29",
+   "quorum_min": 22.0,
+   "r5_min": 28.0
+  },
+  {
+   "origin": "angell",
+   "dest": "h24",
+   "quorum_min": 40.0,
+   "r5_min": 46.0
+  },
+  {
+   "origin": "league",
+   "dest": "h13",
+   "quorum_min": 19.0,
+   "r5_min": 25.0
+  },
+  {
+   "origin": "ggbrown",
+   "dest": "h7",
+   "quorum_min": 38.0,
+   "r5_min": 44.0
   }
  ],
  "matrix": [
@@ -183,7 +183,7 @@
   [
    "ugli",
    "h3",
-   18.0,
+   20.0,
    25.0
   ],
   [
@@ -255,7 +255,7 @@
   [
    "ugli",
    "h15",
-   23.0,
+   26.0,
    31.0
   ],
   [
@@ -339,13 +339,13 @@
   [
    "ugli",
    "h29",
-   20.0,
+   22.0,
    28.0
   ],
   [
    "ugli",
    "h30",
-   19.0,
+   21.0,
    25.0
   ],
   [
@@ -363,7 +363,7 @@
   [
    "hatcher",
    "h3",
-   19.0,
+   21.0,
    25.0
   ],
   [
@@ -435,7 +435,7 @@
   [
    "hatcher",
    "h15",
-   24.0,
+   26.0,
    31.0
   ],
   [
@@ -519,13 +519,13 @@
   [
    "hatcher",
    "h29",
-   21.0,
+   23.0,
    26.0
   ],
   [
    "hatcher",
    "h30",
-   20.0,
+   22.0,
    25.0
   ],
   [
@@ -723,7 +723,7 @@
   [
    "angell",
    "h3",
-   19.0,
+   20.0,
    22.0
   ],
   [
@@ -795,7 +795,7 @@
   [
    "angell",
    "h15",
-   23.0,
+   24.0,
    26.0
   ],
   [
@@ -879,13 +879,13 @@
   [
    "angell",
    "h29",
-   21.0,
+   22.0,
    23.0
   ],
   [
    "angell",
    "h30",
-   20.0,
+   21.0,
    23.0
   ],
   [
@@ -903,7 +903,7 @@
   [
    "chem",
    "h3",
-   16.0,
+   17.0,
    19.0
   ],
   [
@@ -1059,13 +1059,13 @@
   [
    "chem",
    "h29",
-   18.0,
+   19.0,
    22.0
   ],
   [
    "chem",
    "h30",
-   17.0,
+   18.0,
    20.0
   ],
   [
@@ -1083,7 +1083,7 @@
   [
    "ross",
    "h3",
-   25.0,
+   28.0,
    29.0
   ],
   [
@@ -1155,7 +1155,7 @@
   [
    "ross",
    "h15",
-   31.0,
+   34.0,
    35.0
   ],
   [
@@ -1239,13 +1239,13 @@
   [
    "ross",
    "h29",
-   28.0,
+   30.0,
    30.0
   ],
   [
    "ross",
    "h30",
-   27.0,
+   29.0,
    29.0
   ],
   [
@@ -4496,12 +4496,12 @@
   "R5 reports whole minutes (seconds / 60, floored); the main result floors Quorum the same way, the fractional variant does not."
  ],
  "timing": {
-  "r5_network_build_s": 11.9,
-  "r5_matrix_s": 0.43,
-  "quorum_wall_s_including_node_start": 1.34,
-  "quorum_points_ms": 869.9,
-  "quorum_ms_per_leaveAt": 1.243,
-  "total_s": 18.5
+  "r5_network_build_s": 13.3,
+  "r5_matrix_s": 0.48,
+  "quorum_wall_s_including_node_start": 1.11,
+  "quorum_points_ms": 878,
+  "quorum_ms_per_leaveAt": 0.273,
+  "total_s": 20.6
  },
  "engine": {
   "transit_js_sha1": "d2d787f207a9",
@@ -4511,7 +4511,7 @@
   "horizon": 172800,
   "day": "tue",
   "conn_file": "conn_mon.bin",
-  "meta_sha1": "c020ff30aee0",
-  "conn_sha1": "8552208b8927"
+  "meta_sha1": "949dacf67490",
+  "conn_sha1": "603872a64ab5"
  }
 }

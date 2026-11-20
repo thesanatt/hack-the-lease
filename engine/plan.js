@@ -89,12 +89,16 @@ export class Planner {
         const td = snap.t[a.stop] - a.sec;
         if (td > best) { best = td; bestStop = a.stop; bestAccess = a.sec; }
       }
-      const w = this.walkSec(h, placeId), b = this.bikeSec(h, placeId);
+      const w = this.walkSec(h, placeId);
       const r = {
         walk: { depart: deadline - w, arrive: deadline, sec: w },
-        bike: Number.isFinite(b) ? { depart: deadline - b, arrive: deadline, sec: b } : null,
         transit: null,
       };
+      // Bike times need a bike Dijkstra per home (about 15 to 40 ms each), so compute them only when read.
+      lazyBike(r, () => {
+        const b = this.bikeSec(h, placeId);
+        return Number.isFinite(b) ? { depart: deadline - b, arrive: deadline, sec: b } : null;
+      });
       if (bestStop >= 0 && best > -Infinity) {
         r.transit = { depart: best, arrive: deadline, sec: deadline - best, dir: 'arriveBy', deadline,
           home: h, place: placeId, firstStop: bestStop, accessSec: bestAccess, snap };
@@ -117,12 +121,15 @@ export class Planner {
         const ta = snap.t[a.stop] + a.sec;
         if (ta < best) { best = ta; bestStop = a.stop; bestEgress = a.sec; }
       }
-      const w = this.walkSec(placeId, h), b = this.bikeSec(placeId, h);
+      const w = this.walkSec(placeId, h);
       const r = {
         walk: { depart: t, arrive: t + w, sec: w },
-        bike: Number.isFinite(b) ? { depart: t, arrive: t + b, sec: b } : null,
         transit: null,
       };
+      lazyBike(r, () => {
+        const b = this.bikeSec(placeId, h);
+        return Number.isFinite(b) ? { depart: t, arrive: t + b, sec: b } : null;
+      });
       if (bestStop >= 0 && best < Infinity) {
         r.transit = { depart: t, arrive: best, sec: best - t, dir: 'leaveAt', t0: t,
           home: h, place: placeId, lastStop: bestStop, egressSec: bestEgress, snap };
@@ -255,4 +262,14 @@ function transitOf(result, homeId) {
   if (!r) return null;
   if (r.snap) return r;
   return r.transit || null;
+}
+
+// Define r.bike as a getter that computes once on first read, then behaves like a plain property.
+function lazyBike(r, compute) {
+  let done = false, val = null;
+  Object.defineProperty(r, 'bike', {
+    enumerable: true, configurable: true,
+    get() { if (!done) { val = compute(); done = true; } return val; },
+    set(v) { val = v; done = true; },
+  });
 }
