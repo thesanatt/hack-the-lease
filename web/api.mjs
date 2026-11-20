@@ -73,30 +73,32 @@ export async function extract(body) {
   const body2 = JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0, responseMimeType: 'application/json' } });
   let last = 'no model answered';
   for (const model of geminiModels()) {
-    let r, j;
+    let r, j; const t0 = Date.now();
+    const log = (what) => console.log(`extract: ${model} ${what} in ${Date.now() - t0} ms`); // model + status only, never content
     try {
       r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: body2,
         signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
       });
       j = await r.json().catch(() => ({}));
-    } catch (e) { last = `${model} timed out`; continue; }
+    } catch (e) { last = `${model} timed out`; log('timeout'); continue; }
     if (!r.ok) {
-      last = j?.error?.message || String(r.status);
+      last = j?.error?.message || String(r.status); log(r.status);
       if (RETRYABLE.has(r.status)) continue; // busy, rate limited or retired: try the next model
       return [502, { error: `Gemini: ${last}` }];
     }
     const raw = j?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
     const out = parseModelJson(raw);
-    if (!out) { last = 'answer not in the expected format'; continue; }
+    if (!out) { last = 'answer not in the expected format'; log('bad format'); continue; }
+    log(200);
     return [200, { lines: out.lines.join('\n'), notes: out.notes, model }];
   }
-  return [502, { error: `Gemini: ${last}. Try again, or type the lines yourself.` }];
+  return [502, { error: `Gemini: ${last.replace(/\.+$/, '')}. Try again, or type the lines yourself.` }];
 }
 
 // Free Flash models get busy (503) or retired (404) without warning, so try a short list in order.
 // GEMINI_MODEL, when set, goes first. Each try is capped so a slow model never hangs the page.
-const MODEL_TIMEOUT_MS = 20000;
+const MODEL_TIMEOUT_MS = 15000;
 const RETRYABLE = new Set([404, 429, 500, 503, 504]);
 export function geminiModels() {
   const list = [process.env.GEMINI_MODEL, 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-flash-lite-latest', 'gemini-flash-latest'];
@@ -126,7 +128,13 @@ export async function sendMail(body) {
     }),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) return [502, { error: `Resend: ${redactEmails(j?.message || r.status)}` }];
+  if (!r.ok) {
+    const m = String(j?.message || r.status);
+    if (/testing emails|verify a domain/i.test(m)) {
+      return [502, { error: 'The demo email account can only send to its owner. Use "Open in my mail app" to send it yourself.' }];
+    }
+    return [502, { error: `Resend: ${redactEmails(m)}` }];
+  }
   return [200, { id: j.id }];
 }
 
