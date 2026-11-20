@@ -3,6 +3,7 @@
 // Ranking: student/rank.js (the You tab's engine with the profile's week and prior). Homes are SYNTHETIC.
 import { useMemo, useState } from 'react';
 import { Button, MapView } from '../components/index.js';
+import Icon from '../components/Icon.jsx';
 import { useProfile, useSaved } from '../student/store.js';
 import { useRanking, verdict, money, hoursText, fromPrice } from '../student/rank.js';
 import { Heart, FitPill, go, short } from '../student/parts.jsx';
@@ -10,6 +11,22 @@ import ListingDetails from '../student/ListingDetails.jsx';
 import { ContactPanel } from '../student/TourPanel.jsx';
 import { useTours, dateLabel, clock12 } from '../student/tours.js';
 import '../student/student.css';
+
+// A ring for the share of possible weeks where this home is the best of all 30 (the same number Why this rank? gives).
+function FitRing({ p }) {
+  const pct = Math.round(p * 100), r = 22, c = 2 * Math.PI * r;
+  return (
+    <div className="sv-ring" role="img" aria-label={`Best home in ${pct}% of your possible weeks`}>
+      <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
+        <circle cx="28" cy="28" r={r} fill="none" stroke="var(--sky-soft)" strokeWidth="6" />
+        <circle cx="28" cy="28" r={r} fill="none" stroke="var(--sky)" strokeWidth="6" strokeLinecap="round"
+          strokeDasharray={`${(c * pct) / 100} ${c}`} transform="rotate(-90 28 28)" />
+        <text x="28" y="32.5" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--navy)">{pct}%</text>
+      </svg>
+      <span>best weeks</span>
+    </div>
+  );
+}
 
 function Detail({ item, nScen }) {
   const note = item.note;
@@ -116,14 +133,16 @@ export default function SavedView({ api }) {
                 <div style={{ minWidth: 0 }}>
                   <div className="sv-title">
                     <h3>{short(it.home.name)}</h3>
+                    {i === 0 && res && !it.over && <span className="st-pill best"><Icon name="star" size={13} label={null} />Best for your week</span>}
                     {res && <FitPill tier={it.tier} />}
                     {it.over > 0 && <span className="st-pill over">{money(it.over)} over budget</span>}
                   </div>
                   <div className="sv-meta">{it.home.area} &middot; {it.note?.roomLabel || `${it.home.rooms.length} rooms`} &middot; Sample listing</div>
                   {v && <p className="sv-why">{v.plus}{v.minus && <> <span className="minus">{v.minus}</span></>}</p>}
                   <div className="sv-facts">
-                    <span className="sv-fact"><b>{money(it.rent)}</b><span>a month</span></span>
-                    {it.week && <span className="sv-fact"><b>{hoursText(it.week.weeklyMin)}</b><span>a week getting around</span></span>}
+                    <span className="sv-fact big"><Icon name="dollar" size={18} /><b>{money(it.rent)}</b><span>a month</span></span>
+                    {it.week && <span className="sv-fact"><Icon name="clock" size={15} /><b>{hoursText(it.week.weeklyMin)}</b><span>a week</span></span>}
+                    {res && it.pBest != null && <FitRing p={it.pBest} />}
                   </div>
                   <div className="sv-acts" onClick={(e) => e.stopPropagation()}>
                     {T.forHome(it.home.id) ? (

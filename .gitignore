@@ -20,3 +20,6 @@ Thumbs.db
 
 # temporary recording frames
 scripts/record/.video/
+.env*
+.vercel
+.vercel/

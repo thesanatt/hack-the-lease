@@ -1,7 +1,7 @@
 /* Pitch deck inside the app. One picture and one sentence per slide. Paper, ink, hairlines; Source Serif only
    for slide titles; IBM Plex Sans for everything else. No gradients, no glass, a plain cut between slides. */
 .pd {
-  --pd-ink: #1A1A1A; --pd-gray: #6B6B6B; --pd-line: #DEDAD2; --pd-paper: #F7F5F0; --pd-green: #1F6F4A;
+  --pd-ink: var(--navy); --pd-gray: #5a6275; --pd-line: #DEDAD2; --pd-paper: #F7F5F0; --pd-green: var(--sky-ink);
   position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 120px);
   background: var(--pd-paper); color: var(--pd-ink);
   font-family: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
@@ -101,3 +101,12 @@
 .pd-safe-n .pd-gray { font-weight: 400; }
 .pd-aside { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
 .pd-aside .pd-chip, .pd-aside .pd-picker select { margin-top: 10px; }
+
+/* brand pass: each slide title sits on a navy band (the charts stay on paper so route colors and dashes read) */
+.pd-headrow { background: var(--navy); color: #ffffff; border-radius: 12px; padding: clamp(14px, 2.2vh, 28px) clamp(18px, 2vw, 32px); align-items: center; }
+.pd-headrow .pd-title { color: #ffffff; }
+.pd-headrow .pd-green { color: var(--sun); }
+.pd-headrow .pd-gray, .pd-headrow p { color: #dbe3f5; }
+.pd-headrow .pd-chip { color: #ffffff; border-color: #ffffff; }
+.pd-headrow .pd-picker select { margin-top: 0; }
+.pd-bar .pd-ticks button[aria-current='step'] { background: var(--sky); }

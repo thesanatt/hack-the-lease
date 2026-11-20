@@ -13,6 +13,25 @@ import { useTours, tourOptions } from '../student/tours.js';
 import { splitHash } from '../hashParam.js';
 import '../student/student.css';
 
+// Three steps across the top. at: the step the student is on (4 = all done). Step 2 opens Saved, 3 a tour.
+const STEPS = [['Add your week', 'profile'], ['See your fit', 'saved'], ['Book a tour', 'saved']];
+function Steps({ at }) {
+  return (
+    <ol className="pf-steps" aria-label="Steps">
+      {STEPS.map(([label, to], i) => {
+        const n = i + 1, done = n < at, now = n === at;
+        return (
+          <li key={label} className={done ? 'done' : now ? 'now' : ''} aria-current={now ? 'step' : undefined}>
+            <span className="n" aria-hidden="true">{done ? '✓' : n}</span>
+            {done || now ? <button type="button" className="pf-step-go" onClick={() => go(to)}>{label}</button> : <span>{label}</span>}
+            {done && <span className="sr-only"> (done)</span>}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 const PLACEHOLDER = 'For example: I study nursing. Clinicals at University Hospital Tue and Thu 6:30am to 3pm. '
   + 'I study late at the UgLi, work at a cafe in Kerrytown on weekends for $15/hr, and I do not like walking home alone at night. '
   + 'Budget about $900 a month. My own bathroom would be nice.';
@@ -85,13 +104,14 @@ export default function ProfileView({ api }) {
         <div className="st-head">
           <div>
             <h1>My profile</h1>
-            <p>Tell Quorum about your week. It finds the places you go and ranks homes for the life you actually live.</p>
+            <p>Add your week. Quorum ranks homes for it.</p>
           </div>
         </div>
+        <Steps at={1} />
         <div className="pf-start">
           <div className={`pf-drop${over ? ' over' : ''}`} {...dropProps}>
             <h2>Add a file</h2>
-            <p className="st-sub">A resume, a class schedule, a screenshot of your schedule or a calendar file (PDF, PNG, JPG, text or .ics).</p>
+            <p className="st-sub">Resume, class schedule, screenshot or .ics.</p>
             <Button variant="primary" onClick={pick}>Choose a file</Button>
             <span className="st-sub">or drop it here</span>
           </div>
@@ -125,7 +145,7 @@ export default function ProfileView({ api }) {
       <div className="st-head">
         <div>
           <h1>My profile</h1>
-          <p>What Quorum read. Switch anything off or change it; your homes re-rank right away.</p>
+          <p>Change anything; homes re-rank.</p>
         </div>
         <div className="st-head-r">
           <Button variant="primary" onClick={() => go(saved.ids.length ? 'saved' : 'browse')}>
@@ -133,6 +153,7 @@ export default function ProfileView({ api }) {
           </Button>
         </div>
       </div>
+      <Steps at={T.list.length ? 4 : saved.ids.length ? 3 : 2} />
 
       <div className="pf-grid">
         <div className="st-stack">
@@ -148,7 +169,7 @@ export default function ProfileView({ api }) {
           {tourHome && <TourPanel api={api} home={tourHome} profile={p} opts={opts} chosen={chosen} setChosen={setChosen} T={T} />}
 
           <div className="st-card pf-sec">
-            <h2>My calendar <span className="st-sub">{tourHome ? 'Green: open tour times. Click one.' : 'From what you added. Tours you book show in green.'}</span></h2>
+            <h2>My calendar <span className="st-sub">{tourHome ? 'Blue: open tour times. Click one.' : 'Booked tours show in blue.'}</span></h2>
             {p.entries.length || T.list.length ? (
               <Calendar entries={p.entries} placeById={placeById}
                 tours={T.list.filter((t) => !(tourHome && chosen && t.homeId === tourHome.id))}

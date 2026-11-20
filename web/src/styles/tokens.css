@@ -1,39 +1,48 @@
 /* Quorum design tokens (docs/DESIGN_DIRECTION.md). Transit-map clarity: warm paper, ink, hairlines,
-   real GTFS route colors, a navy band for time after dark, one sand-to-green scale for fit.
+   real GTFS route colors, a navy band for time after dark, one gray-to-sky scale for fit.
    Contract names (engine/CONTRACTS.md) are kept: --paper --paper-2 --ink --ink-2 --muted --line --accent
    --accent-ink --good --bad --warn --dark-walk --font-* --r --s1..--s6. New names are additions. */
 :root {
+  /* Brand: navy for text, headers and the top bar; sky for primary actions, links, good fit, charts;
+     sun only as a fill (with navy text on it) for the one thing to look at: the #1 home, key numbers, the main
+     call to action. Never sun-colored text on a light background. Red and orange stay for warnings only. */
+  --navy: #0C1B48;
+  --sky: #62A7EA;
+  --sky-soft: #e3effb;     /* sky wash: selected rows, good-fit badge */
+  --sky-ink: #1f5d9c;      /* sky dark enough for text on white (6.4:1) */
+  --sun: #F2EA1E;
+
   --paper: #f7f5f0;        /* page */
   --paper-2: #efebe2;      /* quiet fills: entries on a week, table stripes, input wells */
   --card: #ffffff;         /* plain white cards */
-  --ink: #1a1a1a;          /* text, walking lines */
-  --ink-2: #3d3d3a;        /* secondary text */
-  --muted: #6b6b6b;        /* labels, units, captions */
+  --ink: var(--navy);      /* text, walking lines */
+  --ink-2: #2c3a5f;        /* secondary text */
+  --muted: #5a6275;        /* labels, units, captions */
   --line: #dedad2;         /* 1 px hairlines */
   --line-2: #c9c4b8;       /* a hairline that must hold on white */
-  --accent: #1f6f4a;       /* the best fit green: selection, the one primary button */
-  --accent-ink: #ffffff;   /* text on accent */
-  --accent-soft: #e3eee7;  /* selected row, focus wash */
-  --good: #1f6f4a;
+  --accent: var(--sky);    /* primary buttons, selection */
+  --accent-ink: var(--navy); /* text on accent: navy on sky is 6.6:1 */
+  --accent-soft: var(--sky-soft); /* selected row, focus wash */
+  --good: var(--sky-ink);
   --bad: #b3261e;
   --warn: #9a6400;
-  --dark-walk: #1e2a4a;    /* time after civil dusk: the navy band */
-  --night: #1e2a4a;
+  --dark-walk: var(--navy);    /* time after civil dusk: the navy band */
+  --night: var(--navy);
   --night-band: #d9deea;  /* the navy band behind evening hours, as a flat tint so blocks on it stay crisp */
 
   /* modes in a week ribbon. Bus rides use their own GTFS route color. */
-  --walk: #1a1a1a;
+  --walk: var(--navy);
   --bike: #3d3d3a;
   --ride: #2a5c8f;         /* fallback when a ride has no route color */
   --wait: #9a6400;
 
   /* fit, worst to best: one ordered scale, light sand to deep green. Never rainbow.
      The light end sits under 2:1 on paper, so fit dots always carry a 1 px ink ring. */
-  --fit-1: #cdb57c;
-  --fit-2: #98ad72;
-  --fit-3: #66976a;
-  --fit-4: #3d8159;
-  --fit-5: #1f6f4a;
+  --fit-1: #c9d3df;
+  --fit-2: #a5c6e8;
+  --fit-3: #7fb4ea;
+  --fit-4: #62A7EA;
+  --fit-5: #2f78c2;
 
   /* group members: one fixed color each, used everywhere (chip, room, route, ribbon).
      Validated categorical order (adjacent CVD separation passes on white). Light ones need a label beside them. */
@@ -75,9 +84,9 @@
   --fs-num-big: 44px;
   --track-caps: 0.04em;
 
-  --focus: #1f6f4a;
-  --sel: #e3eee7;
-  --accent-hover: #185a3c;
+  --focus: var(--navy);
+  --sel: var(--sky-soft);
+  --accent-hover: #4f97de;
   --rule-heavy: 1px solid var(--line);
   --rule-light: 1px solid var(--line);
   --motion: 200ms;

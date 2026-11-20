@@ -1,6 +1,7 @@
 // The landlord-style listing for one saved home: description, six key facts, and a "Full listing" fold with
 // the rest and every room. Details are SYNTHETIC (web/public/data/listing_details.json) and labeled so.
 import { money } from './rank.js';
+import Icon from '../components/Icon.jsx';
 
 const KEY = [['available', 'Move-in'], ['lease', 'Lease'], ['laundry', 'Laundry'], ['parking', 'Parking'], ['pets', 'Pets'], ['furnished', 'Furnished']];
 const MORE = [['deposit', 'Deposit'], ['utilities', 'Utilities'], ['internet', 'Internet'], ['heatCool', 'Heat and cooling'],
@@ -14,10 +15,11 @@ export default function ListingDetails({ home, d, roomId }) {
   const n = home.rooms.length;
   const util = (home.utilities || 0) / n;
   return (
-    <div className="ld" onClick={(e) => e.stopPropagation()}>
+    <details className="ld sv-more" onClick={(e) => e.stopPropagation()}>
+      <summary>Details</summary>
       <p className="ld-desc">{d.description}</p>
       <dl className="ld-facts">
-        {KEY.map(([k, l]) => <div key={k}><dt>{l}</dt><dd>{d[k]}</dd></div>)}
+        {KEY.map(([k, l]) => <div key={k}><dt>{k === 'laundry' ? <Icon name="laundry" size={13} label={null} /> : null}{l}</dt><dd>{d[k]}</dd></div>)}
       </dl>
       <details className="sv-more ld-more">
         <summary>Full listing</summary>
@@ -39,6 +41,6 @@ export default function ListingDetails({ home, d, roomId }) {
         <p className="st-sub">Rent per room plus its share of utilities. Whole house {money(home.rent)}/mo.</p>
       </details>
       <p className="ld-label">Sample listing details, made up for the demo.</p>
-    </div>
+    </details>
   );
 }

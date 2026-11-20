@@ -292,3 +292,16 @@ details > summary:hover { color: var(--ink); }
   .topbar { position: static; }
   body { background: #fff; }
 }
+
+/* ------------------------------------------------------------------ brand: navy top bar */
+.topbar { background: var(--navy); border-bottom-color: var(--navy); }
+.topbar .wordmark { color: #ffffff; }
+.topbar .tab { color: #c9d4ee; }
+.topbar .tab:hover { color: #ffffff; }
+.topbar .tab[aria-current='page'] { color: #ffffff; border-bottom: 3px solid var(--sun); }
+.topbar .chip-sample { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+.topbar .textlink { color: #dbe3f5; text-decoration-color: rgba(255, 255, 255, 0.4); }
+.topbar .textlink:hover:not(:disabled) { color: #ffffff; }
+.topbar .btn { color: #ffffff; }
+a { color: var(--navy); text-decoration-color: var(--sky); }
+.ic { flex: none; vertical-align: -3px; }

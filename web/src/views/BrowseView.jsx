@@ -1,6 +1,7 @@
 // Browse: the sample homes, nine to a page, three across. With a profile, each card checks the home against
 // what the student asked for (student/match.js): "Includes" and "Does not include", from real walk times,
 // router trip times and the listing's rooms. Without a profile it shows the plain listing facts.
+import Icon, { iconFor } from '../components/Icon.jsx';
 import { useEffect, useMemo, useState } from 'react';
 import { Button, Seg } from '../components/index.js';
 import { useProfile, useSaved } from '../student/store.js';
@@ -10,6 +11,12 @@ import { Heart, FitPill, go, short, beds } from '../student/parts.jsx';
 import '../student/student.css';
 
 const PAGE = 9;
+
+// A topic icon (bus, walk, moon, $...) before a fact line; the line's own words say the same, so it is decorative.
+function FactIcon({ text }) {
+  const n = iconFor(text);
+  return n ? <Icon name={n} size={14} label={null} className="br-topic" /> : null;
+}
 
 function Check({ ok }) {
   return ok ? (
@@ -86,7 +93,7 @@ export default function BrowseView({ api }) {
       <div className="st-head">
         <div>
           <h1>Browse homes</h1>
-          <p>{homes.length} sample homes around Ann Arbor{profile ? ', each checked against your profile' : ''}. Tap the heart to save one.</p>
+          <p>{homes.length} sample homes{profile ? ', checked against your week' : ''}. Tap a heart to save.</p>
         </div>
         <div className="st-head-r">
           <button type="button" className="textlink" onClick={() => go('listings')}>Found a post in a group chat? Paste it</button>
@@ -116,10 +123,11 @@ export default function BrowseView({ api }) {
         <Seg label="Sort" value={res ? sortKey : 'price'} onChange={setSort} options={sortOptions} />
       </div>
       {res && (
-        <p className="st-sub" style={{ margin: '-6px 0 14px' }}>
-          <b>Has N of M</b> counts what you asked for. The fit badge is the all-in score for your week: rent plus your
-          time, late nights and room, across the weeks your schedule could turn out to be.
-        </p>
+        <details className="sv-more br-why" style={{ margin: '-6px 0 14px' }}>
+          <summary>Why?</summary>
+          <p className="st-sub"><b>Has N of M</b> counts what you asked for. The fit badge is the all-in score for your week: rent plus your
+          time, late nights and room, across the weeks your schedule could turn out to be.</p>
+        </details>
       )}
 
       <div className="br-grid">
@@ -142,13 +150,13 @@ export default function BrowseView({ api }) {
                 {m.yes.length > 0 && (
                   <div className="br-sec">
                     <h4>Includes</h4>
-                    <ul className="br-list">{m.yes.map((l) => <li key={l.key}><Check ok />{l.text}</li>)}</ul>
+                    <ul className="br-list">{m.yes.map((l) => <li key={l.key}><Check ok /><span><FactIcon text={l.text} />{l.text}</span></li>)}</ul>
                   </div>
                 )}
                 {m.no.length > 0 && (
                   <div className="br-sec">
                     <h4>Does not include</h4>
-                    <ul className="br-list miss">{m.no.map((l) => <li key={l.key}><Check ok={false} />{l.text}</li>)}</ul>
+                    <ul className="br-list miss">{m.no.map((l) => <li key={l.key}><Check ok={false} /><span><FactIcon text={l.text} />{l.text}</span></li>)}</ul>
                   </div>
                 )}
                 {m.unknown.length > 0 && <p className="st-sub">Not in the listing: {m.unknown.join(', ')}.</p>}

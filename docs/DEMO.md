@@ -73,8 +73,9 @@ week)". The five saved homes show filled hearts.
 ## 4. Saved (1:35 to 2:25)
 
 Clicks: **Saved**. Headline: "For your week, **Broadway St house** is the best of your 5." Order: Broadway,
-Catherine St, Georgetown Blvd, East Ann St, Church St. Card 1: **Great fit**, "Lower rent and quick trips.
-Watch out for walks home in the dark." **$923** a month, **9 h 2 min** a week getting around. Click **Why this
+Catherine St, Georgetown Blvd, East Ann St, Church St. Card 1: yellow **Best for your week** badge, **Great fit**,
+"Lower rent and quick trips. Watch out for walks home in the dark." Big **$923** a month, **9 h 2 min** a week
+(clock icon), and a ring **57%** "best weeks". The listing text is folded under **Details**. Click **Why this
 rank?** on card 1: "Best of all 30 homes in **57%** of the 24 weeks your schedule could turn out to be."
 
 > One sentence, two numbers per home. Why this rank opens the engine: Broadway wins in 57 percent of the 24
@@ -91,7 +92,7 @@ Click **Saved**.
 
 Screen: Broadway still 1st, now "A ride for every trip and lower rent." **Georgetown Blvd** moves to 2nd.
 Catherine St (**$33 over budget**), East Ann St (**$165 over budget**) and Church St (**$75 over budget**) drop
-below it. Broadway's **Why this rank?** now reads **82%** and "No trip in your week breaks your walking limits.
+below it. Broadway's ring and **Why this rank?** now read **82%** and "No trip in your week breaks your walking limits.
 The middle home has 4 trips like that." Each of the other four saved homes has 4 such trips.
 
 > Now she adds two sentences: a budget, and she does not like walking home alone at night. Three homes go over
@@ -105,7 +106,7 @@ and room size are checked on the cards, not priced.
 
 Optional (about 25 s): on Saved card 1 click **Schedule a tour**. My profile opens with **Tour Broadway St
 house**: best times Monday Nov 23, Wednesday Dec 2 and Friday Dec 4, all 2:00 PM (no tours over U-M Thanksgiving
-break, Wed Nov 25 to Sun Nov 29; those days roll to the next week), and every open half hour in green on **My
+break, Wed Nov 25 to Sun Nov 29; those days roll to the next week), and every open half hour in blue on **My
 calendar**. Click **1**: "Leave EECS Building at 1:37 PM, bus CS then WS, there at 1:56 PM. Then bus 65 to Beyster
 Building, there at 2:59 PM." Click **Book this time**. Click **Back to Saved**: card 1 shows **Tour Monday, Nov 23,
 2:00 PM**. Click **Contact landlord**: **To** (filled before you went on), **Subject** "Your listing: Broadway St
