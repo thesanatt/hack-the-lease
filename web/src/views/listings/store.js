@@ -1,6 +1,7 @@
 // Pasted posts live only in this browser (localStorage). Every read and write is wrapped: a private window or
 // blocked storage just means the posts are gone after a reload, never a crash.
-// A stored post: { id, n, text (contact details already removed), key, count, sample, edits: {}, pin: {lat, lon} | null }
+// A stored post: { id, n, text (contact details already removed), key, count, sample, edits: {}, pin: {lat, lon} | null,
+//   to: the email the student typed for this post (optional; never read from the post) }
 const KEY = 'quorum.listings.v1';
 
 export function loadPosts() {

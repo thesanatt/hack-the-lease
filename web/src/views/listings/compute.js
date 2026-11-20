@@ -3,6 +3,7 @@
 import { editableWeek, modalRoutine, uncertainRoutine } from '../me/routine.js';
 import { lateNights } from '../me/TopThree.jsx';
 import { termOf } from '../../../../engine/listing.js';
+import { meanTheta } from './fit.js';
 
 // The semester the student needs the place for. Month-level spans; covers() allows 10 days of slack at each end.
 export const SEMESTERS = {
@@ -63,7 +64,9 @@ export const SCENARIO_SEED = 11;
 // the cost is averaged over cfg.scenarios sampled weeks (week.sampleWeeks on the uncertain routine, seed 11),
 // each routed on the term dates. Hours, late nights and the draft's trip use the most likely week.
 // thetas: draws from a fresh posterior (createPosterior seed 7, draws seed 3), as the You tab uses before any pick.
-// Returns { rows: [{ id, kind: 'post' | 'home', postId?, name, cost, hours, late, rent, week }], weekMap }.
+// dollars: the explain.js pieces a month under the mean of the draws, travel averaged over the same sampled weeks
+// (rent = the ranked room's price, time, dark, strand, each a positive cost); the fit scores read them.
+// Returns { rows: [{ id, kind: 'post' | 'home', postId?, name, cost, hours, late, rent, week, dollars }], weekMap }.
 export function rankAll({ api, persona, routine, items, thetas }) {
   const decide = api.mod('decide');
   const week = api.mod('week');
@@ -82,6 +85,15 @@ export function rankAll({ api, persona, routine, items, thetas }) {
   const listingHomes = posts.map((it) => listingHome(it.post, it.l));
   const rank = decide.meRank({ homes: [...homes, ...listingHomes], weeksByScenario, thetas, cfg });
   const postById = new Map(posts.map((it) => [postPointId(it.post), it]));
+  const explain = api.mod('explain');
+  const homeById = new Map([...homes, ...listingHomes].map((h) => [h.id, h]));
+  const mt = meanTheta(thetas);
+  const dollarsOf = (r) => {
+    const h = homeById.get(r.homeId);
+    if (!h || !explain?.pieces || !decide.homeOption) return null;
+    const p = explain.pieces(mt, decide.homeOption(h, weeksByScenario.map((m) => m.get(r.homeId)), mt, cfg));
+    return { rent: r.price, time: -p.time, dark: -p.dark, strand: -p.strand };
+  };
   const rows = rank.map((r) => {
     const it = postById.get(r.homeId);
     const w = weekMap.get(r.homeId);
@@ -89,7 +101,7 @@ export function rankAll({ api, persona, routine, items, thetas }) {
       id: r.homeId, kind: it ? 'post' : 'home', postId: it?.post.id, n: it?.post.n,
       name: it ? it.l.name : api.data.homeById.get(r.homeId)?.name,
       cost: -r.meanU, hours: w ? w.weeklyMin / 60 : null, late: lateNights(w), rent: r.price,
-      utilitiesExtra: it ? it.l.utilities === 'extra' : false, week: w,
+      utilitiesExtra: it ? it.l.utilities === 'extra' : false, week: w, dollars: dollarsOf(r),
     };
   }).sort((a, b) => a.cost - b.cost);
   return { rows, weekMap };

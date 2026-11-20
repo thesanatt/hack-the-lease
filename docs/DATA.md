@@ -65,9 +65,12 @@ East, Southwest); the build fails if one falls outside. Fixes over the earlier f
 
 ### personas.json: FICTIONAL
 
-Six made-up students. Each carries `label: "FICTIONAL persona..."`, a private cap, mode limits, a `theta` used only
+Ten made-up students. Each carries `label: "FICTIONAL persona..."`, a private cap, mode limits, a `theta` used only
 to auto-answer demo picks (labeled "demo values" in the UI), and a week with `p` and `alt` per entry. Places
-are real (ids in `places.json`); the people, schedules and values are invented.
+are real (ids in `places.json`); the people, schedules and values are invented. Week labels use real U-M course
+numbers (EECS 445, NURS 372, FIN 300, THEORY 238 and so on) so a week reads like a real one; which sections, days
+and times a persona has is made up. Labels are labels only: no number in the app reads them, except that the You
+tab's late-lab finder prefers a label with "lab" in it (Jordan's is "EECS 482 project lab").
 
 | id | Week | Group | Cap |
 |---|---|---|---|
@@ -77,6 +80,10 @@ are real (ids in `places.json`); the people, schedules and values are invented.
 | leo | LSA: Angell Hall and the Chemistry Building, Shapiro Library until 23:00 (alt: Hatcher), Intramural Sports Building gym, bikes | yes | $960 |
 | sam | Music: Moore Building classes, rehearsals until 22:00 (alt: Hill Auditorium, p 0.3), Saturday practice, no bike | yes | $1000 |
 | noor | Law, Central only: Law Quad classes, Hatcher Library (alt: Shapiro), early gym at the Central Campus rec center | no (Me mode) | $1500 |
+| dev | Ross BBA junior: FIN 300, MKT 300 and TO 300 at Ross, ECON 401 at Angell Hall, coffee shop shifts at Kerrytown Market Mon Wed Fri to 21:00 (alt: Main St, p 0.3), Sunday case team at Ross, Saturday shift on Main St (p 0.6), no bike | no | $1100 |
+| clara | Music, violin performance junior: THEORY 238 and MUSICOL 345 at the Moore Building, orchestra rehearsal Mon to Thu 19:00 to 22:00 (alt: Hill Auditorium, p 0.4), weekend practice rooms, no bike | no | $950 |
+| amara | Biochemistry pre-med and research assistant: University Hospital shift Mon Wed Fri 06:00 to 10:00 (alt: Mott, p 0.3), CHEM 351 and CHEM 352 lab at the Chemistry Building, BIOLOGY 305 at Angell Hall, MCAT study at Taubman Library to 21:00 (p 0.7), no bike | no | $1050 |
+| mateo | Mechanical engineering senior: research lab at G.G. Brown, undergrad research Tue Thu afternoons, late test runs at the Ford Robotics Building to 23:00 (p 0.5; alt: Duderstadt), Kroger on Saturday, bikes | no | $1300 |
 
 `group: true` marks the five members of the demo group.
 
@@ -92,15 +99,20 @@ Built by `engine/operator.js` and `scripts/build_operator.mjs` (decide builder) 
 
 ### catalog_sample.csv and plans_sample.json: SAMPLE (Next year tab)
 
-`catalog_sample.csv` has 41 rows (40 sections, plus one `ARR` row the parser skips). It uses the column layout of
+`catalog_sample.csv` has 76 rows (75 sections, plus one `ARR` row the parser skips). It uses the column layout of
 the U-M Schedule of Classes CSV as published in past years. The real header has not been checked against a
 current file. `catalog_sample.meta.json` carries the label shown on screen: "SAMPLE catalog: course numbers are
 real; sections, times and rooms are made up".
 
 - Real: course numbers and titles (EECS 281, 376, 445, 482, 484, 485, 499; ECON 101; PSYCH 111; SOC 100;
-  STATS 250; NURS 370, 372, 373). The nursing clinical is listed as `PNE 350`. The UMSN 2026-27 undergraduate
+  STATS 250; NURS 370, 372, 373). Added Nov 20 for the three new plans: FIN 300, MKT 300, TO 300 (the Ross BBA
+  floating core), ECON 401, EECS 183, EECS 314, THEORY 238, MUSICOL 345, ENS 344 (Campus Philharmonia/Symphony
+  Orchestras), MECHENG 335, 350, 360, 382, 395. Numbers were checked against Ross, SMTD and College of Engineering
+  pages on Nov 20 2026; the TO 300 title ("Operations Management") and the use of a LAB component for the ENS 344
+  rehearsal were not checked. The nursing clinical is listed as `PNE 350`. The UMSN 2026-27 undergraduate
   handbook lists the Therapeutic Nursing Care II clinical as PNE 350 to 366, 5 credits. Building codes map to
-  real places through `engine/ics.js` (BBB, EECS, GGBL, FMCRB, CHEM, AH, UGL, NIB, UH).
+  real places through `engine/ics.js` (BBB, EECS, GGBL, FMCRB, CHEM, AH, UGL, NIB, UH; Ross, Moore and Hill
+  Auditorium match by name).
 - Made up: every section number, day, time, room number, class number and component split, and the
   instructor (`Sample`). Start and end dates are left blank. Term is `SAMPLE`.
 - How it is shaped: most EECS sections are on North Campus, with one Central option for some components. There
@@ -109,26 +121,39 @@ real; sections, times and rooms are made up".
   evening). Times were spread out only so that a plan can usually be scheduled without clashes. No number
   was set to steer a result.
 
-`plans_sample.json` ("SAMPLE plans, made up") holds two plans that `engine/catalog.js` draws weeks from:
+`plans_sample.json` ("SAMPLE plans, made up") holds five plans that `engine/catalog.js` draws weeks from:
 
 | id | Persona (walking limits) | Courses | Choice | Maybe |
 |---|---|---|---|---|
 | cs | jordan | EECS 482 lecture and lab, EECS 376 lecture and discussion, ECON 101 lecture and discussion | one of EECS 445, 485, 484 | research lab job, Ford Robotics Building, Tue Thu 13:00 to 17:00, odds 0.4 |
 | nursing | maya | NURS 372, NURS 373, PNE 350 clinical | one of PSYCH 111, SOC 100, STATS 250 | part-time job, Kerrytown Market, Mon Wed 18:30 to 21:30, odds 0.5 |
+| ross | dev | FIN 300, MKT 300, TO 300 lectures, all at Ross | one of ECON 401, EECS 183, PSYCH 111 | restaurant job on Main St, Tue Thu Sat 17:00 to 23:30, odds 0.5 |
+| music | clara | THEORY 238, MUSICOL 345 lecture and discussion, ENS 344 rehearsal (Hill Auditorium Mon Wed or Moore Tue Thu, 19:00 to 22:00) | one of PSYCH 111, SOC 100, STATS 250 | evening job at Trader Joe's on Washtenaw, Mon Wed 17:00 to 21:00, odds 0.5 |
+| mecheng | mateo | MECHENG 350 lecture and lab, MECHENG 360 lecture and discussion, MECHENG 382, MECHENG 395 lab, all on North | one of MECHENG 335, EECS 314, ECON 101 | tutoring job at Shapiro Library, Tue Thu 20:00 to 23:00, odds 0.5 |
+
+The three new plans reuse the existing PSYCH 111, SOC 100, STATS 250 and ECON 101 sections and add none to them;
+the cs and nursing plans and their numbers are unchanged. On the tab (k 200, seed 1): Ross BBA junior $35 a
+month, Church St house loses least (65%), the Main St job is worth $22; Music performance junior $73 a month,
+Catherine St house (45%), the Trader Joe's evening job is worth $73 and the ENS 344 section $30; Mechanical
+engineering junior $16 a month, Georgetown Blvd house (61%), the UgLi tutoring job is worth $12.
 
 The odds and the share of full sections (early 5%, normal 20%, late 40%) are assumptions, not data. The repo
 never ships a real Registrar file. A student's own file is read in the browser and never uploaded.
 
 ## Sample posts for the Listings tab
 
-`web/public/data/posts_sample.json` ("SAMPLE posts, made up for the demo; not real listings or people") holds 7
+`web/public/data/posts_sample.json` ("SAMPLE posts, made up for the demo; not real listings or people") holds 15
 short posts written in the style students use in sublet groups. Every post is made up: there is no real listing,
 landlord or student behind any of them, and none carries a name, phone number, email or link. Street names were
 chosen from the `n` names in `streets/streets.geojson` so that `engine/listing.js` can place them; the street data
 leaves many central blocks unnamed (Packard Street, for one, has no named segment), so the samples use pairs that
 meet in that file. They cover: an intersection (Hill St near Church), a street only (Catherine St), a place name
 (the Michigan Union), a summer sublet, a Winter semester sublet, a whole-house total split per person, a post with
-no location (it asks for a pin), and one reworded duplicate of the first post (merged as "seen 2 times").
+no location (it asks for a pin), and one reworded duplicate of the first post (merged as "seen 2 times"). Posts 8 to 15, added Nov 20: a
+whole-house lease (Lincoln Ave, 6 bed, house total split per person, so it reads $950/mo), a studio near the hospital (Glen Ave), a North Campus room
+(Baits Dr), a short Winter sublet (East Ann St, Jan 6 to Feb 28), a 5 bed priced per person (Lawrence St), a
+cross street only (Geddes and Observatory), an all-caps post with slashes (S Division St; emojis were left out
+so the file stays ASCII) and a room with parking included (Broadway St). The demo uses posts 1 and 2 only.
 A pasted post that names a street the file lacks ("on Packard near Hill") keeps that name as the street. It is
 never swapped for the cross street. The point is a guess on the cross street near the student's week, and the
 card asks for a pin. Oakland, Tappan, Monroe, Benjamin and East University are also missing from the file.

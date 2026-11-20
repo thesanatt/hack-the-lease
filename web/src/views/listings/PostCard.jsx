@@ -1,10 +1,13 @@
 // One pasted post: its number (same as the map), the fields as chips (solid = read from the post, dashed = a
 // guess or missing, green edge = you set it), a location chip that can ask for a pin, and "Reach out".
 // Props: post, l (effective listing), cover ({ ok, note }), pinning (bool), onEdit(patch), onPin(), onCancelPin(),
-//        onRemove(), draft (string), onDraft(text), open (bool), onToggle(), firstName, setFirstName
+//        onRemove(), draft (string), onDraft(text), open (bool), onToggle(), firstName, setFirstName,
+//        fit (fit.fitScores entry or null), to (the email the student typed for this post), setTo(text)
 import { useEffect, useRef, useState } from 'react';
 import { fmtRange, shortStreet } from '../../../../engine/listing.js';
 import { money } from '../me/format.js';
+import { cleanEmail, mailtoHref } from './fit.js';
+import FitBlock from './FitBlock.jsx';
 
 const TITLE = {
   found: 'Read from the post. Click to change.',
@@ -67,7 +70,7 @@ function placeText(l) {
   return null;
 }
 
-export default function PostCard({ post, l, cover, pinning, onEdit, onPin, onCancelPin, onRemove, draft, onDraft, open, onToggle, firstName, setFirstName }) {
+export default function PostCard({ post, l, cover, pinning, onEdit, onPin, onCancelPin, onRemove, draft, onDraft, open, onToggle, firstName, setFirstName, fit, to = '', setTo }) {
   const c = l.confidence || {};
   const [copied, setCopied] = useState(false);
   const ta = useRef(null);
@@ -148,14 +151,22 @@ export default function PostCard({ post, l, cover, pinning, onEdit, onPin, onCan
 
       {cover?.note && <p className={`lv-cover${cover.ok === false ? ' bad' : ''}`}>{cover.note}</p>}
 
+      {fit && <FitBlock s={fit} />}
+
       <div className="lv-reach">
         <button type="button" className="textlink" aria-expanded={open} onClick={onToggle}>{open ? 'Hide message' : 'Reach out'}</button>
         {open && (
           <div className="lv-draft">
-            <label className="lv-name">Your first name <input value={firstName} onChange={(e) => setFirstName(e.target.value)} size={10} placeholder="optional" /></label>
+            <div className="lv-names">
+              <label className="lv-name">Your first name <input value={firstName} onChange={(e) => setFirstName(e.target.value)} size={10} placeholder="optional" /></label>
+              <label className="lv-name">Their email <input type="email" value={to} onChange={(e) => setTo?.(e.target.value)} size={16} placeholder="optional"
+                autoComplete="off" title="Kept only in this browser. Quorum never reads emails from posts." /></label>
+            </div>
             <textarea ref={ta} value={draft} onChange={(e) => onDraft(e.target.value)} rows={5} aria-label={`Message for post ${post.n}`} />
             <div className="lv-draft-f">
               <button type="button" className="btn small" onClick={copy}>Copy</button>
+              <a className="lv-mail" href={mailtoHref({ to, title: l.name, body: draft })}
+                title={`Opens your mail app${cleanEmail(to) ? ` to ${cleanEmail(to)}` : ''} with this message. You press Send.`}>Email it</a>
               <span className="lv-copied" role="status">{copied || ''}</span>
               <span className="lv-quiet">Quorum sends nothing.</span>
             </div>

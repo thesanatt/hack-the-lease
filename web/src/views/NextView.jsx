@@ -14,6 +14,7 @@ import Weeks from './next/Weeks.jsx';
 import Details from './next/Details.jsx';
 import '../views/me/verdict/you.css';
 import './next/next.css';
+import { pickFromHash } from '../hashParam.js';
 
 const K = 200;
 const SEED = 1;
@@ -41,7 +42,7 @@ export default function NextView({ api }) {
     if (!ready) return;
     loadNextYearSample(api).then((s) => {
       setSample(s);
-      setPlanId((id) => id || (s.plans.find((p) => p.id === NEXT_DEFAULT_PLAN) || s.plans[0])?.id || null);
+      setPlanId((id) => id || pickFromHash('plan', s.plans, (s.plans.find((p) => p.id === NEXT_DEFAULT_PLAN) || s.plans[0])?.id || null)); // #next?plan=<id>
     }).catch((e) => { console.error(e); setLoadError(String(e.message || e)); });
   }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 

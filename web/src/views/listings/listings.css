@@ -76,6 +76,29 @@
 .lv-copied { font-size: 13px; color: var(--l-fit); font-weight: 600; }
 .lv-quiet { font-size: 13px; color: var(--l-gray); }
 
+/* fit: the big number, four small category bars under it */
+.lv-fit { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--l-line); padding-top: 8px; }
+.lv-fit-n { font-size: 28px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--l-fit); white-space: nowrap; }
+.lv-fit-k { font-size: 15px; font-weight: 400; color: var(--l-gray); }
+.lv-fit-u { font-size: 13px; font-weight: 400; color: var(--l-gray); }
+.lv-fit.zero .lv-fit-n { color: var(--l-gray); }
+.lv-fit-cats { flex: 1; min-width: 200px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 10px; }
+.lv-fit-c { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lv-fit-l { font-size: 13px; color: var(--l-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lv-fit-b { display: block; height: 4px; background: var(--l-paper-2); border-radius: 2px; overflow: hidden; }
+.lv-fit-b i { display: block; height: 100%; background: var(--l-fit); }
+.lv-fit.compact { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; border: 0; padding: 0; flex-wrap: nowrap; }
+.lv-fit.compact .lv-fit-n { font-size: 20px; }
+.lv-fit.compact .lv-fit-cats { min-width: 0; width: 64px; grid-template-columns: repeat(4, 1fr); gap: 3px; flex: none; }
+.lv-fit.compact .lv-fit-b { height: 3px; }
+.lv-tbl .fit { width: 1%; white-space: nowrap; }
+.lv-tbl tr.off .lv-fit-n { color: var(--l-gray); }
+
+.lv-names { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.lv-mail { font-size: 13px; color: var(--l-ink); text-decoration: underline; text-decoration-color: var(--l-line-2); text-underline-offset: 3px; }
+.lv-mail:hover { text-decoration-color: var(--l-ink); }
+.lv-mail:focus-visible { outline: 2px solid var(--l-fit); outline-offset: 2px; }
+
 /* map */
 .lv-mapcol { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .lv-map { position: relative; }
@@ -124,6 +147,22 @@
 @media (max-width: 960px) {
   .lv-top { grid-template-columns: 1fr; }
   .lv-mapcol { position: static; }
+}
+@media (max-width: 600px) {
+  .lv-fit-cats { min-width: 0; flex-basis: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lv-name input { width: 11em; min-width: 0; }
+  /* the comparison as one block per place: name, then Fit beside the cost bar, then the three small numbers */
+  .lv-tbl, .lv-tbl tbody { display: block; }
+  .lv-tbl thead { display: none; }
+  .lv-tbl tr { display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); gap: 4px 12px; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--l-line); }
+  .lv-tbl td { display: block; border: 0; padding: 0; }
+  .lv-tbl td.nm { grid-column: 1 / -1; width: auto; }
+  .lv-tbl td.fit { grid-row: span 2; width: auto; }
+  .lv-tbl td.bar { grid-column: 2 / -1; }
+  .lv-tbl td.n { width: auto; text-align: left; font-size: 13px; }
+  .lv-tbl td.n::before { content: attr(data-l); display: block; color: var(--l-gray); font-size: 11px; }
+  .lv-sub.bad { padding-left: 26px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .lv-pchip { transition: none; }

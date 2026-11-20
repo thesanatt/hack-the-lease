@@ -34,6 +34,58 @@
         { "id": "downtownjob", "label": "Part-time job downtown", "odds": 0.5, "days": ["mon", "wed"], "place": "kerrytown", "start": "18:30", "end": "21:30" }
       ],
       "fixed": []
+    },
+    {
+      "id": "ross",
+      "name": "Sample Ross BBA junior",
+      "personaId": "dev",
+      "courses": [
+        { "id": "f300", "course": "FIN 300", "components": ["LEC"] },
+        { "id": "m300", "course": "MKT 300", "components": ["LEC"] },
+        { "id": "t300", "course": "TO 300", "components": ["LEC"] }
+      ],
+      "choices": [
+        { "id": "elective", "label": "Which elective", "of": ["ECON 401", "EECS 183", "PSYCH 111"], "components": ["LEC"] }
+      ],
+      "maybes": [
+        { "id": "mainstjob", "label": "Restaurant job on Main St", "odds": 0.5, "days": ["tue", "thu", "sat"], "place": "mainst", "start": "17:00", "end": "23:30" }
+      ],
+      "fixed": []
+    },
+    {
+      "id": "music",
+      "name": "Sample Music performance junior",
+      "personaId": "clara",
+      "courses": [
+        { "id": "th238", "course": "THEORY 238", "components": ["LEC"] },
+        { "id": "mu345", "course": "MUSICOL 345", "components": ["LEC", "DIS"] },
+        { "id": "ens344", "course": "ENS 344", "components": ["LAB"] }
+      ],
+      "choices": [
+        { "id": "central", "label": "Which Central Campus course", "of": ["PSYCH 111", "SOC 100", "STATS 250"], "components": ["LEC"] }
+      ],
+      "maybes": [
+        { "id": "teaching", "label": "Evening job at Trader Joe's on Washtenaw", "odds": 0.5, "days": ["mon", "wed"], "place": "tj", "start": "17:00", "end": "21:00" }
+      ],
+      "fixed": []
+    },
+    {
+      "id": "mecheng",
+      "name": "Sample Mechanical engineering junior",
+      "personaId": "mateo",
+      "courses": [
+        { "id": "me350", "course": "MECHENG 350", "components": ["LEC", "LAB"] },
+        { "id": "me360", "course": "MECHENG 360", "components": ["LEC", "DIS"] },
+        { "id": "me382", "course": "MECHENG 382", "components": ["LEC"] },
+        { "id": "me395", "course": "MECHENG 395", "components": ["LAB"] }
+      ],
+      "choices": [
+        { "id": "elective", "label": "Which elective", "of": ["MECHENG 335", "EECS 314", "ECON 101"], "components": ["LEC"] }
+      ],
+      "maybes": [
+        { "id": "tutor", "label": "Tutoring job at the UgLi", "odds": 0.5, "days": ["tue", "thu"], "place": "ugli", "start": "20:00", "end": "23:00" }
+      ],
+      "fixed": []
     }
   ]
 }

@@ -40,3 +40,38 @@ SAMPLE,Regular Academic Session,LSA,40138,Sociology (SOC), 100,001,Principles of
 SAMPLE,Regular Academic Session,LSA,40139,Statistics (STATS), 250,001,Introduction to Statistics and Data Analysis,LEC,,M,,W,,,,,,,1130-1PM,1800 CHEM,Sample,4
 SAMPLE,Regular Academic Session,LSA,40140,Statistics (STATS), 250,002,Introduction to Statistics and Data Analysis,LEC,,,T,,TH,,,,,,4-530PM,1800 CHEM,Sample,4
 SAMPLE,Regular Academic Session,Engineering,40141,Electrical Engineering & Computer Sci (EECS), 499,001,Directed Study,IND,,,,,,,,,,,ARR,ARR,Sample,1
+SAMPLE,Regular Academic Session,Business,40142,Finance (FIN), 300,001,Financial Management,LEC,,M,,W,,,,,,,830-10AM,R1220 ROSS,Sample,3
+SAMPLE,Regular Academic Session,Business,40143,Finance (FIN), 300,002,Financial Management,LEC,,,T,,TH,,,,,,1-230PM,R0220 ROSS,Sample,3
+SAMPLE,Regular Academic Session,Business,40144,Finance (FIN), 300,003,Financial Management,LEC,,M,,W,,,,,,,4-530PM,R1240 ROSS,Sample,3
+SAMPLE,Regular Academic Session,Business,40145,Marketing (MKT), 300,001,Marketing Management,LEC,,,T,,TH,,,,,,10-1130AM,R1210 ROSS,Sample,3
+SAMPLE,Regular Academic Session,Business,40146,Marketing (MKT), 300,002,Marketing Management,LEC,,M,,W,,,,,,,1-230PM,R1210 ROSS,Sample,3
+SAMPLE,Regular Academic Session,Business,40147,Technology & Operations (TO), 300,001,Operations Management,LEC,,M,,W,,,,,,,1130-1PM,R0230 ROSS,Sample,3
+SAMPLE,Regular Academic Session,Business,40148,Technology & Operations (TO), 300,002,Operations Management,LEC,,,T,,TH,,,,,,230-4PM,R0230 ROSS,Sample,3
+SAMPLE,Regular Academic Session,LSA,40149,Economics (ECON), 401,001,Intermediate Microeconomic Theory,LEC,,,T,,TH,,,,,,1130-1PM,AUD C AH,Sample,4
+SAMPLE,Regular Academic Session,LSA,40150,Economics (ECON), 401,002,Intermediate Microeconomic Theory,LEC,,M,,W,,,,,,,6-730PM,AUD B AH,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40151,Electrical Engineering & Computer Sci (EECS), 183,001,Elementary Programming Concepts,LEC,,M,,W,,,,,,,3-430PM,1800 CHEM,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40152,Electrical Engineering & Computer Sci (EECS), 183,002,Elementary Programming Concepts,LEC,,,T,,TH,,,,,,6-730PM,1670 BBB,Sample,4
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40153,Music Theory (THEORY), 238,001,Introduction to Music Analysis,LEC,,M,,W,,,,,,,3-430PM,2026 MOORE,Sample,3
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40154,Music Theory (THEORY), 238,002,Introduction to Music Analysis,LEC,,,T,,TH,,,,,,9-1030AM,2026 MOORE,Sample,3
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40155,Musicology (MUSICOL), 345,001,History of Music,LEC,,,T,,TH,,,,,,1030-12PM,1100 MOORE,Sample,3
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40156,Musicology (MUSICOL), 345,011,History of Music,DIS,,,,,,F,,,,,10-11AM,2043 MOORE,Sample,
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40157,Musicology (MUSICOL), 345,012,History of Music,DIS,,,,W,,,,,,,5-6PM,2043 MOORE,Sample,
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40158,Musicology (MUSICOL), 345,013,History of Music,DIS,,,,,TH,,,,,,4-5PM,G127 AH,Sample,
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40159,Music Ensembles (ENS), 344,001,Campus Philharmonia/Symphony Orchestras,LAB,,M,,W,,,,,,,7-10PM,HILL AUD,Sample,1
+SAMPLE,Regular Academic Session,Music Theatre & Dance,40160,Music Ensembles (ENS), 344,002,Campus Philharmonia/Symphony Orchestras,LAB,,,T,,TH,,,,,,7-10PM,1100 MOORE,Sample,1
+SAMPLE,Regular Academic Session,Engineering,40161,Mechanical Engineering (MECHENG), 350,001,Design and Manufacturing II,LEC,,,T,,TH,,,,,,9-1030AM,1571 GGBL,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40162,Mechanical Engineering (MECHENG), 350,011,Design and Manufacturing II,LAB,,M,,,,,,,,,1-5PM,2281 GGBL,Sample,
+SAMPLE,Regular Academic Session,Engineering,40163,Mechanical Engineering (MECHENG), 350,012,Design and Manufacturing II,LAB,,,,W,,,,,,,6-10PM,2281 GGBL,Sample,
+SAMPLE,Regular Academic Session,Engineering,40164,Mechanical Engineering (MECHENG), 350,013,Design and Manufacturing II,LAB,,,,,,F,,,,,1-5PM,2281 GGBL,Sample,
+SAMPLE,Regular Academic Session,Engineering,40165,Mechanical Engineering (MECHENG), 360,001,Modeling Analysis and Control of Dynamic Systems,LEC,,M,,W,,,,,,,9-1030AM,1311 EECS,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40166,Mechanical Engineering (MECHENG), 360,002,Modeling Analysis and Control of Dynamic Systems,LEC,,,T,,TH,,,,,,1230-2PM,1504 GGBL,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40167,Mechanical Engineering (MECHENG), 360,011,Modeling Analysis and Control of Dynamic Systems,DIS,,,,,,F,,,,,10-11AM,1504 GGBL,Sample,
+SAMPLE,Regular Academic Session,Engineering,40168,Mechanical Engineering (MECHENG), 360,012,Modeling Analysis and Control of Dynamic Systems,DIS,,,,,TH,,,,,,4-5PM,1005 EECS,Sample,
+SAMPLE,Regular Academic Session,Engineering,40169,Mechanical Engineering (MECHENG), 382,001,Mechanical Behavior of Materials,LEC,,M,,W,,,,,,,1030-12PM,1571 GGBL,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40170,Mechanical Engineering (MECHENG), 382,002,Mechanical Behavior of Materials,LEC,,,T,,TH,,,,,,3-430PM,1670 BBB,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40171,Mechanical Engineering (MECHENG), 395,011,Laboratory I,LAB,,,T,,,,,,,,2-6PM,1340 GGBL,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40172,Mechanical Engineering (MECHENG), 395,012,Laboratory I,LAB,,,,W,,,,,,,6-10PM,1340 GGBL,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40173,Mechanical Engineering (MECHENG), 395,013,Laboratory I,LAB,,,,,,F,,,,,8-12PM,1340 GGBL,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40174,Mechanical Engineering (MECHENG), 335,001,Heat Transfer,LEC,,M,,W,,,,,,,3-430PM,1571 GGBL,Sample,3
+SAMPLE,Regular Academic Session,Engineering,40175,Mechanical Engineering (MECHENG), 335,002,Heat Transfer,LEC,,,T,,TH,,,,,,6-730PM,2300 FMCRB,Sample,3
+SAMPLE,Regular Academic Session,Engineering,40176,Electrical Engineering & Computer Sci (EECS), 314,001,Electrical Circuits Systems and Applications,LEC,,,T,,TH,,,,,,1030-12PM,1500 EECS,Sample,4

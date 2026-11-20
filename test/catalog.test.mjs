@@ -24,7 +24,7 @@ test('sample catalog: columns, sections, times and places', () => {
   assert.equal(parsed.columns.time, 'Time');
   assert.equal(parsed.columns.location, 'Location');
   assert.deepEqual(parsed.columns.dayFlags, ['M', 'T', 'W', 'TH', 'F', 'S', 'SU']);
-  assert.equal(parsed.sections.length, 40);
+  assert.equal(parsed.sections.length, 75);
   assert.deepEqual(parsed.skipped, { arranged: 1, noTime: 0, noPlace: 0 });
   assert.deepEqual(parsed.unmatched, []);
   assert.deepEqual(parsed.warnings, []);

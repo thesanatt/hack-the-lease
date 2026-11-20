@@ -1,10 +1,16 @@
 // "How they compare for your week": pasted posts ranked with the three best sample homes, one bar each for
 // cost to you a month, then hours a week, late nights and the rent.
 // Props: rows (compute.shownRows), notes (Map postId -> cover note), sentence, waiting (string | null),
-//        unranked [{ n, name, why }]
+//        unranked [{ n, name, why }], fits (Map id -> fit.fitScores entry)
 import { money } from '../me/format.js';
+import { FIT_TITLE } from './fit.js';
+import FitBlock from './FitBlock.jsx';
 
-export default function Compare({ rows, notes, sentence, waiting, unranked }) {
+export default function Compare({ rows: allRows, notes, sentence, waiting, unranked, fits }) {
+  // Places whose dates miss the semester (Fit 0) go last, so the top of the table is a place you can use.
+  // The sort is stable: each group stays in order of cost to you.
+  const missed = (r) => (fits?.get(r.id)?.dates === 0 ? 1 : 0);
+  const rows = allRows && fits ? [...allRows].sort((a, b) => missed(a) - missed(b)) : allRows;
   // Bars start a little under the cheapest row so the gaps between places can be seen; the header says where.
   const costs = (rows || []).map((r) => r.cost).filter(Number.isFinite);
   const max = Math.max(1, ...costs);
@@ -18,6 +24,7 @@ export default function Compare({ rows, notes, sentence, waiting, unranked }) {
           <thead>
             <tr>
               <th scope="col" className="nm">Place</th>
+              {fits && <th scope="col" className="fit" title={`${FIT_TITLE} Small bars: price, getting around, nights, dates.`}>Fit</th>}
               <th scope="col" className="bar" title="Rent plus what travel time, darkness and trips with no ride cost you, less what the room is worth to you, averaged over the weeks your schedule could turn out to be. Same numbers as the You tab. Hours and late nights are for your most likely week.">Cost to you a month{base > 0 && <span className="u"> (bars start at {money(base)})</span>}</th>
               <th scope="col" className="n">Getting around</th>
               <th scope="col" className="n" title="Nights a week with a trip that has no ride, or walking or biking after dusk">Late nights</th>
@@ -35,13 +42,14 @@ export default function Compare({ rows, notes, sentence, waiting, unranked }) {
                     {r.kind === 'home' && <span className="lv-sub">Sample listing</span>}
                     {note && <span className="lv-sub bad">{note}</span>}
                   </div></td>
+                  {fits && <td className="fit"><FitBlock s={fits.get(r.id)} compact /></td>}
                   <td className="bar">
                     <span className="lv-bar"><i style={{ width: `${Math.max(2, ((Math.max(base, r.cost) - base) / Math.max(1, max - base)) * 100)}%` }} /></span>
                     <span className="lv-v">{money(r.cost)}<span className="u">/mo</span></span>
                   </td>
-                  <td className="n">{r.hours != null ? r.hours.toFixed(1) : '--'}<span className="u"> h/wk</span></td>
-                  <td className="n">{r.late ?? '--'}<span className="u">/wk</span></td>
-                  <td className="n">{money(r.rent)}{r.utilitiesExtra && <span className="u" title="Utilities are extra and not counted"> + util.</span>}</td>
+                  <td className="n" data-l="Getting around">{r.hours != null ? r.hours.toFixed(1) : '--'}<span className="u"> h/wk</span></td>
+                  <td className="n" data-l="Late nights">{r.late ?? '--'}<span className="u">/wk</span></td>
+                  <td className="n" data-l="Rent">{money(r.rent)}{r.utilitiesExtra && <span className="u" title="Utilities are extra and not counted"> + util.</span>}</td>
                 </tr>
               );
             })}

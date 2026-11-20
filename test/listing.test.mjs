@@ -24,8 +24,8 @@ before(async () => {
 const ASCII = /^[\x20-\x7E\n]*$/;
 const NEAR_AA = (loc) => loc.lat > 42.2 && loc.lat < 42.35 && loc.lon > -83.8 && loc.lon < -83.65;
 
-test('sample file: about 6 posts, ASCII, no emails, phone numbers or links', () => {
-  assert.ok(posts.length >= 6 && posts.length <= 8);
+test('sample file: 6 to 16 posts, ASCII, no emails, phone numbers or links', () => {
+  assert.ok(posts.length >= 6 && posts.length <= 16);
   for (const p of posts) {
     assert.match(p.text, ASCII, p.id);
     assert.equal(redact(p.text), p.text, `${p.id} carries contact details`);

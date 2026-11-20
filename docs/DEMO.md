@@ -177,9 +177,11 @@ Clicks:
    Could I see it on Monday at 5:00 PM? Another time works too. Thanks!" Under it: **Copy** and "Quorum sends
    nothing."
 4. On "For winter": click **Winter 2027** (top, next to Fall 2027), then press **End**. **How they compare for
-   your week** reads "Catherine St costs you $67 a month less than the best sample home." Rows: **2 Catherine
-   St $1,284/mo**, **1 Hill St near Church St $1,319/mo** "starts May 1: summer only" (grayed), then the sample
-   homes Broadway St $1,351, Catherine St house $1,414, East Ann St $1,470.
+   your week** reads "Catherine St costs you $67 a month less than the best sample home." Rows, each with a Fit
+   score out of 100: **2 Catherine St 100/100, $1,284/mo**, then the sample homes Broadway St 64/100 $1,351,
+   Catherine St house 30/100 $1,414, East Ann St 0/100 $1,470, and last **1 Hill St near Church St** 0/100
+   "starts May 1: summer only" (grayed, it misses the semester). If asked: Fit compares only the places in this
+   table, 100 is the lowest cost to you, 0 the highest, and 0 when the dates miss the semester.
 
 Say (Ruibin):
 > Sublets get posted in Facebook groups and group chats, and Quorum does not scrape them. Jordan, a fictional

@@ -20,6 +20,7 @@ import Details from './me/Details.jsx';
 import { editableWeek, modalRoutine, uncertainRoutine, lateEntry, moveToCentral, TERM_CHOICES, autoAnswer, DAY_LABEL } from './me/routine.js';
 import { pct } from './me/format.js';
 import './me/verdict/you.css';
+import { pickFromHash } from '../hashParam.js';
 
 const SCENARIO_SEED = 11;
 
@@ -35,7 +36,7 @@ export default function MeView({ api }) {
   const { personas, homes, places, placeById, homeById } = api.data;
   const week = api.mod('week'), prefs = api.mod('prefs'), decide = api.mod('decide'), solar = api.mod('solar');
 
-  const [personaId, setPersonaId] = useState(personas[0]?.id);
+  const [personaId, setPersonaId] = useState(() => pickFromHash('who', personas, personas[0]?.id)); // #me?who=<id>
   const persona = personas.find((p) => p.id === personaId) || personas[0];
   const [entries, setEntries] = useState(() => editableWeek(persona));
   const [labCentral, setLabCentral] = useState(false);

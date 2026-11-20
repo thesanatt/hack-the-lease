@@ -7,12 +7,12 @@
   "modes": { "bike": false, "maxWalkMin": 20, "lateHour": "22:00", "maxLateWalkMin": 10 },
   "theta": { "vTime": 22, "vDark": 25, "vStrand": 40, "wBath": 45, "wSize": 6, "wLight": 15 },
   "week": [
-   { "id": "j1", "label": "Lectures", "days": ["mon", "wed", "fri"], "place": "beyster", "start": "09:00", "end": "11:30", "p": 1 },
-   { "id": "j2", "label": "Classes", "days": ["mon", "wed", "fri"], "place": "eecs", "start": "12:30", "end": "16:00", "p": 1 },
-   { "id": "j3", "label": "Project team", "days": ["tue", "thu"], "place": "fmcrb", "start": "13:00", "end": "17:00", "p": 0.7 },
-   { "id": "j4", "label": "Late lab", "days": ["tue", "thu"], "place": "dude", "start": "19:00", "end": "23:30", "p": 0.8,
+   { "id": "j1", "label": "EECS 445 and 370 lectures", "days": ["mon", "wed", "fri"], "place": "beyster", "start": "09:00", "end": "11:30", "p": 1 },
+   { "id": "j2", "label": "EECS 482 lecture and discussion", "days": ["mon", "wed", "fri"], "place": "eecs", "start": "12:30", "end": "16:00", "p": 1 },
+   { "id": "j3", "label": "Robotics project team", "days": ["tue", "thu"], "place": "fmcrb", "start": "13:00", "end": "17:00", "p": 0.7 },
+   { "id": "j4", "label": "EECS 482 project lab", "days": ["tue", "thu"], "place": "dude", "start": "19:00", "end": "23:30", "p": 0.8,
      "alt": [ { "place": "ugli", "p": 0.3 } ] },
-   { "id": "j5", "label": "Gym", "days": ["sat"], "place": "ncrb", "start": "11:00", "end": "12:30", "p": 0.6 }
+   { "id": "j5", "label": "Gym at NCRB", "days": ["sat"], "place": "ncrb", "start": "11:00", "end": "12:30", "p": 0.6 }
   ]
  },
  {
@@ -23,11 +23,11 @@
   "modes": { "bike": false, "maxWalkMin": 25, "lateHour": "21:00", "maxLateWalkMin": 12 },
   "theta": { "vTime": 14, "vDark": 30, "vStrand": 35, "wBath": 120, "wSize": 5, "wLight": 25 },
   "week": [
-   { "id": "m1", "label": "Clinical", "days": ["tue", "thu"], "place": "uh", "start": "06:30", "end": "15:00", "p": 1,
+   { "id": "m1", "label": "PNE 350 clinical", "days": ["tue", "thu"], "place": "uh", "start": "06:30", "end": "15:00", "p": 1,
      "alt": [ { "place": "mott", "p": 0.4 } ] },
-   { "id": "m2", "label": "Classes", "days": ["mon", "wed"], "place": "nursing", "start": "09:00", "end": "12:00", "p": 1 },
-   { "id": "m3", "label": "Seminar", "days": ["fri"], "place": "nursing", "start": "10:00", "end": "12:00", "p": 1 },
-   { "id": "m4", "label": "Study", "days": ["mon", "wed"], "place": "thsl", "start": "13:00", "end": "17:00", "p": 0.7 }
+   { "id": "m2", "label": "NURS 372 lecture", "days": ["mon", "wed"], "place": "nursing", "start": "09:00", "end": "12:00", "p": 1 },
+   { "id": "m3", "label": "NURS 373 seminar", "days": ["fri"], "place": "nursing", "start": "10:00", "end": "12:00", "p": 1 },
+   { "id": "m4", "label": "Study group, Taubman", "days": ["mon", "wed"], "place": "thsl", "start": "13:00", "end": "17:00", "p": 0.7 }
   ]
  },
  {
@@ -38,11 +38,11 @@
   "modes": { "bike": true, "maxWalkMin": 25, "lateHour": "21:30", "maxLateWalkMin": 15 },
   "theta": { "vTime": 18, "vDark": 12, "vStrand": 20, "wBath": 40, "wSize": 10, "wLight": 35 },
   "week": [
-   { "id": "p1", "label": "Classes", "days": ["mon", "wed"], "place": "ross", "start": "10:00", "end": "13:00", "p": 1 },
-   { "id": "p2", "label": "Classes", "days": ["tue", "thu"], "place": "ross", "start": "11:30", "end": "14:30", "p": 1 },
-   { "id": "p3", "label": "Shop job", "days": ["mon", "wed", "thu"], "place": "kerrytown", "start": "17:00", "end": "21:00", "p": 0.9,
+   { "id": "p1", "label": "FIN 300 and MKT 300", "days": ["mon", "wed"], "place": "ross", "start": "10:00", "end": "13:00", "p": 1 },
+   { "id": "p2", "label": "TO 300 and BCOM 250", "days": ["tue", "thu"], "place": "ross", "start": "11:30", "end": "14:30", "p": 1 },
+   { "id": "p3", "label": "Kerrytown shop shift", "days": ["mon", "wed", "thu"], "place": "kerrytown", "start": "17:00", "end": "21:00", "p": 0.9,
      "alt": [ { "place": "mainst", "p": 0.3 } ] },
-   { "id": "p4", "label": "Shop job", "days": ["sat"], "place": "kerrytown", "start": "10:00", "end": "16:00", "p": 0.9,
+   { "id": "p4", "label": "Saturday shop shift", "days": ["sat"], "place": "kerrytown", "start": "10:00", "end": "16:00", "p": 0.9,
      "alt": [ { "place": "mainst", "p": 0.3 } ] }
   ]
  },
@@ -54,11 +54,11 @@
   "modes": { "bike": true, "maxWalkMin": 30, "lateHour": "22:30", "maxLateWalkMin": 20 },
   "theta": { "vTime": 9, "vDark": 6, "vStrand": 10, "wBath": 30, "wSize": 14, "wLight": 12 },
   "week": [
-   { "id": "l1", "label": "Lectures", "days": ["mon", "wed", "fri"], "place": "angell", "start": "10:00", "end": "12:00", "p": 1 },
-   { "id": "l2", "label": "Chem lecture and lab", "days": ["tue", "thu"], "place": "chem", "start": "09:00", "end": "13:00", "p": 1 },
-   { "id": "l3", "label": "Library", "days": ["sun", "mon", "tue", "wed", "thu"], "place": "ugli", "start": "19:00", "end": "23:00", "p": 0.7,
+   { "id": "l1", "label": "BIOLOGY 305 and EEB 390", "days": ["mon", "wed", "fri"], "place": "angell", "start": "10:00", "end": "12:00", "p": 1 },
+   { "id": "l2", "label": "CHEM 215 lecture and 216 lab", "days": ["tue", "thu"], "place": "chem", "start": "09:00", "end": "13:00", "p": 1 },
+   { "id": "l3", "label": "Late study at the UgLi", "days": ["sun", "mon", "tue", "wed", "thu"], "place": "ugli", "start": "19:00", "end": "23:00", "p": 0.7,
      "alt": [ { "place": "hatcher", "p": 0.2 } ] },
-   { "id": "l4", "label": "Gym", "days": ["tue", "thu", "sat"], "place": "imsb", "start": "16:30", "end": "18:00", "p": 0.8 }
+   { "id": "l4", "label": "Gym at the IM Building", "days": ["tue", "thu", "sat"], "place": "imsb", "start": "16:30", "end": "18:00", "p": 0.8 }
   ]
  },
  {
@@ -69,10 +69,10 @@
   "modes": { "bike": false, "maxWalkMin": 30, "lateHour": "22:00", "maxLateWalkMin": 15 },
   "theta": { "vTime": 12, "vDark": 18, "vStrand": 30, "wBath": 70, "wSize": 12, "wLight": 30 },
   "week": [
-   { "id": "s1", "label": "Classes", "days": ["mon", "tue", "wed", "thu", "fri"], "place": "music", "start": "09:00", "end": "14:00", "p": 1 },
-   { "id": "s2", "label": "Rehearsal", "days": ["mon", "wed", "thu"], "place": "music", "start": "18:00", "end": "22:00", "p": 0.9,
+   { "id": "s1", "label": "THEORY 238, MUSICOL 345, lessons", "days": ["mon", "tue", "wed", "thu", "fri"], "place": "music", "start": "09:00", "end": "14:00", "p": 1 },
+   { "id": "s2", "label": "Orchestra rehearsal", "days": ["mon", "wed", "thu"], "place": "music", "start": "18:00", "end": "22:00", "p": 0.9,
      "alt": [ { "place": "hill", "p": 0.3 } ] },
-   { "id": "s3", "label": "Practice", "days": ["sat"], "place": "music", "start": "13:00", "end": "17:00", "p": 0.6 }
+   { "id": "s3", "label": "Practice rooms", "days": ["sat"], "place": "music", "start": "13:00", "end": "17:00", "p": 0.6 }
   ]
  },
  {
@@ -83,10 +83,78 @@
   "modes": { "bike": false, "maxWalkMin": 25, "lateHour": "22:00", "maxLateWalkMin": 12 },
   "theta": { "vTime": 25, "vDark": 8, "vStrand": 15, "wBath": 90, "wSize": 9, "wLight": 20 },
   "week": [
-   { "id": "n1", "label": "Classes", "days": ["mon", "tue", "wed", "thu", "fri"], "place": "law", "start": "09:00", "end": "12:30", "p": 1 },
-   { "id": "n2", "label": "Library", "days": ["mon", "tue", "wed", "thu"], "place": "hatcher", "start": "14:00", "end": "18:00", "p": 0.8,
+   { "id": "n1", "label": "Contracts, Torts, Civil Procedure", "days": ["mon", "tue", "wed", "thu", "fri"], "place": "law", "start": "09:00", "end": "12:30", "p": 1 },
+   { "id": "n2", "label": "Case reading", "days": ["mon", "tue", "wed", "thu"], "place": "hatcher", "start": "14:00", "end": "18:00", "p": 0.8,
      "alt": [ { "place": "ugli", "p": 0.3 } ] },
-   { "id": "n3", "label": "Gym", "days": ["mon", "wed", "fri"], "place": "ccrb", "start": "07:00", "end": "08:00", "p": 0.6 }
+   { "id": "n3", "label": "Morning gym", "days": ["mon", "wed", "fri"], "place": "ccrb", "start": "07:00", "end": "08:00", "p": 0.6 }
+  ]
+ },
+ {
+  "id": "dev", "name": "Dev", "program": "Business (Ross BBA) junior, job downtown", "color": "#5b6b2a",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": false,
+  "cap": 1100,
+  "modes": { "bike": false, "maxWalkMin": 25, "lateHour": "22:00", "maxLateWalkMin": 15 },
+  "theta": { "vTime": 20, "vDark": 15, "vStrand": 25, "wBath": 60, "wSize": 8, "wLight": 20 },
+  "week": [
+   { "id": "d1", "label": "FIN 300 and MKT 300", "days": ["mon", "wed"], "place": "ross", "start": "08:30", "end": "11:30", "p": 1 },
+   { "id": "d2", "label": "TO 300 lecture", "days": ["tue", "thu"], "place": "ross", "start": "10:00", "end": "11:30", "p": 1 },
+   { "id": "d3", "label": "ECON 401 lecture", "days": ["tue", "thu"], "place": "angell", "start": "13:00", "end": "14:30", "p": 1 },
+   { "id": "d4", "label": "Coffee shop shift, Kerrytown", "days": ["mon", "wed", "fri"], "place": "kerrytown", "start": "16:00", "end": "21:00", "p": 0.9,
+     "alt": [ { "place": "mainst", "p": 0.3 } ] },
+   { "id": "d5", "label": "Case team meeting", "days": ["sun"], "place": "ross", "start": "18:00", "end": "21:00", "p": 0.7,
+     "alt": [ { "place": "ugli", "p": 0.3 } ] },
+   { "id": "d6", "label": "Saturday shift, Main St", "days": ["sat"], "place": "mainst", "start": "10:00", "end": "16:00", "p": 0.6 }
+  ]
+ },
+ {
+  "id": "clara", "name": "Clara", "program": "Music (SMTD) violin performance junior, North Campus", "color": "#9c3f62",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": false,
+  "cap": 950,
+  "modes": { "bike": false, "maxWalkMin": 25, "lateHour": "21:30", "maxLateWalkMin": 12 },
+  "theta": { "vTime": 12, "vDark": 28, "vStrand": 35, "wBath": 50, "wSize": 10, "wLight": 30 },
+  "week": [
+   { "id": "c1", "label": "THEORY 238 lecture", "days": ["mon", "wed"], "place": "music", "start": "10:00", "end": "11:30", "p": 1 },
+   { "id": "c2", "label": "MUSICOL 345 lecture", "days": ["tue", "thu"], "place": "music", "start": "10:30", "end": "12:00", "p": 1 },
+   { "id": "c3", "label": "Violin lesson and studio class", "days": ["fri"], "place": "music", "start": "13:00", "end": "15:00", "p": 1 },
+   { "id": "c4", "label": "Orchestra rehearsal", "days": ["mon", "tue", "wed", "thu"], "place": "music", "start": "19:00", "end": "22:00", "p": 0.9,
+     "alt": [ { "place": "hill", "p": 0.4 } ] },
+   { "id": "c5", "label": "Practice rooms", "days": ["sat", "sun"], "place": "music", "start": "13:00", "end": "17:00", "p": 0.8 }
+  ]
+ },
+ {
+  "id": "amara", "name": "Amara", "program": "Biochemistry (LSA) pre-med, research assistant on Medical Campus", "color": "#1f7a7a",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": false,
+  "cap": 1050,
+  "modes": { "bike": false, "maxWalkMin": 20, "lateHour": "21:00", "maxLateWalkMin": 10 },
+  "theta": { "vTime": 24, "vDark": 30, "vStrand": 40, "wBath": 80, "wSize": 6, "wLight": 18 },
+  "week": [
+   { "id": "a1", "label": "Research assistant shift", "days": ["mon", "wed", "fri"], "place": "uh", "start": "06:00", "end": "10:00", "p": 1,
+     "alt": [ { "place": "mott", "p": 0.3 } ] },
+   { "id": "a2", "label": "CHEM 351 lecture", "days": ["mon", "wed", "fri"], "place": "chem", "start": "11:00", "end": "12:00", "p": 1 },
+   { "id": "a3", "label": "BIOLOGY 305 lecture", "days": ["tue", "thu"], "place": "angell", "start": "10:00", "end": "11:30", "p": 1 },
+   { "id": "a4", "label": "CHEM 352 lab", "days": ["tue", "thu"], "place": "chem", "start": "13:00", "end": "16:00", "p": 1 },
+   { "id": "a5", "label": "MCAT study, Taubman", "days": ["mon", "tue", "wed", "thu"], "place": "thsl", "start": "17:00", "end": "21:00", "p": 0.7,
+     "alt": [ { "place": "ugli", "p": 0.3 } ] }
+  ]
+ },
+ {
+  "id": "mateo", "name": "Mateo", "program": "Mechanical Engineering senior, research lab on North, bikes", "color": "#b0602a",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": false,
+  "cap": 1300,
+  "modes": { "bike": true, "maxWalkMin": 20, "lateHour": "22:00", "maxLateWalkMin": 15 },
+  "theta": { "vTime": 30, "vDark": 10, "vStrand": 20, "wBath": 100, "wSize": 12, "wLight": 15 },
+  "week": [
+   { "id": "t1", "label": "Research lab, GG Brown", "days": ["mon", "wed", "fri"], "place": "ggbrown", "start": "09:00", "end": "18:00", "p": 1 },
+   { "id": "t2", "label": "Research lab, GG Brown", "days": ["tue", "thu"], "place": "ggbrown", "start": "09:00", "end": "13:00", "p": 1 },
+   { "id": "t3", "label": "Undergrad research, GG Brown", "days": ["tue", "thu"], "place": "ggbrown", "start": "14:00", "end": "17:00", "p": 1 },
+   { "id": "t4", "label": "Late test runs, robotics lab", "days": ["tue", "thu"], "place": "fmcrb", "start": "19:00", "end": "23:00", "p": 0.5,
+     "alt": [ { "place": "dude", "p": 0.3 } ] },
+   { "id": "t5", "label": "Groceries at Kroger", "days": ["sat"], "place": "kroger", "start": "10:00", "end": "11:00", "p": 0.8 },
+   { "id": "t6", "label": "Pickup soccer at NCRB", "days": ["sun"], "place": "ncrb", "start": "17:00", "end": "19:00", "p": 0.6 }
   ]
  }
 ]

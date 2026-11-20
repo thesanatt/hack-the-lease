@@ -1,0 +1,12 @@
+{
+  "name": "quorum-cards",
+  "private": true,
+  "type": "module",
+  "description": "Builds the printable student cards (docs/cards/student_cards.pdf). Not needed to run the app.",
+  "scripts": {
+    "cards": "node make_cards.mjs"
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4"
+  }
+}

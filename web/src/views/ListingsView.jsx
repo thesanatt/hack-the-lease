@@ -13,6 +13,8 @@ import {
 } from './listings/compute.js';
 import PostCard from './listings/PostCard.jsx';
 import Compare from './listings/Compare.jsx';
+import { fitScores, datesScore } from './listings/fit.js';
+import { pickFromHash } from '../hashParam.js';
 import './listings/listings.css';
 
 let streetsP = null;
@@ -34,7 +36,7 @@ const mapName = (s, n = 20) => {
 export default function ListingsView({ api }) {
   const version = useConfigVersion(api);
   const { personas, homes, places, placeById } = api.data;
-  const [personaId, setPersonaId] = useState(personas[0]?.id);
+  const [personaId, setPersonaId] = useState(() => pickFromHash('who', personas, personas[0]?.id)); // #listings?who=<id>
   const persona = personas.find((p) => p.id === personaId) || personas[0];
   const [streets, setStreets] = useState(null);
   const [samples, setSamples] = useState(null);
@@ -100,6 +102,12 @@ export default function ListingsView({ api }) {
     n: it.post.n, name: it.l.name,
     why: [!Number.isFinite(it.l.rent) && 'add the rent', !routable(it.l) && 'drop a pin'].filter(Boolean).join(' and '),
   }));
+  // Fit scores among the compared places (docs/ROUND3.md part 2): same rows as the table, dates for the chosen semester
+  const fits = useMemo(() => {
+    if (!rows || !fresh) return null;
+    const conf = new Map(items.filter((it) => it.l).map((it) => [it.post.id, it.l.confidence]));
+    return fitScores(rows, { dates: (r) => (r.kind === 'post' ? datesScore(coverById.get(r.postId), conf.get(r.postId)) : 100) });
+  }, [rows, fresh, items, coverById]);
   const sentence = rows && fresh ? bestSentence(rows, money, { fits: (r) => coverById.get(r.postId)?.ok, semLabel: sem.label }) : null;
   const topHomeIds = useMemo(() => (ranked ? ranked.rows.filter((r) => r.kind === 'home').slice(0, 3).map((r) => r.id) : []), [ranked]);
 
@@ -140,6 +148,7 @@ export default function ListingsView({ api }) {
     }
     setText(''); setFromSample(null);
   };
+  const setTo = (id, v) => setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, to: String(v).slice(0, 120) } : p)));
   const edit = (id, patch) => setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, edits: { ...p.edits, ...patch } } : p)));
   const remove = (id) => {
     setPosts((ps) => ps.filter((p) => p.id !== id));
@@ -213,6 +222,7 @@ export default function ListingsView({ api }) {
                 open={openId === it.post.id} onToggle={() => setOpenId((o) => (o === it.post.id ? null : it.post.id))}
                 draft={openId === it.post.id ? (drafts[it.post.id] ?? autoDraft) : ''}
                 onDraft={(v) => setDrafts((d) => ({ ...d, [it.post.id]: v }))}
+                fit={fits?.get(postPointId(it.post)) || null} to={it.post.to || ''} setTo={(v) => setTo(it.post.id, v)}
                 firstName={firstName} setFirstName={(v) => { setFirstName(v); setDrafts((d) => { const n = { ...d }; delete n[it.post.id]; return n; }); }} />
             ))}
           </div>
@@ -232,7 +242,7 @@ export default function ListingsView({ api }) {
         <h2 id="lv-cmp-h">How they compare for your week</h2>
         <Compare rows={rows} notes={notes} sentence={sentence}
           waiting={!fresh ? 'Routing your week from each place' : (!items.length ? 'Paste a post to see it next to the best sample homes.' : null)}
-          unranked={unranked} />
+          unranked={unranked} fits={fits} />
       </section>
     </div>
   );

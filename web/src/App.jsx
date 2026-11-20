@@ -6,6 +6,7 @@ import { Component, Suspense, lazy, useEffect, useState } from 'react';
 import { createEngine } from './engine/index.js';
 import { AssumptionsDrawer } from './components/index.js';
 import MeView from './views/MeView.jsx';
+import { splitHash } from './hashParam.js';
 
 const viewFiles = import.meta.glob('./views/*View.jsx');
 const lazyView = (name) => {
@@ -49,28 +50,31 @@ function getEngine() {
   return enginePromise;
 }
 
+// The part before "?" picks the view; deep links like #me?who=maya keep their query for the view to read.
 const viewFromHash = () => {
-  const h = (window.location.hash || '').replace('#', '');
-  return VIEWS.some((v) => v.id === h) ? h : 'me';
+  const { view } = splitHash(window.location.hash);
+  return VIEWS.some((v) => v.id === view) ? view : 'me';
 };
+const queryFromHash = () => splitHash(window.location.hash).query;
 
 export default function App() {
   const [api, setApi] = useState(null);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState({ msg: 'Starting', f: 0 });
   const [view, setView] = useState(viewFromHash);
+  const [query, setQuery] = useState(queryFromHash);
   const [drawer, setDrawer] = useState(false);
 
   useEffect(() => {
     const fn = (msg, f) => setProgress({ msg, f });
     progressListeners.add(fn);
     getEngine().then((a) => { setApi(a); if (import.meta.env.DEV) window.__quorum = a; }).catch((e) => { console.error(e); setError(e); });
-    const onHash = () => { setView(viewFromHash()); window.scrollTo(0, 0); };
+    const onHash = () => { setView(viewFromHash()); setQuery(queryFromHash()); window.scrollTo(0, 0); };
     window.addEventListener('hashchange', onHash);
     return () => { progressListeners.delete(fn); window.removeEventListener('hashchange', onHash); };
   }, []);
 
-  const go = (id) => { window.location.hash = id; setView(id); window.scrollTo(0, 0); };
+  const go = (id) => { window.location.hash = id; setView(id); setQuery(''); window.scrollTo(0, 0); };
   const current = VIEWS.find((v) => v.id === view);
   const Comp = current?.Comp;
 
@@ -114,7 +118,7 @@ export default function App() {
           </div>
         )}
         {api && Comp && (
-          <ViewBoundary key={view} label={current.label}>
+          <ViewBoundary key={`${view}?${query}`} label={current.label}>
             <Suspense fallback={<div className="empty" role="status">Opening {current.label}</div>}>
               <Comp api={api} />
             </Suspense>

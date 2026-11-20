@@ -103,3 +103,23 @@
 
 @media (max-width: 1100px) { .you-hero { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .you .chip, .t3-card { transition: none; } }
+
+/* phone (a judge's phone is about 390 px wide): no horizontal scroll, top 3 and the map stay readable */
+@media (max-width: 560px) {
+  .you { gap: 18px; }
+  .you-hero { gap: 16px; }
+  .you-map .map { height: 440px !important; }
+  .you-map-cap { position: static; max-width: none; border: 0; border-top: 1px solid var(--y-line); border-radius: 0; padding: 8px 10px; }
+  .t3-card { grid-template-columns: minmax(0, 1fr); padding: 10px 12px; }
+  .t3-sub { flex-wrap: wrap; padding-left: 0; margin-top: 0; gap: 2px 8px; }
+  .t3-room { white-space: normal; }
+  .t3-sample { margin-left: 0; }
+  .t3-nums { grid-template-columns: repeat(3, minmax(0, auto)); gap: 4px 14px; }
+  .t3-card.first .t3-num .v { font-size: 24px; }
+  .t3-num .v { font-size: 18px; }
+  .t3-why { white-space: normal; }
+  .t3-card.first .t3-name { font-size: 18px !important; }
+  .t3-card.ghost.first { min-height: 200px; }
+  .to-legend { gap: 4px; }
+  .to-key { margin-left: 0; }
+}
