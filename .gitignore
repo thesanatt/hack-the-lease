@@ -20,9 +20,8 @@ Thumbs.db
 
 # temporary recording frames
 scripts/record/.video/
-
-# Vercel CLI link (local only)
-.vercel/
-
-.vercel
 .env*
+.vercel
+.vercel/
+web/public/img/hero-local.jpg
+.vscode/

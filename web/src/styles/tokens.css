@@ -1,39 +1,58 @@
 /* Quorum design tokens (docs/DESIGN_DIRECTION.md). Transit-map clarity: warm paper, ink, hairlines,
-   real GTFS route colors, a navy band for time after dark, one sand-to-green scale for fit.
+   real GTFS route colors, a navy band for time after dark, one dark-to-gold scale for fit.
    Contract names (engine/CONTRACTS.md) are kept: --paper --paper-2 --ink --ink-2 --muted --line --accent
    --accent-ink --good --bad --warn --dark-walk --font-* --r --s1..--s6. New names are additions. */
 :root {
-  --paper: #f7f5f0;        /* page */
-  --paper-2: #efebe2;      /* quiet fills: entries on a week, table stripes, input wells */
-  --card: #ffffff;         /* plain white cards */
-  --ink: #1a1a1a;          /* text, walking lines */
-  --ink-2: #3d3d3a;        /* secondary text */
-  --muted: #6b6b6b;        /* labels, units, captions */
-  --line: #dedad2;         /* 1 px hairlines */
-  --line-2: #c9c4b8;       /* a hairline that must hold on white */
-  --accent: #1f6f4a;       /* the best fit green: selection, the one primary button */
-  --accent-ink: #ffffff;   /* text on accent */
-  --accent-soft: #e3eee7;  /* selected row, focus wash */
-  --good: #1f6f4a;
-  --bad: #b3261e;
-  --warn: #9a6400;
-  --dark-walk: #1e2a4a;    /* time after civil dusk: the navy band */
-  --night: #1e2a4a;
-  --night-band: #d9deea;  /* the navy band behind evening hours, as a flat tint so blocks on it stay crisp */
+  /* Night theme: a hotel lounge at night. Ink backgrounds, cream text, gold for headlines, accents and the primary
+     button (with ink text on it), gold glow for hover and highlights, muted for secondary text. Red and orange
+     only for warnings. Contrast on --ink: cream 16.9:1, gold 9.6:1, muted 7.3:1; ink on gold 9.6:1.
+     --text is what used to be --ink (the text color); --ink is now the background, as the brand asks. */
+  --ink: #0B0B0D;
+  --cream: #F4EFE6;
+  --gold: #E3B04B;
+  --gold-glow: #E3B04B33;
+  --muted: #A39E94;
+
+  --text: var(--cream);
+  /* older brand names, kept as aliases so earlier CSS reads the new palette */
+  --navy: var(--ink);
+  --sky: var(--gold);
+  --sky-soft: var(--gold-glow);
+  --sky-ink: var(--gold);
+  --sun: var(--gold);
+
+  --paper: var(--ink);     /* page */
+  --paper-2: #1a1916;      /* quiet fills: entries on a week, table stripes, input wells */
+  --card: #131215;         /* cards, one step up from the page */
+  --ink-2: #d8d1c4;        /* secondary text that must stay strong (13.2:1) */
+  --line: #2b2925;         /* 1 px hairlines */
+  --line-2: #47433b;       /* a hairline that must hold on cards */
+  --rule-gold: rgba(227, 176, 75, 0.45); /* thin gold rule lines */
+  --accent: var(--gold);   /* primary buttons, selection */
+  --accent-ink: var(--ink);
+  --accent-soft: var(--gold-glow);
+  --good: var(--gold);
+  --bad: #ff8a7a;          /* warning text on dark (7.9:1) */
+  --bad-fill: #3a1714;
+  --warn: #f2a65a;         /* caution text on dark (9.1:1) */
+  --warn-fill: #33230f;
+  --dark-walk: #8f8a80;
+  --night: #8f8a80;
+  --night-band: #24221d;   /* the band behind evening hours on dark */
 
   /* modes in a week ribbon. Bus rides use their own GTFS route color. */
-  --walk: #1a1a1a;
-  --bike: #3d3d3a;
-  --ride: #2a5c8f;         /* fallback when a ride has no route color */
-  --wait: #9a6400;
+  --walk: var(--cream);
+  --bike: #cfc8bb;
+  --ride: #7fa7d6;         /* fallback when a ride has no route color */
+  --wait: #f2a65a;
 
   /* fit, worst to best: one ordered scale, light sand to deep green. Never rainbow.
-     The light end sits under 2:1 on paper, so fit dots always carry a 1 px ink ring. */
-  --fit-1: #cdb57c;
-  --fit-2: #98ad72;
-  --fit-3: #66976a;
-  --fit-4: #3d8159;
-  --fit-5: #1f6f4a;
+     The dark end sits under 2:1 on the page, so fit dots always carry a 1 px ring. */
+  --fit-1: #4a453c;
+  --fit-2: #6f6248;
+  --fit-3: #9a7f4a;
+  --fit-4: #c49a4b;
+  --fit-5: #E3B04B;
 
   /* group members: one fixed color each, used everywhere (chip, room, route, ribbon).
      Validated categorical order (adjacent CVD separation passes on white). Light ones need a label beside them. */
@@ -75,9 +94,9 @@
   --fs-num-big: 44px;
   --track-caps: 0.04em;
 
-  --focus: #1f6f4a;
-  --sel: #e3eee7;
-  --accent-hover: #185a3c;
+  --focus: var(--gold);
+  --sel: var(--sky-soft);
+  --accent-hover: #edc370;
   --rule-heavy: 1px solid var(--line);
   --rule-light: 1px solid var(--line);
   --motion: 200ms;

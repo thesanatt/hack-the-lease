@@ -28,6 +28,7 @@ function copyServer() {
     apply: 'build',
     closeBundle() {
       copyFileSync(path.join(here, 'serve.mjs'), path.join(here, 'dist', 'serve.mjs'));
+      copyFileSync(path.join(here, 'api.mjs'), path.join(here, 'dist', 'api.mjs'));
     },
   };
 }
@@ -35,6 +36,6 @@ function copyServer() {
 export default defineConfig({
   base: './',
   plugins: [react(), devCsp(), copyServer()],
-  server: { fs: { allow: ['..'] } },
+  server: { fs: { allow: ['..'] }, proxy: { '/api': 'http://localhost:4173' } },
   build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 1500, assetsInlineLimit: 0 },
 });

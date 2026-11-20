@@ -2,11 +2,13 @@
 //   cd web && npm run build && node dist/serve.mjs          (serves dist on http://localhost:4173)
 //   node serve.mjs [dir] [port]                              (from web/, serves ./dist by default)
 // Fallback without Node:  cd web/dist && python -m http.server 4173
-// Everything is served from this one origin; the app makes no other network requests.
+// Everything is served from this one origin. /api/* (api.mjs) is the only part that calls out: Gemini and Resend,
+// and only when their keys are set in web/.env. Without keys the app is fully offline as before.
 import { createServer } from 'node:http';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { handleApi, loadEnv } from './api.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const argDir = process.argv[2];
@@ -21,7 +23,10 @@ const TYPES = {
   '.map': 'application/json',
 };
 
-const server = createServer((req, res) => {
+loadEnv(here);
+
+const server = createServer(async (req, res) => {
+  if (req.url.startsWith('/api/') && await handleApi(req, res)) return;
   let rel;
   try { rel = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400).end(); return; }
   let file = path.normalize(path.join(root, rel));

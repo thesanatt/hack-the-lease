@@ -173,3 +173,21 @@ python pipeline/build_places.py     # about 60 s, reads the local Michigan extra
 python pipeline/build_homes.py      # under 1 s, reads streets.geojson
 node scripts/check_data.mjs         # about 2 s: schema, labels, ASCII, every persona week from every home, group caps
 ```
+
+## listing_details.json (SYNTHETIC)
+
+Landlord-style details for each of the 30 SYNTHETIC homes: description, move-in date, lease, deposit, utilities,
+internet, laundry, parking, pets, heat and cooling, kitchen, bathrooms, outdoor space, street noise. Made up for the
+demo by `scripts/make_listing_details.mjs` (seeded, consistent with each home's rooms and kind). Not real listings,
+landlords or prices. Shown on the Saved tab and used for the pets, parking and quiet checks on Browse.
+
+## Schedule screenshots
+
+Read on the device by Tesseract.js 5 (Apache 2.0) with the `eng` 4.0.0_best_int model from
+`@tesseract.js-data/eng`, bundled in `web/public/ocr`. Nothing is sent anywhere.
+
+## places.json additions (Nov 20, 4 PM)
+
+Weiser Hall (500 Church St, formerly the Dennison Building), East Hall (530 Church St), Mason Hall (419 State St)
+and the Modern Languages Building (812 Washington St), with coordinates from the mguide.app U-M building directory,
+looked up Nov 20 2026. The other 31 places are from OSM as before. MATH and PSYCH classes default to East Hall.

@@ -41,12 +41,20 @@ function loadGeo() {
   return geoPromise;
 }
 
-const PAPER = '#F7F5F0';
-const INK = '#1A1A1A';
-const GRAY = '#6B6B6B';
-const HAIR = '#DEDAD2';
+// Night map (tokens.css): ink background, cream marks and labels, muted gray, dark hairlines.
+const PAPER = '#0B0B0D';
+const INK = '#F4EFE6';
+const GRAY = '#A39E94';
+const HAIR = '#2b2925';
+const CARD = '#131215';
+const GOLD = '#E3B04B';
+// Area names drawn as quiet caps labels on every map.
+const AREAS = [
+  ['CENTRAL CAMPUS', 42.2768, -83.7382], ['NORTH CAMPUS', 42.2925, -83.7160], ['DOWNTOWN', 42.2795, -83.7490],
+  ['KERRYTOWN', 42.2855, -83.7452], ['MEDICAL', 42.2840, -83.7290], ['SOUTH U', 42.2735, -83.7330],
+];
 // Sequential fit scale: light sand (worst) to deep green (best), interpolated in OKLab, lightness monotone.
-export const FIT_STOPS = ['#d8c69a', '#adb085', '#829a71', '#56855d', '#1f6f4a'];
+export const FIT_STOPS = ['#5a554c', '#7d6c4c', '#a3854d', '#c99b4c', '#E3B04B']; // dark gray to gold on the night map
 
 const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 export function fitColor(f) {
@@ -75,7 +83,7 @@ const CSS = `
 .qmap .maplibregl-ctrl-attrib { display: none; }
 .qmap .maplibregl-ctrl-group { box-shadow: none; border: 1px solid ${HAIR}; border-radius: 8px; overflow: hidden; }
 .qmap .maplibregl-ctrl-group button { width: 28px; height: 28px; }
-.qmap-card { background: #fff; border: 1px solid ${HAIR}; border-radius: 8px; font-family: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif; font-size: 13px; color: ${INK}; }
+.qmap-card { background: ${CARD}; border: 1px solid ${HAIR}; border-radius: 8px; font-family: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif; font-size: 13px; color: ${INK}; }
 .qmap-legend { position: absolute; left: 8px; bottom: 8px; z-index: 2; padding: 6px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; max-width: calc(100% - 140px); }
 .qmap-legend .it { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .qmap-legend .sw { display: inline-flex; gap: 2px; }
@@ -85,13 +93,13 @@ const CSS = `
 .qmap-legend .sq { width: 8px; height: 8px; border: 1.5px solid ${INK}; background: ${PAPER}; box-sizing: border-box; }
 .qmap-legend .muted { color: ${GRAY}; }
 .qmap-src { position: absolute; right: 8px; bottom: 6px; z-index: 2; font: 11px 'IBM Plex Sans', Arial, sans-serif; color: ${GRAY}; pointer-events: none; }
-.qmap-rank { width: 22px; height: 22px; border-radius: 11px; border: 2px solid #fff; box-sizing: border-box; padding: 0; display: flex; align-items: center; justify-content: center;
+.qmap-rank { width: 22px; height: 22px; border-radius: 11px; border: 2px solid ${INK}; box-sizing: border-box; padding: 0; display: flex; align-items: center; justify-content: center;
   font: 600 13px/1 'IBM Plex Sans', Arial, sans-serif; cursor: pointer; }
 .qmap-rank.sel { width: 28px; height: 28px; border-radius: 14px; font-size: 15px; outline: 2px solid ${INK}; outline-offset: 1px; }
 .qmap-rank:focus-visible { outline: 2px solid ${INK}; outline-offset: 3px; }
 .qmap-namewrap { display: flex; }
 .qmap-namewrap.flip .qmap-name { transform: translateX(calc(-100% - 2 * var(--off, 10px))); }
-.qmap-name { font: 600 13px 'IBM Plex Sans', Arial, sans-serif; color: ${INK}; background: #fff; border: 1px solid ${HAIR}; border-radius: 6px; padding: 1px 6px; white-space: nowrap; cursor: pointer; }
+.qmap-name { font: 600 13px 'IBM Plex Sans', Arial, sans-serif; color: ${INK}; background: ${CARD}; border: 1px solid ${HAIR}; border-radius: 6px; padding: 1px 6px; white-space: nowrap; cursor: pointer; }
 .qmap-name.quiet { font-weight: 400; background: ${PAPER}; border-color: transparent; padding: 0 3px; }
 .qmap-place { width: 8px; height: 8px; position: relative; pointer-events: none; }
 .qmap-place i { position: absolute; inset: 0; border: 1.5px solid ${INK}; background: ${PAPER}; box-sizing: border-box; }
@@ -104,6 +112,11 @@ const CSS = `
 .qmap-play .ic { width: 28px; height: 28px; border-radius: 14px; background: ${INK}; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .qmap-play .clk { font: 500 13px 'IBM Plex Sans', Arial, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .qmap-play .leg { color: ${GRAY}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 420px; }
+.qmap-area { font: 600 10px 'IBM Plex Sans', Arial, sans-serif; letter-spacing: 0.16em; color: ${GRAY}; opacity: 0.6; pointer-events: none; white-space: nowrap; z-index: 0 !important; }
+.qmap .maplibregl-marker:not(.qmap-area) { z-index: 1; }
+.qmap .maplibregl-ctrl-group { background: ${CARD}; }
+.qmap .maplibregl-ctrl-group button + button { border-top-color: ${HAIR}; }
+.qmap .maplibregl-ctrl-icon { filter: invert(1); }
 .qmap-tip { position: absolute; z-index: 4; pointer-events: none; padding: 4px 8px; transform: translate(-50%, calc(-100% - 12px)); white-space: nowrap; }
 `;
 let cssDone = false;
@@ -226,6 +239,7 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
   const shapeIdx = useRef(null);
   const tipRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   clickRef.current = onHomeClick;
 
   const showTip = (text, x, y) => {
@@ -238,10 +252,18 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
 
   useEffect(() => {
     let cancelled = false;
-    const m = new maplibregl.Map({
-      container: box.current, style: STYLE, center: [-83.735, 42.283], zoom: 12.4,
-      attributionControl: false, dragRotate: false, pitchWithRotate: false, maxZoom: 17, minZoom: 10,
-    });
+    let m;
+    try {
+      m = new maplibregl.Map({
+        container: box.current, style: STYLE, center: [-83.735, 42.283], zoom: 12.4,
+        attributionControl: false, dragRotate: false, pitchWithRotate: false, maxZoom: 17, minZoom: 10,
+      });
+    } catch (e) {
+      // No WebGL (old phone, locked-down laptop, GPU off): keep the rest of the page working.
+      console.warn('Map unavailable:', e?.message || e);
+      setFailed(true);
+      return undefined;
+    }
     m.touchZoomRotate.disableRotation();
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.current = m;
@@ -257,11 +279,11 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
       const major = ['in', ['get', 'k'], ['literal', ['primary', 'secondary', 'trunk', 'motorway', 'primary_link', 'secondary_link']]];
       const mid = ['==', ['get', 'k'], 'tertiary'];
       m.addLayer({ id: 'streets', type: 'line', source: 'streets', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: {
-        'line-color': ['case', major, '#c9c3b8', mid, '#d6d1c7', '#e2ded5'],
+        'line-color': ['case', major, '#4A4A52', mid, '#36363d', '#2A2A30'],
         'line-width': ['interpolate', ['linear'], ['zoom'], 11, ['case', major, 1.1, mid, 0.7, 0.35], 15, ['case', major, 3.2, mid, 2, 1.2]],
       } });
       m.addLayer({ id: 'routes', type: 'line', source: 'routes', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: {
-        'line-color': ['coalesce', ['get', 'color'], GRAY], 'line-opacity': 0.22,
+        'line-color': ['coalesce', ['get', 'color'], GRAY], 'line-opacity': 0.35,
         'line-width': ['interpolate', ['linear'], ['zoom'], 11, 0.8, 15, 2],
       } });
       m.addLayer({ id: 'paths-casing', type: 'line', source: 'paths', filter: ['!=', ['get', 'dash'], true],
@@ -321,7 +343,7 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
   useEffect(() => {
     const m = map.current;
     if (!ready || !m) return;
-    const rankOf = (id) => { const r = lookup(rankById, id); return Number.isFinite(r) && r >= 1 && r <= 3 ? r : 0; };
+    const rankOf = (id) => { const r = lookup(rankById, id); return Number.isFinite(r) && r >= 1 ? r : 0; };
     const fitOf = (id) => { const f = lookup(fitById, id); return Number.isFinite(f) ? Math.min(Math.max(f, 0), 1) : -1; };
     m.getSource('homes').setData(fc(homes.map((h) => pt(h.lon, h.lat, {
       id: h.id, name: h.name || h.short || h.id, sel: h.id === selectedHomeId, fit: fitOf(h.id), top: rankOf(h.id) > 0 }))));
@@ -338,8 +360,11 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
       const el = document.createElement('button');
       el.type = 'button';
       el.className = `qmap-rank${h.id === selectedHomeId ? ' sel' : ''}`;
-      el.style.background = fill;
-      el.style.color = contrast(fill, '#ffffff') >= contrast(fill, INK) ? '#ffffff' : INK;
+      // 1 = gold fill with ink number; the others: ink fill, cream outline and number.
+      el.style.background = r === 1 ? GOLD : PAPER;
+      el.style.borderColor = r === 1 ? GOLD : INK;
+      el.style.color = r === 1 ? PAPER : INK;
+      void fill;
       el.textContent = String(r);
       el.setAttribute('aria-label', `Pick ${r}: ${h.name || h.id}`);
       el.addEventListener('click', (e) => { e.stopPropagation(); clickRef.current?.(h.id); });
@@ -372,6 +397,12 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
       items.push({ el, label: tx, always: isSel, prio: isSel ? 0.2 : 3, flip: true });
     }
 
+    // area names: quiet caps labels, under everything else
+    for (const [name, lat, lon] of AREAS) {
+      const el = document.createElement('div');
+      el.className = 'qmap-area'; el.textContent = name; el.setAttribute('aria-hidden', 'true');
+      add(el, [lon, lat], {});
+    }
     // campus places: hollow squares, short labels
     for (const p of places) {
       const el = document.createElement('div');
@@ -419,7 +450,7 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
     const pad = { top: Math.min(60, H * 0.15), bottom: Math.min(64, H * 0.18), left: Math.min(40, W * 0.08), right: Math.min(56, W * 0.1) };
     if (b) m.fitBounds(b, { padding: pad, duration: 0, maxZoom: 15.5 });
     // with a trip on the map, the network fades back so the trip reads first
-    m.setPaintProperty('routes', 'line-opacity', drawn.some((p) => p.coords?.length > 1) ? 0 : 0.22);
+    m.setPaintProperty('routes', 'line-opacity', drawn.some((p) => p.coords?.length > 1) ? 0 : 0.35);
     requestAnimationFrame(() => declutter(box.current, labelItems.current, rankMarks.current));
   }, [ready, drawn, fit, homesKey, rankKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -490,15 +521,20 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
     ? (mode === 'step' ? (step + 1 >= stops.length ? 'Back to start' : 'Next step') : 'Step through this trip')
     : (mode === 'run' ? 'Stop' : mode === 'done' ? 'Play again' : 'Play this trip');
   const icon = mode === 'run'
-    ? <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="#fff" /></svg>
+    ? <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill={PAPER} /></svg>
     : reduced && mode === 'step'
-      ? <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l5 4-5 4zM8 2h2v8H8z" fill="#fff" /></svg>
-      : <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5l8 4.5-8 4.5z" fill="#fff" /></svg>;
+      ? <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l5 4-5 4zM8 2h2v8H8z" fill={PAPER} /></svg>
+      : <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5l8 4.5-8 4.5z" fill={PAPER} /></svg>;
 
   return (
     <div className="map qmap" style={{ height }}>
       <div ref={box} style={{ position: 'absolute', inset: 0 }} />
-      {track && (
+      {failed && (
+        <div role="note" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center', color: '#6b665e', fontSize: 14 }}>
+          The map needs WebGL, which this browser has turned off. Every number on this page still works.
+        </div>
+      )}
+      {track && !failed && (
         <div className="qmap-play qmap-card">
           <button type="button" onClick={onPlay} disabled={!ready}>
             <span className="ic">{icon}</span>{label}
