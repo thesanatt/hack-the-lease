@@ -20,3 +20,9 @@ Thumbs.db
 
 # temporary recording frames
 scripts/record/.video/
+
+# Vercel CLI link (local only)
+.vercel/
+
+.vercel
+.env*
