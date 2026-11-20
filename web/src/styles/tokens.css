@@ -31,4 +31,25 @@
   --s4: 16px;
   --s5: 24px;
   --s6: 40px;
+  --s7: 64px;
+
+  /* type scale: key numbers large, labels small caps. Sizes in px at 1280 wide; the projector zoom in
+     app.css scales the whole page, so these stay fixed. */
+  --fs-label: 12px;        /* small caps labels, table heads */
+  --fs-small: 13px;        /* captions, notes */
+  --fs-body: 15px;         /* running text */
+  --fs-lede: 17px;         /* one-line page guides, panel kickers set large */
+  --fs-h3: 18px;
+  --fs-h2: 22px;           /* panel titles */
+  --fs-h1: 34px;           /* view titles */
+  --fs-num: 24px;          /* a stat */
+  --fs-num-big: 40px;      /* the one number a panel is about */
+  --track-caps: 0.08em;
+
+  /* focus and selection */
+  --focus: #b23a1c;
+  --sel: #f1dcc7;          /* selected table row */
+  --accent-hover: #9a3017;
+  --rule-heavy: 2px solid var(--ink);
+  --rule-light: 1px solid var(--line);
 }

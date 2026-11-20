@@ -8,4 +8,5 @@ export { default as MapView } from './MapView.jsx';
 export { default as Matrix } from './Matrix.jsx';
 export { default as DotPlot } from './DotPlot.jsx';
 export { default as NotBuilt } from './NotBuilt.jsx';
+export { default as Empty } from './Empty.jsx';
 export { default as AssumptionsDrawer } from './AssumptionsDrawer.jsx';

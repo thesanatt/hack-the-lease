@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Panel, Pill, Button, Seg, Stat, MapView, NotBuilt } from '../components/index.js';
 import { useConfigVersion } from '../engine/useConfig.js';
 import JumpBar from '../components/JumpBar.jsx';
+import Verdict from './me/Verdict.jsx';
+import CalendarDrop from './me/CalendarDrop.jsx';
 import { rng } from '../../../engine/rng.js';
 import { PARAM_INFO, utility } from '../../../engine/model.js';
 import WeekEditor from './me/WeekEditor.jsx';
@@ -204,7 +206,7 @@ export default function MeView({ api }) {
   return (
     <div>
       <JumpBar items={[
-        { label: 'Persona', find: 'Me' }, { label: 'Your week', find: 'Your week' }, { label: 'Homes', find: 'Homes' },
+        { label: 'Persona', find: 'Me' }, { label: 'Your week', find: 'Your week' }, { label: 'Map', find: 'Map' }, { label: 'Homes', find: 'Homes' },
         { label: 'Picks', find: 'Which week would you rather live?' }, { label: 'Ranking', find: 'Ranking' },
       ]} />
       <Panel title="Me" kicker="One student. Pick a persona, edit the week, answer a few picks, read the ranking."
@@ -226,8 +228,13 @@ export default function MeView({ api }) {
         </div>
       </Panel>
 
+      <Verdict api={api} homes={homes} homeById={homeById} ranked={ranked} weekMap={weekMap} summary={summary}
+        persona={persona} cfg={cfg} entries={effEntries} selected={shownHome}
+        onSelect={(id) => { setSelHome(id); setSelTrip(null); }} />
+
       <div className="grid-week">
         <Panel title="Your week" kicker="Toggle an entry, change its place, add a job">
+          <CalendarDrop api={api} places={places} placeById={placeById} entries={entries} setEntries={setEntries} persona={persona} />
           <WeekEditor entries={effEntries} setEntries={setEntries} places={places} placeById={placeById}
             lateId={lab?.id} movedId={labCentral ? lab?.id : null} />
         </Panel>
@@ -235,7 +242,7 @@ export default function MeView({ api }) {
           <MapView homes={mapHomes} places={mapPlaces} selectedHomeId={shownHome} onHomeClick={(id) => { setSelHome(id); setSelTrip(null); }}
             labelIds={ranked?.rank ? ranked.rank.slice(0, 6).map((r) => r.homeId) : homes.slice(0, 6).map((h) => h.id)}
             paths={paths} height={360} fit={paths.length ? 'paths' : 'all'} />
-          <p className="small muted" style={{ marginTop: 4 }}>Bus legs are drawn stop to stop in the route color; walks are dashed.</p>
+          <p className="small muted" style={{ marginTop: 4 }}>Bus legs follow each trip's route shape from the feed. Walks follow OpenStreetMap streets and are dashed. Play this trip runs the clock door to door.</p>
         </Panel>
       </div>
 

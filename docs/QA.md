@@ -123,8 +123,8 @@ interval covers it only 8 to 9% of the time after 6 picks (81% when truths come 
 app tags that weight "mostly prior".
 
 **"How does a student enter their own week?"** In **Your week** on Me: toggle an entry, change its days, times and
-place, or add a job. Places are a fixed list of 31 real Ann Arbor places, not a free address box. We have not
-timed it.
+place, or add a job. Or import a calendar file or paste schedule lines (see below). Places are a fixed list of 31
+real Ann Arbor places, not a free address box. We have not timed it.
 
 **"Can you load a real listing now?"** Not from the screen. Listings are a JSON file read when the app is built.
 There is no upload button.
@@ -234,6 +234,49 @@ network calls.
 in that house ("from"). The ranking prices the room that is best for Jordan, which is the primary room with its own
 bath at $921. The ranking always picks each student's best room at its asking rent.
 
+## The new pieces, short answers
+
+**"Where do the pros and cons on the verdict card come from?"** From the same utility the ranking uses
+(`engine/explain.js` on top of `engine/model.js`). For each home we take its best room and the student's most
+likely week, with every value at the median of what the picks say. That monthly value splits into seven dollar
+pieces: rent, travel time, time outside after dark, trips with no way that fits, bathroom, size and daylight. The
+pieces add up to the utility exactly; a test checks it for every home and persona. Each piece is compared with
+the middle home, the per-piece median over all 30 homes. The biggest gains are "Why it fits", the biggest costs
+are "Watch out for". Trip lines name a real trip from the timetable. The runner-up line is exact because utility
+is linear in each value. Limit: the card uses one week at median values, while the ranking averages 24 weeks and
+200 value draws. When they disagree, the card says so (section 7).
+
+**"What does the calendar import read, and where does it go?"** Nothing is read until the student ticks the
+consent box. Then it reads an .ics file or pasted lines in this browser, in `engine/ics.js`. It keeps only the
+event title, weekday, start and end time, and location. All-day, cancelled and monthly events are skipped with a
+reason. Locations are matched to our 31 places by name or common short codes such as BBB or NCRB. A location it
+cannot match is flagged and never guessed. The student sees a preview and chooses Replace, Add or Discard. Nothing
+is uploaded: the only server is the static file server on the laptop, and the app makes no network calls. The sample file is SYNTHETIC (section 8).
+
+**"Why not take social media or a resume to know the student better?"** The case sheet
+says to minimize personal data, use consent-based inputs and avoid demographic inference. A home choice needs the
+week and a few trade-offs, not who someone is. So Quorum asks only for the week, walking limits, a private cap
+and a few picks. It never asks for age, gender, race, religion or income, and it infers none of them.
+
+**"Why no reviews from past residents?"** We have no lawful source for them in this data, and we will not invent
+any. Every home here is SYNTHETIC; made-up reviews next to made-up homes would read as facts. With a landlord or
+university partner that holds real, consented reviews, they could sit beside the notes, labeled with their source.
+
+**"How are the tour times found? Does Quorum book or message anyone?"** `engine/tours.js` checks every weekday
+half-hour from 9:00 to 19:00. A slot counts only if every member is free, can reach the house from where they just
+were by walking, bike (only for those who bike) or the real buses within their walking limits, and can get to
+their next entry on time. Slots are scored by group travel minutes plus a penalty for tight connections; different
+days come first. For Broadway, 5 of 100 half-hours work, all on Friday (section 9). Quorum drafts a plain note with
+the house, the group size and the times, and no names, rents or caps. It never sends anything. The listing contact
+is SAMPLE; the group copies the note and sends it themselves.
+
+**"Why not just ask a chatbot?"** A chatbot can talk about bus routes, but it does not run the timetable. Quorum
+routes every trip in the week, for every home, for each of 24 possible fall weeks, on the real TheRide and U-M
+timetables and OpenStreetMap streets. The router matches an independent reference on 3,000 of 3,000 trips and
+r5py within a median of 1 minute (section 6). The rent split is a linear program whose result a separate checker
+verifies: nobody envies anyone, caps hold, and shares add up to the rent. It runs offline in milliseconds, and the
+same inputs always give the same answer.
+
 ## Known limitations
 
 - Walking speed is 1.3 m/s for everyone. No hills, snow or ice.
@@ -246,5 +289,7 @@ bath at $921. The ranking always picks each student's best room at its asking re
 - The operator population is drawn independently from stated shares, with no joint survey data.
 - No user testing yet. The recovery test uses simulated answers.
 - Places come from a fixed list of 31. Listings load from a build-time file.
+- The calendar import keeps weekly patterns only: it ignores EXDATE and UNTIL, and reads every-other-week as weekly.
+- Tour times use each member's most likely week only, and each trip is checked on the December timetable.
 - "No pickup" or "no drop-off" flags in the middle of a trip are not modeled. Flags at a trip's first or last
   stop are (the reference check found that case on route 63 and the pipeline now handles it).

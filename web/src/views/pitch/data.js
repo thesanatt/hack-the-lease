@@ -38,6 +38,44 @@ export function campusExample(api, homeId = DEFAULT_HOME) {
   return { homeId, home: api.data.homeById?.get(homeId) || api.data.homes.find((h) => h.id === homeId), rows, duskS };
 }
 
+// What one student sees: Jordan's most likely week run through every home, each home valued with Jordan's
+// demo values (FICTIONAL persona; the same values the Me tab uses to auto-answer picks). Compares the home with
+// the lowest rent against the home worth the most to Jordan once the week is counted.
+// Hours are real clock minutes in motion (walk, wait, ride, bike) from week.js, times 52/12 weeks a month.
+export const STUDENT = 'jordan';
+export async function studentExample(api, personaId = STUDENT) {
+  const decide = api.mod('decide'), model = api.mod('model');
+  if (!decide?.homeOption || !model?.utility || typeof api.weekFor !== 'function') return null;
+  const persona = api.data.personas.find((p) => p.id === personaId) || api.data.personas[0];
+  if (!persona?.theta) return null;
+  const homes = api.data.homes;
+  const cfg = api.config;
+  const res = await Promise.resolve(api.weekFor(modalRoutine(persona), homes.map((h) => h.id), { cfg }));
+  if (!res) return null;
+  const weeks = res instanceof Map ? res : new Map(Object.entries(res));
+  const perMonth = model.WEEKS_PER_MONTH ?? 52 / 12;
+  const rows = [];
+  for (const home of homes) {
+    const w = weeks.get(home.id);
+    if (!w) continue;
+    const opt = decide.homeOption(home, w, persona.theta, cfg);
+    const u = model.utility(persona.theta, opt);
+    rows.push({
+      home, u, rent: opt.rent, room: opt.room,
+      hours: ((w.weeklyMin ?? 0) / 60) * perMonth,
+      darkHours: ((w.darkWalkMin ?? 0) / 60) * perMonth,
+      stranded: w.stranded?.length ?? 0,
+      timeCost: model.travelCost(persona.theta, opt.travel),
+    });
+  }
+  if (rows.length < 2) return null;
+  const byU = [...rows].sort((a, b) => b.u - a.u);
+  byU.forEach((r, k) => { r.rank = k + 1; });
+  const best = byU[0];
+  const cheapest = rows.reduce((a, b) => (b.rent < a.rent ? b : a));
+  return { persona, n: rows.length, best, cheapest, gap: best.u - cheapest.u };
+}
+
 // The demo group of five, as the Group tab solves it: each member's most likely week through every
 // whole-house lease, then fair.solveHouse per house, ranked. Returns the top house and its split.
 export async function groupExample(api) {

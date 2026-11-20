@@ -137,3 +137,8 @@
 .qv-raw > summary { cursor: pointer; color: var(--ink-2, #4a443c); font-size: 14px; padding: 4px 0; }
 .qv-raw[open] > summary { margin-bottom: var(--s2, 8px); }
 .qv-loading { color: var(--muted, #7a7266); font-size: 14px; }
+
+/* Phone width: long labels and pills wrap instead of pushing the page sideways. */
+@media (max-width: 600px) {
+  .qv-label, .qv-pill { white-space: normal; max-width: 100%; }
+}

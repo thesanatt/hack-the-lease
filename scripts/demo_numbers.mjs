@@ -18,6 +18,9 @@ import * as prefs from '../engine/prefs.js';
 import * as decide from '../engine/decide.js';
 import * as fair from '../engine/fair.js';
 import * as operator from '../engine/operator.js';
+import * as explain from '../engine/explain.js';
+import * as ics from '../engine/ics.js';
+import * as tours from '../engine/tours.js';
 import { editableWeek, modalRoutine, uncertainRoutine, lateEntry, moveToCentral, TERM_CHOICES, autoAnswer } from '../web/src/views/me/routine.js';
 import * as G from '../web/src/views/group/logic.js';
 import { pickIrregular, canAddHalfBath } from '../web/src/views/operator/logic.js';
@@ -321,6 +324,55 @@ if (reno) {
     say(`   with the private bathroom slider at ${usd(wb)}/mo: half bath ${o.renovationDelta.roomP50 >= 0 ? '+' : ''}${usd(o.renovationDelta.roomP50)}/mo room share, ${o.renovationDelta.headroom >= 0 ? '+' : ''}${usd(o.renovationDelta.headroom)}/mo headroom`);
   }
   say(`   +${usd(op.renovationDelta.headroom)}/mo headroom is ${usd(12 * op.renovationDelta.headroom)} a year. No build cost is in the data, so no payback is computed.`);
+}
+
+// ---------- 7. Verdict card on Me (web/src/views/me/Verdict.jsx) ----------
+// Same call as the card: the most likely week, every value at its posterior median (rankNow's mean).
+for (const [lbl, r] of [['before any pick', r0], ['after Auto-answer until done', r1]]) {
+  H(`7. Me verdict card, Jordan, ${lbl}`);
+  const notes = explain.explainAll({ homes, weekMap, theta: r.mean, cfg, places: placeById, modes: jordan.modes });
+  const bestId = r.rank[0].homeId, row = r.rank[0], note = notes.get(bestId);
+  say(`title: "Best for Jordan's week: ${nm(bestId)}"`);
+  say(`facts: ${usd(note.roomLabel && Number.isFinite(note.rent) ? note.rent : row.price)}/mo rent and utilities, ${note.roomLabel || row.roomLabel}; ${usd(-row.meanU)}/mo all in; ${Math.floor(weekMap.get(bestId).weeklyMin / 60)}h ${Math.round(weekMap.get(bestId).weeklyMin % 60)}m door to door a week; best in ${Math.round(100 * row.pBest)}% of possible weeks`);
+  say(`headline: ${note.headline}`);
+  const line = (x) => `${x.absolute ? `costs ${usd(Math.abs(x.dollars))}/mo` : `${x.dollars >= 0 ? '+' : '-'}${usd(Math.abs(x.dollars))}/mo`} ${x.label}: ${x.text}${x.trip ? `  [${x.trip.lead}: ${x.trip.text}]` : ''}`;
+  say('Why it fits:'); note.fits.forEach((x) => say('   ' + line(x)));
+  say('Watch out for:'); note.watch.forEach((x) => say('   ' + line(x)));
+  const runner = r.rank[1].homeId, c = explain.compareHomes(notes.ctx, bestId, runner);
+  say(`runner-up ${nm(runner)}: ${usd(c.gap)}/mo behind at the median values; first if its rent were ${usd(c.rentToFlip)} lower${c.flip ? `, or if ${c.flip.text}` : ''}`);
+  say(`ranking why lines: ${r.rank.slice(0, 4).map((x) => `${nm(x.homeId)} "${explain.whyLine(notes.get(x.homeId))}"`).join('; ')}`);
+  const g = homes.find((h) => h.name.startsWith('Georgetown Blvd'))?.id;
+  if (g && g !== bestId) {
+    const ng = notes.get(g);
+    say(`notes for ${nm(g)} (rank #${r.rank.findIndex((x) => x.homeId === g) + 1}): ${ng.headline} Watch: ${ng.watch.map((x) => `${x.label} (${x.dollars >= 0 ? '+' : '-'}${usd(Math.abs(x.dollars))})`).join('; ')}`);
+  }
+}
+
+// ---------- 8. Calendar import, the SYNTHETIC sample file (web/public/samples/sample_week.ics) ----------
+H('8. Calendar import: "Use the sample file" (SYNTHETIC), parsed in the browser by engine/ics.js');
+{
+  const text = readFileSync(path.join(ROOT, 'web', 'public', 'samples', 'sample_week.ics'), 'utf8');
+  const tp = performance.now();
+  const r = ics.parseSchedule(text, places);
+  say(`parsed in ${Math.round(performance.now() - tp)} ms: ${r.items.length} entries, ${r.skipped.length} skipped, ${r.warnings.length} warnings`);
+  for (const it of r.items) say(`   ${it.label.padEnd(30)} ${it.days.join('/').padEnd(16)} ${it.start}-${it.end}  "${it.location}" -> ${it.place ? placeById.get(it.place)?.label : 'NO MATCH' + (it.candidates?.length ? ` (candidates ${it.candidates.map((c) => placeById.get(c.id ?? c)?.label ?? c.id ?? c).join(', ')})` : '')}`);
+  for (const x of r.skipped) say(`   skipped: ${x.label || x.summary || ''} (${x.reason})`);
+  const unmatched = r.items.filter((it) => !it.place).length;
+  say(`ready ${r.items.length - unmatched}, unresolved ${unmatched}. Resolving the unmatched row by hand gives ${r.items.length} entries for "Replace my week".`);
+}
+
+// ---------- 9. Group tour times (web/src/views/group/TourTimes.jsx) ----------
+for (const [lbl, row] of [['before the cap move', top], ['after "Lower the cap"', nf]]) {
+  if (!row) continue;
+  H(`9. Group "Tour it together", ${row.home.name} (${lbl})`);
+  const people = members.map((m) => ({ id: m.id, name: m.name, routine: G.modalRoutine(m) }));
+  const res = tours.findTourSlots(planner, { house: row.home, members: people, places, cfg });
+  say(`${res.feasibleSlots} of ${res.checked} weekday half-hours work; days with a slot: ${res.daysWithSlot.join(', ') || 'none'}; ${Math.round(res.ms)} ms`);
+  for (const sl of res.slots) {
+    say(`   ${sl.day} ${sl.startHM} to ${sl.endHM}: group travel ${sl.travelMin} min, score ${sl.score}${sl.sameDay ? ' (same day)' : ''}`);
+    for (const m of sl.members) say(`      ${m.name}: ${m.to.mode}${m.to.routes?.length ? ' ' + m.to.routes.join(' then ') : ''}, ${m.to.min} min from ${placeById.get(m.origin)?.label || m.origin}, leaves ${m.to.departHM}`);
+  }
+  say('draft message:'); tours.tourMessage({ houseName: row.home.name, groupSize: members.length, slots: res.slots }).split('\n').forEach((l) => say('   | ' + l));
 }
 
 // ---------- 6. Evidence files ----------

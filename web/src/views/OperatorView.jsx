@@ -1,22 +1,34 @@
-// Operator view: one irregular house, per-room envy-free rents for typical SYNTHETIC groups, the prior medians
-// that drive them, live sliders for the wBath and wSize medians, and a renovation lever.
-import React, { useEffect, useMemo, useState } from 'react';
-import { Panel, Label, Stat, Button, Pending, Note, Guard, usd, signedUsd, ms, modOf, homesOf, configOf, seeded } from './group/kit.jsx';
+// Operator view: a portfolio table of every home, "who this house fits" from the SYNTHETIC demand map
+// (2,000 synthetic weeks routed on the real timetables), per-room envy-free rents for typical SYNTHETIC groups,
+// the assumed room values that drive them (live sliders), and a renovation lever.
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Panel, Label, Stat, Button, Pending, Note, Guard, usd, signedUsd, pct, ms, modOf, homesOf, configOf, seeded } from './group/kit.jsx';
 import { useConfigVersion } from '../engine/useConfig.js';
 import { pickIrregular, drawGroups, renovate, canAddHalfBath, roomPricingLocal, renovationDelta } from './operator/logic.js';
+import {
+  CAMPUS_WORDS, EXTRAS, jobWords, studyWords, gymWords, weekWords, parseKey, countKinds, kindGrid, winsSummary,
+  firstRank, portfolioRow, actionFor, SORTS,
+} from './operator/fit.js';
+import JumpBar from '../components/JumpBar.jsx';
+import './operator/operator.css';
 
 const BATH = { private: 'private bath', half: 'half bath', shared: 'shared bath' };
 const FLOOR = { basement: 'basement', 1: '1st floor', 2: '2nd floor', attic: 'attic' };
 const LIGHT = ['little daylight', 'some daylight', 'bright'];
 const SEED = 2026;      // local fallback draws
 const POP_SEED = 11;    // same seed as scripts/build_operator.mjs
+const n0 = (x) => (Number.isFinite(x) ? Math.round(x).toLocaleString('en-US') : 'n/a');
+
+function reducedMotion() {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return true; }
+}
 
 export default function OperatorView({ api }) {
   return (
-    <div className="qv-view">
+    <div className="qv-view op-view">
       <div className="qv-head">
         <h1>Operator</h1>
-        <p>What each room of an irregular house would rent for, if typical groups split the house rent so nobody would swap rooms.</p>
+        <p>Which weeks each home fits, and what each room would rent for if typical groups split the house rent so nobody would swap rooms.</p>
         <Label>SYNTHETIC population and homes, not market rents</Label>
       </div>
       <Guard name="Operator view"><OperatorBody api={api} /></Guard>
@@ -31,13 +43,15 @@ function OperatorBody({ api }) {
   const cfg = configOf(api);
   const homes = homesOf(api);
   const opData = api?.data?.operator || null;
+  const demand = opData?.demand || null;
   const info = model?.PARAM_INFO;
 
   const preferId = opData?.houseId || opData?.featured || null;
   const defaultHome = useMemo(() => pickIrregular(homes, preferId), [homes, preferId]);
-  const houseChoices = useMemo(() => (homes || []).filter((h) => h.kind === 'house' && (h.rooms || []).length >= 3), [homes]);
+  const pricedHomes = useMemo(() => (homes || []).filter((h) => (h.rooms || []).length >= 2), [homes]);
   const [houseId, setHouseId] = useState(null);
-  const home = (houseId && (homes || []).find((h) => h.id === houseId)) || defaultHome;
+  const home = (houseId && pricedHomes.find((h) => h.id === houseId)) || defaultHome;
+  const houseRef = useRef(null);
 
   const [bathMed, setBathMed] = useState(null);
   const [sizeMed, setSizeMed] = useState(null);
@@ -61,6 +75,12 @@ function OperatorBody({ api }) {
     if (!opMod?.makePopulation) return null;
     try { return opMod.makePopulation({ n: cfg?.population ?? 2000, seed: POP_SEED, cfg: cfg || undefined }); } catch { return null; }
   }, [opMod, cfg]);
+  const kindCounts = useMemo(() => (population ? countKinds(population) : null), [population]);
+
+  const selectHouse = (id, scroll) => {
+    setHouseId(id); setRenoRoom(null);
+    if (scroll && houseRef.current?.scrollIntoView) houseRef.current.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
+  };
 
   // Recompute 200 ms after the last slider move (debounced; each run is G envy-free solves, twice with a renovation).
   useEffect(() => {
@@ -99,6 +119,36 @@ function OperatorBody({ api }) {
     return () => clearTimeout(id);
   }, [fair, model, opMod, population, home, wBath, wSize, renoIdx, G, cfg]);
 
+  // Portfolio room rents: start from the shipped numbers (our assumed values), then re-solve every home in the
+  // browser, one home per tick, whenever the sliders move.
+  const pre = useMemo(() => new Map((opData?.homes || []).map((ph) => [ph.homeId, ph.rooms.map((r) => r.p50)])), [opData]);
+  const sliderKey = `${wBath}|${wSize}`;
+  const [live, setLive] = useState({ key: null, typical: new Map(), done: 0 });
+  const [full, setFull] = useState(null);
+  useEffect(() => {
+    if (!opMod?.roomPricing || !opMod?.groupsFor || !population || !pricedHomes.length) return;
+    let i = 0, cancelled = false, timer = null;
+    const acc = new Map();
+    const total = pricedHomes.length;
+    const step = () => {
+      if (cancelled) return;
+      const h = pricedHomes[i];
+      try {
+        const groups = opMod.groupsFor({ home: h, population, cfg: cfg || undefined, count: G });
+        const r = opMod.roomPricing({ home: h, groups, cfg: cfg || undefined, medians: { wBath, wSize }, prior: population.prior });
+        acc.set(h.id, r.rooms.map((x) => x.p50));
+      } catch { /* leave this home on its last numbers */ }
+      i++;
+      if (i % 4 === 0 || i === total) setLive({ key: sliderKey, typical: new Map(acc), done: i });
+      if (i === total) setFull({ key: sliderKey, typical: new Map(acc) });
+      else timer = setTimeout(step, 0);
+    };
+    timer = setTimeout(step, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [opMod, population, pricedHomes, wBath, wSize, G, cfg, sliderKey]);
+  const portUpdating = !!opMod?.roomPricing && !!population && !(full && full.key === sliderKey);
+  const typicalFor = (id) => (live.key === sliderKey && live.typical.get(id)) || full?.typical.get(id) || pre.get(id) || null;
+
   if (!homes) return <Pending what="homes.json (SYNTHETIC homes)" detail="The data builder writes it to web/public/data/." />;
   if (!model) return <Pending what="engine/model.js" />;
   if (!home) return <Note>No house with three or more rooms in homes.json.</Note>;
@@ -121,21 +171,40 @@ function OperatorBody({ api }) {
   return (
     <div className="qv-grid">
       <div className="qv-span-12">
-        <Panel kicker="One irregular house" title={home.name}
-          right={houseChoices.length > 1 ? (
-            <select aria-label="House" value={home.id} onChange={(e) => { setHouseId(e.target.value); setRenoRoom(null); }}>
-              {houseChoices.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+        <JumpBar items={[
+          { label: 'Where to act', find: 'Where to act' }, { label: 'Who it fits', find: 'Who this house fits, SYNTHETIC students' },
+          { label: 'Room by room', find: 'Room by room' }, { label: 'Half bath', find: 'Add a half bath to one room' },
+        ]} />
+      </div>
+      <div className="qv-span-12">
+        <Portfolio homes={homes} demand={demand} typicalFor={typicalFor} selectedId={home.id}
+          onPick={(id) => selectHouse(id, true)} updating={portUpdating} done={live.key === sliderKey ? live.done : 0}
+          total={pricedHomes.length} wBath={wBath} wSize={wSize} />
+      </div>
+
+      <div className="qv-span-12" ref={houseRef} style={{ scrollMarginTop: 12 }}>
+        <Panel kicker="Who this house fits, SYNTHETIC students" title={home.name}
+          right={pricedHomes.length > 1 ? (
+            <select aria-label="House" style={{ maxWidth: '100%' }} value={home.id} onChange={(e) => selectHouse(e.target.value, false)}>
+              {pricedHomes.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
             </select>
           ) : null}>
+          <FitPanel home={home} homes={homes} demand={demand} kindCounts={kindCounts} assumptions={opMod?.POP_ASSUMPTIONS}
+            onPick={(id) => selectHouse(id, false)} pickable={(id) => pricedHomes.some((h) => h.id === id)} />
+        </Panel>
+      </div>
+
+      <div className="qv-span-12">
+        <Panel kicker="Room by room" title={`Fair rent for each room of ${home.name.split(',')[0]}`}>
           <div className="qv-stats">
             <Stat label="house rent per month" value={`${usd(home.rent)}/mo`} />
             <Stat label="rooms" value={home.rooms.length} />
-            <Stat label="synthetic groups" value={G} note={res?.source === 'engine' ? `from a population of ${population?.n ?? ''}, seed ${POP_SEED}` : `drawn from the prior, seed ${SEED}`} />
-            {res?.totalMs != null && res.base && <Stat label="live compute" value={ms(res.totalMs)} note={`${res.solves} house solves`} />}
+            <Stat label="synthetic groups" value={G} note={res?.source === 'engine' ? `from a population of ${n0(population?.n)}` : `drawn from our assumed values`} />
+            {res?.totalMs != null && res.base && <Stat label="worked out in this browser" value={ms(res.totalMs)} note={`${res.solves} house splits`} />}
           </div>
           {!fair ? <Pending what="engine/fair.js" detail="Per-room rents need the envy-free solver." /> : res?.error ? (
             <Note tone="bad">Pricing failed: {res.error}</Note>
-          ) : !res ? <p className="qv-muted">Solving {G} groups...</p> : (
+          ) : !res ? <p className="qv-muted">Splitting the rent for {G} groups...</p> : (
             <>
               <h3 className="qv-kicker" style={{ margin: '4px 0 6px' }}>Low, typical and high fair rent across {res.base.solved} synthetic groups</h3>
               <div className="qv-scroll">
@@ -176,7 +245,7 @@ function OperatorBody({ api }) {
                 Bar: low to high fair rent, the middle 8 in 10 of {res.base.solved} synthetic groups. Tick: typical rent.
                 Dotted line: asking rent. Each group's rents sum to {usd(home.rent)}; the typical rents of separate rooms
                 need not add up to it exactly.
-                {res.base.failed ? ` ${res.base.failed} groups failed to solve and are left out.` : ''}
+                {res.base.failed ? ` ${res.base.failed} groups could not be split and are left out.` : ''}
                 {res.base.negative ? ` ${res.base.negative} groups needed a negative room rent.` : ''}
                 {' '}Preference-based, synthetic, not market rents.
               </p>
@@ -208,7 +277,8 @@ function OperatorBody({ api }) {
           <p className="qv-small qv-muted" style={{ marginBottom: 0 }}>
             Each synthetic student's room values spread around these typical values. They are our assumptions, not
             survey data. Commute is left out: it is the same for every room of one house. Every slider position uses the
-            same synthetic students.
+            same synthetic students. The sliders move the room rents here and in the table of all homes above. They do
+            not move who each home fits.
           </p>
         </Panel>
       </div>
@@ -241,7 +311,7 @@ function OperatorBody({ api }) {
                     these numbers move with it.
                   </p>
                 </>
-              ) : <p className="qv-muted">Solving...</p>}
+              ) : <p className="qv-muted">Working it out...</p>}
             </div>
           )}
         </Panel>
@@ -250,10 +320,200 @@ function OperatorBody({ api }) {
       {opData && (
         <div className="qv-span-12">
           <Note>
-            Every number on this page is computed live in this browser for the selected house, from SYNTHETIC students.
+            Room rents on this page are worked out live in this browser from SYNTHETIC students. Who each home fits
+            was worked out ahead of time by the same engine, from the same synthetic students. Nothing leaves this
+            browser.
           </Note>
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------- Portfolio: every home in one table ----------
+function Portfolio({ homes, demand, typicalFor, selectedId, onPick, updating, done, total, wBath, wSize }) {
+  const [sortBy, setSortBy] = useState('off');
+  const students = demand?.students || 0;
+  const fitOf = useMemo(() => new Map((demand?.homes || []).map((d) => [d.homeId, d])), [demand]);
+  const rows = homes.map((home) => portfolioRow({
+    home, typical: (home.rooms || []).length >= 2 ? typicalFor(home.id) : null, fit: fitOf.get(home.id), students,
+  }));
+  const sorted = [...rows].sort(SORTS[sortBy].fn);
+  const split = rows.filter((r) => r.off != null);
+  const worst = [...split].sort((a, b) => Math.abs(b.worst?.d ?? 0) - Math.abs(a.worst?.d ?? 0))[0];
+  const top = demand ? [...rows].filter((r) => r.firstShare != null).sort(SORTS.first.fn)[0] : null;
+  const nobody = demand ? rows.filter((r) => r.firstShare === 0).length : 0;
+  const singles = rows.length - split.length;
+  const maxFirst = Math.max(0.0001, ...rows.map((r) => r.firstShare || 0));
+
+  const SortBtn = ({ k, children }) => (
+    <button type="button" aria-pressed={sortBy === k} onClick={() => setSortBy(k)} title={`Sort by ${SORTS[k].label}`}>{children}</button>
+  );
+
+  return (
+    <Panel kicker="All homes, SYNTHETIC" title="Where to act"
+      right={<span className="qv-small qv-muted" aria-live="polite">{updating ? `Updating room rents, ${done} of ${total} homes...` : `Room rents at ${usd(wBath)} private bath, ${usd(wSize, 1)} per 10 sq ft`}</span>}>
+      <p style={{ marginTop: 0 }}>
+        {top ? <>{top.short} is the most common first pick: {n0(top.firstN)} of {n0(students)} synthetic students. </> : null}
+        {worst?.worst ? <>The room furthest from its fair rent is the {worst.worst.label} at {worst.short}: asking {usd(worst.worst.asking)}, typical fair rent {usd(worst.worst.typical)}. </> : null}
+        {nobody ? <>{nobody} of {rows.length} homes are not the first pick of any synthetic student.</> : null}
+      </p>
+      <div className="qv-scroll">
+        <table className="qv-table op-port">
+          <thead>
+            <tr>
+              <th><SortBtn k="name">Home</SortBtn></th>
+              <th className="num" title={`How many of ${n0(students)} synthetic students rank this home first`}><SortBtn k="first">First choice</SortBtn></th>
+              <th className="num" title="Share of synthetic students with this home in their top 3">Top 3</th>
+              <th className="num" title="Among students who rank it first: how much more a month they value it than their second choice (typical)"><SortBtn k="premium">Fit premium</SortBtn></th>
+              <th className="num" title="Sum of the asking rents of the rooms">Asking total</th>
+              <th className="num" title="Sum of each room's typical fair rent">Fair total</th>
+              <th className="num" title="Sum over rooms of how far asking rent is from typical fair rent"><SortBtn k="off">Room gaps</SortBtn></th>
+              <th title="The room whose asking rent is furthest from its typical fair rent">Where to act</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((r) => (
+              <tr key={r.homeId} className={r.homeId === selectedId ? 'sel' : ''} tabIndex={0}
+                aria-label={`${r.name}. Open this home`}
+                onClick={() => onPick(r.homeId)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(r.homeId); } }}>
+                <td>
+                  <b>{r.short}</b>
+                  <div className="qv-small qv-muted">{r.area}, {r.kind}, {r.nRooms} {r.nRooms === 1 ? 'room' : 'rooms'}</div>
+                </td>
+                <td className="num">
+                  {r.firstN == null ? 'n/a' : n0(r.firstN)}
+                  {r.firstShare != null && <span className="meter" aria-hidden="true"><i style={{ width: `${(100 * r.firstShare) / maxFirst}%` }} /></span>}
+                  <div className="qv-small qv-muted">{pct(r.firstShare, 1)}</div>
+                </td>
+                <td className="num">{pct(r.top3Share, 1)}</td>
+                <td className="num">{r.fitPremium == null ? <span className="qv-muted">none</span> : `${usd(r.fitPremium)}/mo`}
+                  {r.fitPremium != null && r.firstN < 30 && <div className="qv-small qv-muted">{r.firstN} students, rough</div>}
+                </td>
+                <td className="num">{usd(r.askTotal)}</td>
+                <td className="num">{r.fairTotal == null ? <span className="qv-muted">one rent</span> : usd(r.fairTotal)}</td>
+                <td className="num">{r.off == null ? <span className="qv-muted">no split</span> : usd(r.off)}</td>
+                <td className="qv-small act">
+                  {actionFor(r, usd)}
+                  {r.worst && <div className="qv-muted">{r.worst.label}: asking {usd(r.worst.asking)}, fair {usd(r.worst.typical)}</div>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="qv-small qv-muted" style={{ marginBottom: 0 }}>
+        First choice and top 3: each of {n0(students)} SYNTHETIC students ranks every home for their own week at asking
+        rents, with door to door trips on the real bus timetables and streets. Fit premium: the typical student who
+        ranks a home first likes it that much more a month than their second choice. Fair total adds each room's typical
+        fair rent. Every group's split adds up to the house rent, so the two totals stay close; the gap that matters is
+        inside the house. Room gaps add up how far each room's asking rent sits from its typical fair rent.
+        {singles ? ` ${singles} homes have one room, so there is no split to price.` : ''} Click a row to open that home.
+      </p>
+    </Panel>
+  );
+}
+
+// ---------- Who this house fits ----------
+function FitPanel({ home, homes, demand, kindCounts, assumptions, onPick, pickable }) {
+  if (!demand) return <Pending what="The fit data in operator.json" detail="scripts/build_operator.mjs writes it." />;
+  const fit = demand.homes.find((d) => d.homeId === home.id);
+  if (!fit) return <Note>This home is not in the fit data.</Note>;
+  const N = demand.students;
+  const firstN = Math.round(fit.firstShare * N);
+  const top3N = Math.round(fit.top3Share * N);
+  const rank = firstRank(demand, home.id);
+  const grid = kindGrid(demand, kindCounts);
+  const totalKinds = grid.reduce((t, r) => t + r.cells.length, 0);
+  const shortOf = new Map(homes.map((h) => [h.id, String(h.name).split(',')[0].replace(/ (house|apartment)$/, '')]));
+  const lines = winsSummary(fit.wins, totalKinds);
+  const winsSorted = [...fit.wins].sort((a, b) => (kindCounts?.get(b) || 0) - (kindCounts?.get(a) || 0));
+  const SHOW = 6;
+  const A = assumptions;
+
+  const item = (k) => (
+    <li key={k}>{weekWords(parseKey(k), A)}{kindCounts ? <span className="qv-muted">, {n0(kindCounts.get(k) || 0)} students</span> : null}</li>
+  );
+
+  return (
+    <div className="op-fit">
+      <div>
+        <div className="qv-stats">
+          <Stat label={`of ${n0(N)} rank it first`} value={n0(firstN)} note={rank ? `${pct(fit.firstShare, 1)}, rank ${rank.rank} of ${rank.of}` : pct(fit.firstShare, 1)} />
+          <Stat label="have it in their top 3" value={n0(top3N)} note={pct(fit.top3Share, 1)} />
+          <Stat label="fit premium" value={fit.fitPremium == null ? 'none' : `${usd(fit.fitPremium)}/mo`} note="typical first picker" />
+        </div>
+        {fit.fitPremium != null ? (
+          <p style={{ marginTop: 0 }}>
+            The typical student who ranks {home.name.split(',')[0]} first likes it {usd(fit.fitPremium)} a month more than
+            their second choice. If their room cost that much more, about half of them would switch.
+            {firstN < 30 ? ` Only ${firstN} students rank it first, so this number is rough.` : ''}
+          </p>
+        ) : (
+          <p style={{ marginTop: 0 }}>No synthetic student ranks it first, so there is no fit premium to report.</p>
+        )}
+        <h3 className="qv-kicker" style={{ margin: '12px 0 4px' }}>The weeks it wins</h3>
+        <p style={{ margin: 0 }}>{lines.join(' ')}</p>
+        {winsSorted.length > 0 && (
+          <>
+            <ul className="op-wins">{winsSorted.slice(0, SHOW).map(item)}</ul>
+            {winsSorted.length > SHOW && (
+              <details className="qv-raw"><summary>{winsSorted.length - SHOW} more kinds of week</summary>
+                <ul className="op-wins">{winsSorted.slice(SHOW).map(item)}</ul>
+              </details>
+            )}
+          </>
+        )}
+        <p className="qv-small qv-muted">
+          A kind of week is a campus, an evening job or none, late library nights or not, and an early gym or not.
+          A home wins a kind of week when it is the most common first pick among students with that week.
+        </p>
+      </div>
+
+      <div>
+        <h3 className="qv-kicker" style={{ margin: '0 0 6px' }}>Most common first pick, by kind of week</h3>
+        <div className="qv-scroll">
+          <table className="op-grid">
+            <thead>
+              <tr>
+                <th>Campus, job</th>
+                <th>Classes only</th>
+                <th>+ {studyWords(A)}</th>
+                <th>+ {gymWords(A)}</th>
+                <th>+ both</th>
+              </tr>
+            </thead>
+            <tbody>
+              {grid.map((row, ri) => (
+                <tr key={`${row.campus}-${row.job}`} className={ri % 3 === 0 && ri ? 'campus-start' : ''}>
+                  <th className="row" scope="row">{CAMPUS_WORDS[row.campus]}, {row.job === 'none' ? 'no job' : jobWords(row.job).replace('evening ', '')}</th>
+                  {row.cells.map((c, ci) => {
+                    const mine = c.winner === home.id;
+                    const name = c.winner ? shortOf.get(c.winner) || c.winner : 'none';
+                    const can = c.winner && !mine && pickable(c.winner);
+                    return (
+                      <td key={ci} className={mine ? 'mine' : ''}>
+                        <button type="button" disabled={!can} onClick={() => can && onPick(c.winner)}
+                          title={`${weekWords(c.a, A)}: ${name}${c.n != null ? `, ${c.n} students` : ''}`}
+                          aria-label={`${weekWords(c.a, A)}. Most common first pick: ${name}${c.n != null ? `, ${c.n} students` : ''}`}>
+                          {name}
+                          {c.n != null && <span className="n">{c.n} students</span>}
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="qv-small qv-muted" style={{ marginBottom: 0 }}>
+          Red: {home.name.split(',')[0]} wins that kind of week. Click another home to open it. Campus, job, late study
+          and gym are drawn independently for each synthetic student, so small cells are rough. This shows fit, not a
+          demand forecast.
+        </p>
+      </div>
     </div>
   );
 }

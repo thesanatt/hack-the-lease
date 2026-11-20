@@ -6,9 +6,10 @@
 //   note   small line under the value (optional)
 //   tone   '' | 'good' | 'bad' | 'warn' colors the value
 //   title  tooltip text (optional)
-export default function Stat({ label, value, unit, note, tone = '', title }) {
+//   big    bool: the one number a panel is about, set at --fs-num-big (optional)
+export default function Stat({ label, value, unit, note, tone = '', title, big = false }) {
   return (
-    <div className={`stat ${tone}`} title={title}>
+    <div className={`stat ${tone}${big ? ' big' : ''}`} title={title}>
       <span className="stat-label">{label}</span>
       <span className="stat-value">
         {value}

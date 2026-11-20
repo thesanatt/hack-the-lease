@@ -11,6 +11,7 @@ import {
 import { MemberCard } from './group/Members.jsx';
 import EnvyMatrix from './group/EnvyMatrix.jsx';
 import JumpBar from '../components/JumpBar.jsx';
+import TourTimes from './group/TourTimes.jsx';
 import { useConfigVersion } from '../engine/useConfig.js';
 
 const EF_SPREAD = 0.25; // log-sd of the value draws for the EF rate (assumption; demo members have no posterior)
@@ -180,7 +181,7 @@ function GroupBody({ api }) {
         <JumpBar items={[
           { label: 'Members', find: 'The group' }, { label: 'Two moves', find: 'Two moves' },
           { label: 'House ranking', find: 'House ranking' }, { label: 'The split', find: 'The split' },
-          { label: 'Envy matrix', find: 'Envy matrix' },
+          { label: 'Tours', find: 'Tour it together' }, { label: 'Envy matrix', find: 'Envy matrix' },
         ]} />
       </div>
       <div className="qv-span-12">
@@ -264,6 +265,10 @@ function GroupBody({ api }) {
             <SplitTable row={chosen} members={members} colors={colors} />
           )}
         </Panel>
+      </div>
+
+      <div className="qv-span-12">
+        <TourTimes api={api} chosen={chosen} members={members} weeks={weeks} cfg={cfg} colors={colors} />
       </div>
 
       <div className="qv-span-12">

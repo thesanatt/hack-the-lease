@@ -3,6 +3,7 @@
 import { WeekStrip, Pill } from '../../components/index.js';
 import { clock, DAY_LABEL } from './routine.js';
 import { MODE_LABEL } from './format.js';
+import { shapesNow, rideCoords, streetWalk } from '../../engine/shapes.js';
 
 // Legs for one WeekResult trip. Transit uses planner.legs (one single-origin scan from the trip's departure).
 export function tripLegs(api, trip) {
@@ -14,26 +15,50 @@ export function tripLegs(api, trip) {
   return { depart: trip.depart, arrive: trip.arrive, legs: [{ type: trip.mode, dep: trip.depart, arr: trip.arrive, sec: trip.arrive - trip.depart }] };
 }
 
-// Map lines for one trip: walks and bikes on the street graph, rides stop to stop in the route color.
+const placeName = (api, id) => api.data.placeById?.get(id)?.label || api.data.homeById?.get(id)?.name || 'the door';
+
+// Map lines for one trip. Bus legs follow the trip's own GTFS shape between the boarding and alighting
+// stops (straight only when the shape is missing); walks follow the OSM street graph and are dashed.
+// Each path also carries dep, arr and a label so MapView can play the trip back on the map.
 export function tripPaths(api, trip, legs) {
   if (!trip || !trip.mode) return [];
-  const P = api.planner, stops = api.tt.stops;
+  const P = api.planner, stops = api.tt.stops, trips = api.tt.trips || api.data.meta?.trips;
   const safe = (fn) => { try { return fn(); } catch { return null; } };
-  if (trip.mode === 'walk' || trip.mode === 'bike') {
-    const c = safe(() => P.pathCoords(trip.from, trip.to, trip.mode));
-    return c ? [{ coords: c, color: trip.mode === 'bike' ? '#2d6a3e' : '#1c1a16', width: 4 }] : [];
-  }
-  if (!legs) return [];
   const pt = (id) => { const p = P.points.get(id); return p ? [p.lon, p.lat] : null; };
   const st = (i) => (i != null && stops[i] ? [stops[i].lon, stops[i].lat] : null);
+  if (trip.mode === 'walk' || trip.mode === 'bike') {
+    const c = safe(() => P.pathCoords(trip.from, trip.to, trip.mode));
+    if (!c) return [];
+    const coords = [pt(trip.from), ...c, pt(trip.to)].filter(Boolean);
+    return [{ coords, color: trip.mode === 'bike' ? '#2d6a3e' : '#1c1a16', width: 4, dash: trip.mode === 'walk',
+      dep: trip.depart, arr: trip.arrive, label: `${trip.mode === 'bike' ? 'Bike' : 'Walk'} to ${placeName(api, trip.to)}`, kind: trip.mode }];
+  }
+  if (!legs) return [];
+  const index = shapesNow();
   const out = [];
   for (const l of legs.legs) {
-    if (l.type === 'ride') out.push({ coords: [st(l.from), st(l.to)].filter(Boolean), color: l.color || '#2a5c8f', width: 5 });
-    else if (l.type === 'walk') {
+    const time = { dep: l.dep, arr: l.arr };
+    if (l.type === 'ride') {
+      const shape = l.trip != null ? trips?.[l.trip]?.[2] : null;
+      const fromLL = st(l.from), toLL = st(l.to);
+      const r = rideCoords(index, shape, fromLL, toLL);
+      out.push({ coords: r.coords, onShape: r.onShape, shape, fromLL, toLL, color: l.color || '#2a5c8f', width: 5, kind: 'ride',
+        label: `Bus ${l.route || ''} to ${l.toName || 'stop'}`.replace(/\s+/g, ' '), ...time });
+    } else if (l.type === 'walk') {
       const a = l.from != null ? pt(l.from) : st(l.fromStop);
       const b = l.to != null ? pt(l.to) : st(l.toStop);
-      if (a && b) out.push({ coords: [a, b], color: '#1c1a16', width: 2.5, dash: true });
-    } else if (l.type === 'transfer') out.push({ coords: [st(l.from), st(l.to)].filter(Boolean), color: '#1c1a16', width: 2.5, dash: true });
+      const street = safe(() => streetWalk(P, { fromPoint: l.from, toPoint: l.to, fromStop: l.fromStop, toStop: l.toStop }, stops));
+      const coords = street && street.length > 1 ? street : [a, b].filter(Boolean);
+      if (coords.length) out.push({ coords, color: '#1c1a16', width: 3, dash: true, kind: 'walk',
+        label: `Walk to ${l.toName || placeName(api, l.to)}`, ...time });
+    } else if (l.type === 'transfer') {
+      const street = safe(() => streetWalk(P, { fromStop: l.from, toStop: l.to }, stops));
+      const coords = street && street.length > 1 ? street : [st(l.from), st(l.to)].filter(Boolean);
+      out.push({ coords, color: '#1c1a16', width: 3, dash: true, kind: 'walk', label: `Walk to ${l.toName || 'the next stop'}`, ...time });
+    } else if (l.type === 'wait') {
+      const at = st(l.at);
+      if (at) out.push({ coords: [at], color: '#a8700d', kind: 'wait', label: `Wait at ${l.atName || 'the stop'}`, ...time });
+    }
   }
   return out;
 }

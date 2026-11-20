@@ -1,0 +1,34 @@
+/* Verdict card: a printed notice set above the timetable. Uses only the shared tokens. */
+.vd { border-top: 3px double var(--ink); }
+.vd .panel-head h2 { font-size: 24px; }
+.vd-facts { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); font-size: 15px; margin-bottom: var(--s2); }
+.vd-facts b { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+.vd-head { font-family: var(--font-display); font-size: 18px; margin: 0 0 var(--s3); color: var(--ink-2); }
+.vd-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s5); }
+.vd-cols h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-body); font-weight: 700;
+  border-bottom: 1px solid var(--ink); padding-bottom: 3px; margin-bottom: 0; }
+.vd-list { list-style: none; margin: 0; padding: 0; }
+.vd-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--s3); padding: 7px 0; border-bottom: 1px solid var(--line); }
+.vd-item .lbl { font-weight: 600; }
+.vd-item .amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; font-weight: 600; }
+.vd-item.good .amt { color: var(--good); }
+.vd-item.bad .amt { color: var(--bad); }
+.vd-item .txt { grid-column: 1 / -1; font-size: 14px; color: var(--ink-2); }
+.vd-trip { grid-column: 1 / -1; font-size: 13px; font-family: var(--font-mono); color: var(--ink); background: var(--paper-2);
+  border-left: 3px solid var(--line); padding: 3px 8px; }
+.vd-item.bad .vd-trip { border-left-color: var(--bad); }
+.vd-item.good .vd-trip { border-left-color: var(--good); }
+.vd-trip .lead { font-family: var(--font-body); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; margin-right: 6px; color: var(--muted); }
+.vd-trip .pill { margin-right: 4px; }
+.vd-empty { font-size: 14px; color: var(--muted); padding: 7px 0; }
+.vd-runner { margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--ink); font-size: 15px; }
+.vd-bar { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: center; margin-top: var(--s3); }
+.vd-bar label { display: inline-flex; gap: var(--s2); align-items: center; font-size: 14px; }
+.vd-bar select { max-width: 100%; }
+.vd-wait { color: var(--ink-2); font-size: 15px; }
+.vd-wait .dots { font-family: var(--font-mono); color: var(--muted); }
+.vd-why { font-size: 12.5px; margin-top: 1px; }
+.vd-why .amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; margin-right: 4px; }
+.vd-why.good .amt { color: var(--good); }
+.vd-why.bad .amt { color: var(--bad); }
+@media (max-width: 900px) { .vd-cols { grid-template-columns: minmax(0, 1fr); } }

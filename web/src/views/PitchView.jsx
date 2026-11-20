@@ -1,4 +1,4 @@
-// Pitch: six slides inside the app, for the 5-minute presentation.
+// Pitch: seven slides inside the app, for the 5-minute presentation.
 // Keys: Right, Down, PageDown or Space = next. Left, Up or PageUp = back. Home and End jump.
 // F = full screen (Esc leaves it). N = presenter notes under the slide.
 // Slides 1 and 2 compute their numbers live with the engine; slides 3 and 4 read web/public/data/evidence/*.json.

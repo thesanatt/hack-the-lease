@@ -1,10 +1,27 @@
 // The ranking: expected regret (sort key), a 50-dot quantile dotplot of regret, P(best), all-in monthly cost range.
 // Props: api, rank (decide.meRank output), baseline (Map homeId -> previous position, optional), limit (rows),
 //        selected, onSelect(id)
+// Under each home: its biggest plus or minus against the middle home, from the Verdict's notes (engine/explain.js).
 import { DotPlot, Pill } from '../../components/index.js';
 import { money, pct } from './format.js';
+import { useVerdictNotes } from './verdict/store.js';
+import './verdict/verdict.css';
+
+function Why({ note }) {
+  const w = note?.why;
+  if (!note) return null;
+  if (!w) return <div className="vd-why muted">Close to the middle home on every count.</div>;
+  const good = w.dollars >= 0;
+  return (
+    <div className={`vd-why ${good ? 'good' : 'bad'}`} title={w.text}>
+      <span className="amt">{good ? '+' : '-'}{money(Math.abs(w.dollars))}/mo</span>{' '}
+      <span className="muted">{w.label.toLowerCase()}</span>
+    </div>
+  );
+}
 
 export default function Ranking({ api, rank, baseline, limit = 12, selected, onSelect }) {
+  const notes = useVerdictNotes();
   if (!rank?.length) return null;
   const rows = rank.slice(0, limit);
   const all = rows.flatMap((r) => r.dots || []).sort((a, b) => a - b);
@@ -16,7 +33,7 @@ export default function Ranking({ api, rank, baseline, limit = 12, selected, onS
         <thead>
           <tr>
             <th className="num">#</th>
-            <th>Home and best room</th>
+            <th title="Under each home: its biggest plus or minus against the middle home, dollars per month at your median values">Home, best room, biggest plus or minus</th>
             <th className="num" title="Mean over fall weeks and preference draws of how much worse this home is than the best one, $/month">Expected regret</th>
             <th title="50 equally likely outcomes of monthly regret; dots at 0 mean this home was the best">Regret, 50 equally likely outcomes ($0 to {money(max)})</th>
             <th className="num" title="Share of (week, preference) draws where this home is best">P(best)</th>
@@ -33,6 +50,7 @@ export default function Ranking({ api, rank, baseline, limit = 12, selected, onS
                 <td>
                   <span style={{ fontWeight: 600 }}>{name(r.homeId)}</span>
                   <div className="small muted">{r.roomLabel || r.roomId}{r.price ? `, ${money(r.price)}/mo` : ''}</div>
+                  <Why note={notes?.get(r.homeId)} />
                 </td>
                 <td className="num">{money(r.expRegret)}</td>
                 <td><DotPlot dots={r.dots} max={max} width={240} height={30} color={i === 0 ? 'var(--accent)' : 'var(--ink)'} title={`Regret outcomes for ${name(r.homeId)}`} /></td>
