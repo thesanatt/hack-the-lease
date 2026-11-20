@@ -119,6 +119,23 @@ real; sections, times and rooms are made up".
 The odds and the share of full sections (early 5%, normal 20%, late 40%) are assumptions, not data. The repo
 never ships a real Registrar file. A student's own file is read in the browser and never uploaded.
 
+## Sample posts for the Listings tab
+
+`web/public/data/posts_sample.json` ("SAMPLE posts, made up for the demo; not real listings or people") holds 7
+short posts written in the style students use in sublet groups. Every post is made up: there is no real listing,
+landlord or student behind any of them, and none carries a name, phone number, email or link. Street names were
+chosen from the `n` names in `streets/streets.geojson` so that `engine/listing.js` can place them; the street data
+leaves many central blocks unnamed (Packard Street, for one, has no named segment), so the samples use pairs that
+meet in that file. They cover: an intersection (Hill St near Church), a street only (Catherine St), a place name
+(the Michigan Union), a summer sublet, a Winter semester sublet, a whole-house total split per person, a post with
+no location (it asks for a pin), and one reworded duplicate of the first post (merged as "seen 2 times").
+A pasted post that names a street the file lacks ("on Packard near Hill") keeps that name as the street. It is
+never swapped for the cross street. The point is a guess on the cross street near the student's week, and the
+card asks for a pin. Oakland, Tappan, Monroe, Benjamin and East University are also missing from the file.
+
+Posts a student pastes stay in their browser (localStorage) with emails, phone numbers, links, handles and
+self-introductions removed. Quorum never collects posts on its own.
+
 ## What we do not have
 
 No real listings, rents, room sizes or occupancy. No student data of any kind. No street lighting data and no

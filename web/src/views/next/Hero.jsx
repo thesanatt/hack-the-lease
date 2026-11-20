@@ -1,4 +1,4 @@
-// Hero, left side: the price of not knowing next year's schedule, and the home that loses least.
+// Hero, left side: the price of not knowing next semester's schedule, and the home that loses least.
 // Props: res (runNextYear result or null), busy ({ f, msg } or null)
 import { money, moneyRange, pct } from './format.js';
 
@@ -23,7 +23,7 @@ export default function Hero({ res, busy }) {
       <div className="nx-card nx-price">
         {/* Under 50 cents rounds to $0, which reads like a bug: say "Under $1", as pitch slide 2 does. */}
         <span className="nx-big">{small ? 'Under $1' : money(ev.value)}<span className="nx-unit"> a month</span></span>
-        <span className="nx-big-l">what not knowing next year's schedule costs you</span>
+        <span className="nx-big-l">what not knowing next semester's schedule costs you</span>
         {!small && <span className="nx-pm" title="About two standard errors, from resampling the possible weeks">plus or minus {money(pm)}</span>}
       </div>
       {home && (

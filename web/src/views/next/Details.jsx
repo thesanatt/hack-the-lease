@@ -1,4 +1,4 @@
-// Details for Next year: one disclosure with the method in plain words, the run settings, the full table and
+// Details for Next semester: one disclosure with the method in plain words, the run settings, the full table and
 // the data labels. Closed by default.
 // Props: res, source ('sample' | 'file'), file ({ name, parsed }), sample ({ meta, plansLabel, parsed }), k, seed
 import { money, pct } from './format.js';

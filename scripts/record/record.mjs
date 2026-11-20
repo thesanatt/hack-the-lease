@@ -76,7 +76,20 @@ async function main() {
       if (ok) return true;
       await page.waitForTimeout(100);
     }
-    log('Next year price did not show', text);
+    log('Next semester price did not show', text);
+    return false;
+  };
+  // The gray speed line under the Next semester map, read off the page: it is measured live in this browser.
+  const speedLine = () => page.evaluate(() => ((document.querySelector('main')?.innerText || '').match(/[\d,]+ door-to-door trips routed in [\d.]+ m?s/) || [null])[0]);
+  // Waits until the Listings comparison is drawn and not routing.
+  const lvReady = async (text) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < 15000) {
+      const ok = await page.evaluate((t) => (document.querySelector('.lv-tbl')?.innerText || '').includes(t) && !/Routing your week/.test(document.querySelector('.lv-cmp')?.innerText || ''), text);
+      if (ok) return true;
+      await page.waitForTimeout(100);
+    }
+    log('Listings table did not show', text);
     return false;
   };
 
@@ -86,16 +99,18 @@ async function main() {
   await key('Home');
   await caption('The problem. "10 minutes from campus" depends on which campus and what hour. Computed live from TheRide and U-M timetables.');
   await wait(7);
-  await caption("And the lease is signed before the student knows where next year's classes will be.");
+  await caption("And the lease is signed before the student knows where next semester's classes will be.");
   await wait(5);
 
-  log('next year: nursing');
-  await tab('Next year');
+  log('next semester: nursing');
+  await tab('Next semester');
   await nxReady('$31');
-  await caption('Next year. A sample Nursing junior: clinical section, one course and a maybe job are still unknown. 200 possible weeks from a sample class catalog.');
+  await caption('Next semester. A sample Nursing junior: clinical section, one course and a maybe job are still unknown. 200 possible weeks from a sample class catalog.');
   await wait(7);
-  await caption('Each week is routed through all 30 homes on the real buses. Not knowing costs her $31 a month, plus or minus $11.');
-  await wait(6);
+  const sp = await speedLine();
+  if (!sp) log('no speed line');
+  await caption(`Each week is routed through all 30 homes on the real buses${sp ? `: ${sp.replace(/ s$/, ' seconds').replace(/ ms$/, ' milliseconds')}, measured live in this browser` : ''}. Not knowing costs her $31 a month, plus or minus $11.`);
+  await wait(7);
   await caption('The home that loses least: Catherine St, $1,164 to $1,511 a month across the weeks, the best in 66% of them.');
   await wait(6);
   // Put the bars at the top of the screen (the heading alone is already in view at 1280x720).
@@ -111,7 +126,7 @@ async function main() {
   await caption('The home that loses least changes to Broadway St, $1,184 to $1,624 a month. The map renumbers.');
   await wait(6);
 
-  log('next year: cs');
+  log('next semester: cs');
   await click('CS junior', { exact: true });
   await nxReady('Under $1');
   await caption('A sample CS junior, with maybe a research lab job on North Campus. Here not knowing costs under $1 a month.');
@@ -120,6 +135,31 @@ async function main() {
   await wait(5);
   await caption('A student can load their own Registrar file. It never leaves the browser.');
   await wait(7);
+
+  log('listings: two sample posts');
+  await tab('Listings');
+  await lvReady('Broadway St');
+  await caption('Listings. Sublets get posted in Facebook groups and group chats. Quorum does not scrape them: the student pastes posts they can see.');
+  await wait(6);
+  await click('Try a sample post', { exact: true });
+  await wait(1.5);
+  await click('Add', { exact: true });
+  await wait(1);
+  await caption('Quorum reads the rent, dates, beds and street with plain rules and puts the post on the map. These posts are made-up samples.');
+  await wait(3);
+  await click('Try a sample post', { exact: true });
+  await wait(1.5);
+  await click('Add', { exact: true });
+  await lvReady('Hill St near Church St');
+  await wait(4);
+  try { await page.getByRole('button', { name: 'Reach out' }).nth(1).click({ timeout: 4000 }); } catch { log('no Reach out'); }
+  await caption('Reach out: a first message from a template, with only the post\'s facts and the student\'s own. Copy it; Quorum sends nothing.');
+  await wait(7);
+  await click('Winter 2027', { exact: true });
+  await wait(0.5);
+  await key('End');
+  await caption("Jordan's week, routed from each post. For winter, the Catherine St sublet costs $67 a month less than the best sample home.");
+  await wait(8);
 
   log('you: top 3');
   await tab('You');

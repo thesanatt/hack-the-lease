@@ -1,7 +1,14 @@
-// Next year: what not knowing next year's schedule costs, drawn from a class catalog (docs/NEXT_YEAR.md).
+// Next semester (the tab was "Next year"; hash #next): what not knowing next semester's schedule costs, drawn
+// from a class catalog (docs/NEXT_YEAR.md, docs/LISTINGS.md part 1).
 //
 //   runNextYear(api, { plan, sections, k = 200, seed = 1, priority = 'normal', odds = {}, settled = {}, onProgress })
-//     -> { plan, factors, scenarios, rank, voi, safest, homeById, stats, ms, costs, campus, nAll, persona }
+//     -> { plan, factors, scenarios, rank, voi, safest, homeById, stats, ms, costs, campus, nAll, persona, routing }
+//
+//   routing = { trips, ms, weeks, cached }: door-to-door trips evaluated (every trip of every routed week for
+//   every home) and the wall time spent inside the router for them. Weeks served from the week cache count as
+//   zero. When every week came from the cache, it reports what routing exactly those weeks cost when they were
+//   routed, with cached: true. bestRouting() returns the largest routing seen in this page, or null, and
+//   onRouting(fn) tells when it grows (pitch slide 5, the Router stop).
 //
 // Plain JS (no React, no DOM), so the pitch and node scripts can import it.
 // The slow part is routing: every possible week through every home. That runs once per
@@ -21,6 +28,9 @@ const baseCache = new Map();   // key -> Promise<base>
 const evalCache = new Map();   // key -> result
 const weekCache = new Map();   // version|modes|week signature -> Map homeId -> WeekResult
 const thetaCache = new Map();  // config version -> thetas
+const weekCost = new WeakMap(); // routed week (Map) -> { trips, ms } spent routing it
+let bestSeen = null;            // largest routing seen in this page, for the pitch How it works slide
+const routingListeners = new Set();
 const sectionIds = new WeakMap();
 let nextSectionId = 1;
 
@@ -84,7 +94,8 @@ async function buildBase(api, opts, onProgress) {
   const dates = api.config.termDates;
   const version = api.version ?? 0;
   const weeks = new Array(scenarios.length);
-  let routed = 0, last = now();
+  let routed = 0, trips = 0, routeMs = 0, last = now();
+  const used = new Set();
   onProgress?.(0, `Routing ${scenarios.length} possible weeks`);
   for (let i = 0; i < scenarios.length; i++) {
     const s = scenarios[i];
@@ -92,11 +103,17 @@ async function buildBase(api, opts, onProgress) {
     const key = `${version}|${weekSignature(s.week, m)}`;
     let w = weekCache.get(key);
     if (!w) {
+      const a = now();
       w = api.weekFor({ ...s, modes: m }, homeIds, { dates });
+      const dt = now() - a;
       if (!w) throw new Error('The week module is not built yet.');
+      let n = 0;
+      for (const r of w.values()) n += r?.trips?.length || 0;
+      weekCost.set(w, { trips: n, ms: dt });
       remember(weekCache, key, w, WEEK_MAX);
-      routed++;
+      routed++; trips += n; routeMs += dt;
     }
+    used.add(w);
     weeks[i] = w;
     if (now() - last > 40) {
       onProgress?.((i + 1) / scenarios.length, `Routing week ${i + 1} of ${scenarios.length}`);
@@ -105,6 +122,17 @@ async function buildBase(api, opts, onProgress) {
     }
   }
   const t1 = now();
+  let routing = { trips, ms: routeMs, weeks: routed, cached: false };
+  if (!routed) {
+    // everything came from the cache: report what routing these same weeks cost when they were routed
+    let n = 0, ms = 0;
+    for (const w of used) { const c = weekCost.get(w); if (c) { n += c.trips; ms += c.ms; } }
+    routing = { trips: n, ms, weeks: used.size, cached: true };
+  }
+  if (routing.trips && (!bestSeen || routing.trips > bestSeen.trips)) {
+    bestSeen = { ...routing };
+    for (const fn of routingListeners) fn(bestRouting());
+  }
   const thetas = thetasFor(api);
   onProgress?.(1, 'Ranking homes');
   await nextTick();
@@ -112,7 +140,7 @@ async function buildBase(api, opts, onProgress) {
     plan, persona, scenarios, weeks, thetas,
     factors: drawn.factors || [], stats: drawn.stats || { k: scenarios.length, conflictsUnresolved: 0, missingCourses: [] },
     indexById: new Map(scenarios.map((s, i) => [s.id, i])),
-    ms: { sample: tS - t0, route: t1 - tS }, routed,
+    ms: { sample: tS - t0, route: t1 - tS }, routed, routing,
   };
 }
 
@@ -186,7 +214,8 @@ function evaluate(api, base, settled, seed) {
   const homeById = api.data.homeById;
   if (!scenarios.length) {
     return { plan: base.plan, persona: base.persona, factors: base.factors, scenarios, rank: [], voi: null, safest: null,
-      homeById, stats: base.stats, nAll: base.scenarios.length, empty: true, ms: { ...base.ms, rank: 0, voi: 0 } };
+      homeById, stats: base.stats, nAll: base.scenarios.length, empty: true, routing: base.routing,
+      ms: { ...base.ms, rank: 0, voi: 0 } };
   }
   const weeksByScenario = idx.map((i) => base.weeks[i]);
   const rank = decide.meRank({ homes: api.data.homes, weeksByScenario, thetas: base.thetas, cfg });
@@ -201,7 +230,7 @@ function evaluate(api, base, settled, seed) {
   return {
     plan: base.plan, persona: base.persona, factors: base.factors, scenarios, rank, voi, safest, homeById,
     stats: base.stats, costs, campus: campusShares(scenarios, base.plan, api.data.placeById),
-    nAll: base.scenarios.length, nDraws: base.thetas.length,
+    nAll: base.scenarios.length, nDraws: base.thetas.length, routing: base.routing,
     ms: { ...base.ms, rank: t1 - t0, voi: t2 - t1, total: (base.ms.sample || 0) + (base.ms.route || 0) + (t2 - t0) },
   };
 }
@@ -240,7 +269,12 @@ export async function loadNextYearSample(api, base = './data/') {
   return { parsed, plans: plans.plans || [], plansLabel: plans.label || 'SAMPLE plans', meta };
 }
 
+// The largest routing measured in this page ({ trips, ms, weeks, cached }), or null before any run.
+export function bestRouting() { return bestSeen ? { ...bestSeen } : null; }
+// fn(bestRouting()) runs when a larger routing is measured. Returns an unsubscribe function.
+export function onRouting(fn) { routingListeners.add(fn); return () => routingListeners.delete(fn); }
+
 // For tests and for a config change that should drop everything.
 export function clearNextYearCache() {
-  baseCache.clear(); evalCache.clear(); weekCache.clear(); thetaCache.clear();
+  baseCache.clear(); evalCache.clear(); weekCache.clear(); thetaCache.clear(); bestSeen = null;
 }

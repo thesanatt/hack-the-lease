@@ -4,9 +4,11 @@
 //   Me view       web/src/views/MeView.jsx (posterior seed 7, scenario seed 11, draws seed 3, auto-answer seeds 1000+k)
 //   Group view    web/src/views/GroupView.jsx + group/logic.js (EF draws seed 11)
 //   Operator view web/src/views/OperatorView.jsx (population seed 11, engine operator.js path)
-//   Next year     web/src/views/NextView.jsx + next/compute.js (runNextYear, k 200, seed 1; section 11)
+//   Next semester web/src/views/NextView.jsx + next/compute.js (runNextYear, k 200, seed 1; section 11)
+//   Listings      web/src/views/ListingsView.jsx + listings/compute.js + engine/listing.js (section 12)
 // Homes, rooms and rents are SYNTHETIC. People are FICTIONAL personas. Timetables, streets and places are real.
 // The class catalog and the two plans for section 11 are SAMPLE: course numbers are real, sections are made up.
+// The posts in section 12 are SAMPLE posts written for the demo: no real listing, landlord or student.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -460,14 +462,14 @@ for (const off of [false, true]) {
 }
 say(`R6 detail: ${R6.result.pairs - R6.result.both_reachable} of ${R6.result.pairs} trips not reachable in both routers (only in Quorum: ${R6.result.reachable_only_in_quorum ?? 'n/a'})`);
 
-// ---------- 11. Next year tab and pitch slide 2 (web/src/views/NextView.jsx, next/*.jsx, pitch/data.js) ----------
+// ---------- 11. Next semester tab and pitch slide 2 (web/src/views/NextView.jsx, next/*.jsx, pitch/data.js) ----------
 // The same runNextYear call as the tab: k = 200, seed 1, normal registration, the plan's own odds unless changed.
 // Every quoted string below is formatted with the tab's own helpers (next/format.js), so it reads as on screen.
 // The catalog and plans are SAMPLE: course numbers are real; sections, times and rooms are made up.
 {
   const catalog = await import('../engine/catalog.js');
   const { runNextYear, NEXT_DEFAULT_PLAN } = await import('../web/src/views/next/compute.js');
-  const { money, moneyRange, pct: pct0, findOutSentence } = await import('../web/src/views/next/format.js');
+  const { money, moneyRange, pct: pct0, findOutSentence, speedLine } = await import('../web/src/views/next/format.js');
   const mods = { catalog, decide, prefs, week };
   const api = {
     version: 0, config: cfg,
@@ -505,15 +507,16 @@ say(`R6 detail: ${R6.result.pairs - R6.result.both_reachable} of ${R6.result.pai
     say(`sentence: "${findOutSentence(rows[0])}"`);
     if (r.campus?.length) say(`where your classes would be: ${r.campus.map((c) => `${c.area} ${pct0(c.share)}`).join(', ')}`);
     say(`compute: sample ${Math.round(r.ms.sample)} ms, routing ${Math.round(r.ms.route)} ms, rank ${Math.round(r.ms.rank)} ms, voi ${Math.round(r.ms.voi)} ms`);
+    if (r.routing) say(`speed line (node timing; the browser measures its own): "${speedLine(r.routing) || '(none: nothing routed)'}"   [${r.routing.weeks} weeks routed${r.routing.cached ? ', all from the cache' : ''}]`);
     return rows;
   };
   say('');
-  H(`11. Next year: the catalog. ${parsed.sections.length} sections read, skipped ${JSON.stringify(parsed.skipped)}, unmatched ${parsed.unmatched.length}. Tab default plan: ${NEXT_DEFAULT_PLAN}`);
+  H(`11. Next semester: the catalog. ${parsed.sections.length} sections read, skipped ${JSON.stringify(parsed.skipped)}, unmatched ${parsed.unmatched.length}. Tab default plan: ${NEXT_DEFAULT_PLAN}`);
   const order = [NEXT_DEFAULT_PLAN, ...plansFile.plans.map((p) => p.id).filter((id) => id !== NEXT_DEFAULT_PLAN)];
   const first = {};
   for (const id of order) {
     const plan = planOf(id);
-    H(`11a. Next year, ${plan.name} (persona ${plan.personaId}), as the tab opens${id === NEXT_DEFAULT_PLAN ? ' (default plan; pitch slide 2 shows the same)' : ''}`);
+    H(`11a. Next semester, ${plan.name} (persona ${plan.personaId}), as the tab opens${id === NEXT_DEFAULT_PLAN ? ' (default plan; pitch slide 2 shows the same)' : ''}`);
     say(`odds chips: ${(plan.maybes || []).map((m) => `"${m.label}" ${Math.round(m.odds * 100)}%`).join('; ') || 'none'}`);
     const r = await run(plan);
     first[id] = { r, rows: show(r, { chips: true }) };
@@ -522,7 +525,7 @@ say(`R6 detail: ${R6.result.pairs - R6.result.both_reachable} of ${R6.result.pai
     const plan = planOf(id);
     const { r, rows } = first[id];
     const topF = rows[0];
-    H(`11b. Next year, ${plan.name}: settle the top unknown, "${topF.label}", one option at a time`);
+    H(`11b. Next semester, ${plan.name}: settle the top unknown, "${topF.label}", one option at a time`);
     for (const o of topF.options) {
       const c = counts(r.scenarios, topF.id).get(o.id) || 0;
       if (!c) { say(`"${o.label}": disabled, in none of the possible weeks`); continue; }
@@ -533,9 +536,98 @@ say(`R6 detail: ${R6.result.pairs - R6.result.both_reachable} of ${R6.result.pai
   }
   const cs = planOf('cs');
   for (const m of cs.maybes || []) {
-    H(`11c. Next year, ${cs.name}: "${m.label}" odds slider from ${Math.round(m.odds * 100)}% to 70%`);
+    H(`11c. Next semester, ${cs.name}: "${m.label}" odds slider from ${Math.round(m.odds * 100)}% to 70%`);
     const r = await run(cs, { odds: { [m.id]: 0.7 } });
     show(r, { chips: true });
   }
+}
+// ---------- 12. Listings tab: the SAMPLE posts (web/public/data/posts_sample.json) ----------
+// Each sample post goes through engine/listing.js exactly as "Add" does in web/src/views/ListingsView.jsx: redact,
+// parsePost with the streets file and Jordan's centroid (the tab opens on Jordan), then dedupeKey against the posts
+// already added. Then the demo's two posts (sample posts 1 and 2) are ranked for Jordan with the three best sample
+// homes, the same way as web/src/views/listings/compute.js rankAll (You tab values before any pick).
+{
+  const L = await import('../engine/listing.js');
+  const streets = json('streets/streets.geojson');
+  const samples = json('posts_sample.json');
+  const routineJ = modalRoutine(editableWeek(jordan), jordan.modes);
+  let cw = 0, clat = 0, clon = 0;
+  for (const e of routineJ.week || []) {
+    const pl = placeById.get(e.place);
+    if (!pl) continue;
+    const k = e.days?.length || 1;
+    clat += pl.lat * k; clon += pl.lon * k; cw += k;
+  }
+  const centroid = cw ? { lat: clat / cw, lon: clon / cw } : null;
+  H(`12. Listings: ${samples.posts.length} sample posts, label "${samples.label}"`);
+  say(`Jordan's centroid for street-only posts: ${centroid ? `${centroid.lat.toFixed(5)}, ${centroid.lon.toFixed(5)}` : 'none'}`);
+  const added = [];
+  const t0 = performance.now();
+  for (const sp of samples.posts) {
+    const text = L.redact(sp.text.trim());
+    const ta = performance.now();
+    const l = L.parsePost(text, { streets, places, centroid });
+    const ms = performance.now() - ta;
+    const key = L.dedupeKey(l, text);
+    const dup = added.find((a) => a.key === key);
+    const loc = l.location || {};
+    say('');
+    say(`${sp.id}: "${sp.text}"`);
+    say(`   card title "${L.shortName(l) || '(none)'}"; parsed in ${ms.toFixed(1)} ms`);
+    say(`   rent ${l.rent ?? '-'} (${l.confidence.rent}); utilities ${l.utilities ?? '-'}; dates ${l.start ?? '-'} to ${l.end ?? '-'}${l.start || l.end ? ` "${L.fmtRange(l.start, l.end)}"` : ''} (${l.confidence.start}/${l.confidence.end}); term ${l.term ?? '-'}`);
+    say(`   beds ${l.beds ?? '-'} of ${l.bedsInUnit ?? '-'}; furnished ${l.furnished ?? '-'}; street ${l.street ?? '-'}; cross ${l.cross ?? '-'}; number ${l.number ?? '-'}; place ${l.place?.label ?? '-'}`);
+    say(`   location ${loc.how ?? 'none'}${Number.isFinite(loc.lat) ? ` ${loc.lat.toFixed(5)}, ${loc.lon.toFixed(5)}` : ''}: "${loc.note || ''}"; contact ${l.contact}`);
+    say(`   dedupe key "${key}": ${dup ? `same as ${dup.id}, merged ("seen ${++dup.count} times")` : 'new card'}`);
+    if (!dup) added.push({ id: sp.id, key, count: 1, l, text });
+  }
+  say('');
+  say(`${samples.posts.length} posts parsed in ${Math.round(performance.now() - t0)} ms (the first builds the street index); ${added.length} cards after merging`);
+
+  H('12b. Listings demo: Jordan adds sample posts 1 and 2; ranked with the three best sample homes');
+  const demo = added.slice(0, 2).map((a, i) => ({ ...a, n: i + 1, pid: `post-demo-${i + 1}` }));
+  for (const d of demo) planner.addPoint(d.pid, d.l.location.lat, d.l.location.lon);
+  const ids = [...homeIds, ...demo.map((d) => d.pid)];
+  const wm = weekFor(routineJ, ids);
+  const scen = week.sampleWeeks(uncertainRoutine(editableWeek(jordan), jordan.modes), cfg.scenarios, 11);
+  const weeksByScenario = scen.map((s) => weekFor(s, ids));
+  const thetas = prefs.draws(prefs.createPosterior({ seed: 7, cfg }), cfg.posteriorDraws, 3);
+  const listingHomes = demo.map((d) => ({
+    id: d.pid, name: L.shortName(d.l), lat: d.l.location.lat, lon: d.l.location.lon, rent: d.l.rent, utilities: 0,
+    rooms: [{ id: `${d.pid}-r`, label: 'Room', sqft: 120, bath: 'shared', light: 1, asking: d.l.rent }],
+  }));
+  const rank = decide.meRank({ homes: [...homes, ...listingHomes], weeksByScenario, thetas, cfg });
+  const nightsOf = (w) => new Set(w.trips.filter((t) => t.stranded || t.darkMin > 0).map((t) => t.day)).size;
+  const rows = rank.map((r) => ({ r, d: demo.find((x) => x.pid === r.homeId), cost: -r.meanU, w: wm.get(r.homeId) })).sort((a, b) => a.cost - b.cost);
+  let nh = 0;
+  const shown = rows.filter((x) => x.d || nh++ < 3);
+  // Same spans as web/src/views/listings/compute.js SEMESTERS.
+  const SEMS = { fall: { label: 'Fall 2027', start: '2027-09-01', end: '2027-12-15' }, winter: { label: 'Winter 2027', start: '2027-01-06', end: '2027-04-25' } };
+  for (const sem of Object.values(SEMS)) {
+    say(`Need it for ${sem.label}:`);
+    shown.forEach((x) => {
+      const c = x.d ? L.covers(x.d.l, sem) : null;
+      const name = x.d ? `Post ${x.d.n}, ${L.shortName(x.d.l)}` : `${nm(x.r.homeId)} (Sample listing)`;
+      const util = x.d && x.d.l.utilities === 'extra' ? ' + util.' : '';
+      say(`   ${name}: ${usd(x.cost)}/mo cost to you, ${(x.w.weeklyMin / 60).toFixed(1)} h/wk, ${nightsOf(x.w)}/wk late nights, rent ${usd(x.r.price)}${util}${c && c.ok === false ? `; note "${c.note}"` : ''}`);
+    });
+    const fit = shown.filter((x) => x.d && L.covers(x.d.l, sem).ok !== false);
+    const home = shown.find((x) => !x.d);
+    let sentence;
+    if (!fit.length) sentence = `None of your pasted posts covers ${sem.label}.`;
+    else if (fit[1]) sentence = `Best of your pasted posts: ${L.shortName(fit[0].d.l)}, ${usd(fit[1].cost - fit[0].cost)} a month less than the next.`;
+    else { const dd = home.cost - fit[0].cost; sentence = `${L.shortName(fit[0].d.l)} costs you ${usd(Math.abs(dd))} a month ${dd >= 0 ? 'less' : 'more'} than the best sample home.`; }
+    say(`   sentence: "${sentence}"`);
+  }
+  // Draft for post 2 (the Reach out step): the first tour slot, found the way listings/compute.js tourFact does.
+  const d2 = demo[1];
+  let tour = null;
+  try {
+    const res = tours.findTourSlots(planner, { house: { id: d2.pid, lat: d2.l.location.lat, lon: d2.l.location.lon }, members: [{ id: 'you', name: 'You', routine: routineJ }], places, cfg });
+    const order = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const s0 = [...(res.slots || [])].sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day) || a.start - b.start)[0];
+    if (s0) tour = { day: tours.DAY_LONG[s0.day], time: tours.clock12(s0.start) };
+  } catch (e) { say(`tour slots failed: ${e.message}`); }
+  say('Draft for post 2 (no first name typed; its spot is a guess along the street, so there is no trip line):');
+  say(`   "${L.draftMessage({ listing: d2.l, facts: { trip: null, tour }, student: {} })}"`);
 }
 console.log('\nDone.');

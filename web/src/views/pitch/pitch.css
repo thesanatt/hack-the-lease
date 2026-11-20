@@ -93,7 +93,7 @@
 .pd-key { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 15px; color: var(--pd-gray); margin-top: 10px; padding-left: 20.8%; }
 .pd-key span { display: inline-flex; align-items: center; gap: 8px; }
 
-/* slide 2: next year. Bars of what each unknown is worth; the home that loses least under the big number. */
+/* slide 2: next semester. Bars of what each unknown is worth; the home that loses least under the big number. */
 .pd-bar-k { font-size: 20px; fill: var(--pd-ink); }
 .pd-safe { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--pd-line); display: flex; flex-direction: column; gap: 4px; }
 .pd-safe-tag { font-size: 13px; font-weight: 600; color: var(--pd-green); }

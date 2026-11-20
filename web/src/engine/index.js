@@ -6,6 +6,7 @@
 //   api.has(name) true when engine/<name>.js exists and loaded (week, prefs, decide, fair, operator, solar, simplex)
 //   api.mod(name) that module, or null
 //   api.weekFor(routine, homeIds, opts) -> Map homeId -> WeekResult (week.evaluateWeek with cfg = api.config), or null
+//   api.addPoint(id, lat, lon) add or move a routable point at runtime (pasted listings)
 //   api.config    current config (engine/config.js CONFIG with the Assumptions drawer edits applied)
 //   api.overrides the edits only
 //   api.setConfig(partial)  merge edits, re-apply routing constants, notify subscribers
@@ -92,6 +93,13 @@ export async function createEngine({ onProgress = () => {}, base = './data/' } =
       const w = loaded.week;
       if (!w?.evaluateWeek) return null;
       return w.evaluateWeek(planner, routine, homeIds, { cfg: api.config, dates: api.config.termDates, ...opts });
+    },
+    // Add (or move) one routable point at runtime, e.g. a pasted listing. Moving drops the old walk tree;
+    // week.js cache entries are keyed by lat/lon, so a moved point is routed again.
+    addPoint(id, lat, lon) {
+      const p = planner.points.get(id);
+      if (p && (p.lat !== lat || p.lon !== lon)) planner.removePoint(id);
+      return planner.addPoint(id, lat, lon);
     },
     optionFor(home, room, week) {
       const n = home.rooms?.length || 1;

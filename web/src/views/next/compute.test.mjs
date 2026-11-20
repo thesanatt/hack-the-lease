@@ -1,4 +1,4 @@
-// Next year compute: caching (settling never routes again), the cost matrix, campus shares and the sentence.
+// Next semester compute: caching (settling never routes again), the cost matrix, campus shares and the sentence.
 // Uses the real catalog, decide and prefs modules with a stand-in router so it runs in a second.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -7,7 +7,7 @@ import * as catalog from '../../../../engine/catalog.js';
 import * as decide from '../../../../engine/decide.js';
 import * as prefs from '../../../../engine/prefs.js';
 import { CONFIG } from '../../../../engine/config.js';
-import { runNextYear, costMatrix, campusShares, oddsKey, weekSignature, clearNextYearCache, regretByHome, NEXT_DEFAULT_PLAN } from './compute.js';
+import { runNextYear, costMatrix, campusShares, oddsKey, weekSignature, clearNextYearCache, regretByHome, bestRouting, NEXT_DEFAULT_PLAN } from './compute.js';
 import { findOutSentence, money } from './format.js';
 
 const places = JSON.parse(readFileSync(new URL('../../../public/data/places.json', import.meta.url), 'utf8'));
@@ -46,7 +46,9 @@ function makeApi() {
       const out = new Map();
       for (const id of homeIds) {
         const far = routine.week.filter((e) => (id === 'hn' ? area(e.place) !== 'North' : area(e.place) === 'North')).length;
-        out.set(id, { homeId: id, rideMin: 60 * far, walkMin: 0, waitMin: 0, bikeMin: 0, slackMin: 0, stranded: [], trips: [] });
+        // two trips per meeting day (there and back), so the routing count is easy to check
+        const trips = routine.week.flatMap((e) => (e.days || []).flatMap(() => [{}, {}]));
+        out.set(id, { homeId: id, rideMin: 60 * far, walkMin: 0, waitMin: 0, bikeMin: 0, slackMin: 0, stranded: [], trips });
       }
       return out;
     },
@@ -83,6 +85,39 @@ test('runNextYear routes each distinct week once and settling only filters', asy
   // odds change: new draw, same distinct weeks, so nothing new to route
   await runNextYear(api, { plan, sections, k: 40, seed: 3, odds: { job: 0.9 } });
   assert.equal(calls.n, routed);
+});
+
+test('routing counts only weeks routed in this run, and reports the original cost when all are cached', async () => {
+  clearNextYearCache();
+  assert.equal(bestRouting(), null);
+  const { api, calls } = makeApi();
+  const sections = catalog.parseCatalogCSV(CSV, places).sections;
+  const res = await runNextYear(api, { plan, sections, k: 40, seed: 3 });
+  // every distinct week through both homes: two trips per meeting day
+  let want = 0;
+  const seen = new Set();
+  for (const s of res.scenarios) {
+    const sig = weekSignature(s.week, s.modes || api.data.personas[0].modes);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    want += 2 * homes.length * s.week.reduce((a, e) => a + (e.days?.length || 0), 0);
+  }
+  assert.equal(res.routing.weeks, calls.n);
+  assert.equal(res.routing.trips, want);
+  assert.equal(res.routing.cached, false);
+  assert.ok(res.routing.ms >= 0);
+  assert.deepEqual(bestRouting(), res.routing);
+
+  // settling keeps the run's routing
+  const lec = res.factors.find((f) => f.kind === 'section');
+  const settled = await runNextYear(api, { plan, sections, k: 40, seed: 3, settled: { [lec.id]: lec.options[0].id } });
+  assert.deepEqual(settled.routing, res.routing);
+
+  // a new draw over the same distinct weeks routes nothing new: the cost of routing those weeks, marked cached
+  const again = await runNextYear(api, { plan, sections, k: 40, seed: 3, odds: { job: 0.9 } });
+  assert.equal(again.routing.cached, true);
+  assert.ok(again.routing.trips > 0 && again.routing.trips <= res.routing.trips);
+  assert.equal(bestRouting().trips, res.routing.trips);
 });
 
 test('settling to an option with no weeks returns an empty result, not a crash', async () => {

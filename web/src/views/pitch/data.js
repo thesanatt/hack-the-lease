@@ -193,7 +193,7 @@ export function evidenceFigures(ev) {
   return f;
 }
 
-// Next year, as the Next year tab shows it before anything but the plan is changed: a sample plan
+// Next semester, as the Next semester tab shows it before anything but the plan is changed: a sample plan
 // (plans_sample.json; NEXT_DEFAULT_PLAN, the Nursing junior, unless the slide's menu picks another) on the sample catalog, k = 200 possible weeks, seed 1, normal registration,
 // the plan's own odds, nothing settled. Same runNextYear call and same arguments as NextView.jsx (K, SEED there),
 // so the slide and the tab show the same dollars; runNextYear caches, so whichever opens second is instant.

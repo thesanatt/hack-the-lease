@@ -1,11 +1,12 @@
-// Next year: a student signs a lease before next year's schedule exists. From a class catalog (a labeled
-// sample, or the student's own Registrar file read in this browser) we draw the weeks they could end up with,
-// route each one through every home, and show what not knowing costs, the home that loses least, and the
-// one thing worth finding out first. docs/NEXT_YEAR.md is the contract.
+// Next semester (hash #next): a student signs a lease before next semester's schedule exists. From a class
+// catalog (a labeled sample, or the student's own Registrar file read in this browser) we draw the weeks they
+// could end up with, route each one through every home, and show what not knowing costs, the home that loses
+// least, and the one thing worth finding out first. docs/NEXT_YEAR.md and docs/LISTINGS.md are the contract.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapView, NotBuilt } from '../components/index.js';
 import { useConfigVersion } from '../engine/useConfig.js';
 import { runNextYear, loadNextYearSample, NEXT_DEFAULT_PLAN } from './next/compute.js';
+import { speedLine } from './next/format.js';
 import Controls from './next/Controls.jsx';
 import Hero from './next/Hero.jsx';
 import Unknowns from './next/Unknowns.jsx';
@@ -87,8 +88,8 @@ export default function NextView({ api }) {
     return api.data.places.filter((p) => ids.has(p.id));
   }, [res, api]);
 
-  if (!cat) return <NotBuilt module="catalog" what="next year's possible weeks from a class catalog" />;
-  if (!ready) return <NotBuilt module="week" what="routing next year's possible weeks" />;
+  if (!cat) return <NotBuilt module="catalog" what="next semester's possible weeks from a class catalog" />;
+  if (!ready) return <NotBuilt module="week" what="routing next semester's possible weeks" />;
   if (loadError) return <div className="note warn" role="status">The sample catalog did not load: {loadError}</div>;
 
   const onFile = (name, text) => {
@@ -104,6 +105,7 @@ export default function NextView({ api }) {
   };
   const settle = (fid, oid) => setSettled((s) => ({ ...s, [fid]: oid }));
   const unsettle = (fid) => setSettled((s) => { const n = { ...s }; delete n[fid]; return n; });
+  const speed = speedLine(res?.routing);
   const shown = selHome && res?.homeById?.has(selHome) ? selHome : res?.safest?.homeId;
 
   return (
@@ -123,9 +125,12 @@ export default function NextView({ api }) {
           {busy && <div style={{ width: `${Math.max(4, Math.round(busy.f * 100))}%` }} />}
         </div>
         <Hero res={res} busy={busy} />
-        <div className="nx-map">
-          <MapView homes={mapHomes} places={mapPlaces} selectedHomeId={shown} onHomeClick={setSelHome} labelIds={[]}
-            fitById={fitById || undefined} rankById={rankById || undefined} height={440} fit="all" />
+        <div className="nx-mapcol">
+          <div className="nx-map">
+            <MapView homes={mapHomes} places={mapPlaces} selectedHomeId={shown} onHomeClick={setSelHome} labelIds={[]}
+              fitById={fitById || undefined} rankById={rankById || undefined} height={440} fit="all" />
+          </div>
+          {speed && <p className="nx-speed">{speed}</p>}
         </div>
       </section>
 

@@ -13,10 +13,11 @@ const lazyView = (name) => {
   return viewFiles[key] ? lazy(viewFiles[key]) : null;
 };
 
-// Hash routes stay #me, #group, #operator, #evidence, #pitch.
+// Hash routes stay #me, #group, #operator, #evidence, #pitch. "Next semester" keeps #next (it was "Next year").
 const VIEWS = [
   { id: 'me', label: 'You', file: 'Me', Comp: MeView },
-  { id: 'next', label: 'Next year', file: 'Next', Comp: lazyView('Next') },
+  { id: 'next', label: 'Next semester', file: 'Next', Comp: lazyView('Next') },
+  { id: 'listings', label: 'Listings', file: 'Listings', Comp: lazyView('Listings') },
   { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group') },
   { id: 'operator', label: 'Owners', file: 'Operator', Comp: lazyView('Operator') },
   { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence') },

@@ -1,0 +1,33 @@
+{
+  "label": "SAMPLE posts, made up for the demo; not real listings or people",
+  "posts": [
+    {
+      "id": "s1",
+      "text": "Subletting my room on Hill St near Church, May 1 to Aug 15, $780/mo utilities included. Furnished, 1 of 4 bed. 5 min walk to the Union. Message me here if interested!"
+    },
+    {
+      "id": "s2",
+      "text": "Winter semester sublet on Catherine St. 1 room in a 3 bedroom apartment, $925 a month plus utilities. Not furnished. I am leaving for study abroad, so it is open Jan to Apr."
+    },
+    {
+      "id": "s3",
+      "text": "Lease takeover: studio near the Michigan Union, available Jan 5 through April 30. $1,050 per month, all utilities included, furnished. Laundry in the building."
+    },
+    {
+      "id": "s4",
+      "text": "2 rooms open in a 5 bedroom house on S Forest Ave at South University, Sept 2027 to Aug 2028. $4,500 for the whole house, split per person. Utilities extra, unfurnished. Porch and parking."
+    },
+    {
+      "id": "s5",
+      "text": "Summer sublet, 10 min walk to central campus. My room in a 4 bed, 850/mo, utilities included, partly furnished. May to August, dates flexible."
+    },
+    {
+      "id": "s6",
+      "text": "Room for summer at the corner of Church and Hill. $780/mo, utilities included, furnished. May 1 - Aug 15. 1 of 4 bedrooms, easy walk to Central."
+    },
+    {
+      "id": "s7",
+      "text": "Room in a 2 bed apartment on Plymouth Rd near Huron Pkwy, Jan to Aug. 820/mo plus utilities. Furnished, bus stop out front."
+    }
+  ]
+}

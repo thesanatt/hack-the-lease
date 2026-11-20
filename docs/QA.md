@@ -78,11 +78,14 @@ p10, p50 and p90 across those groups is its fair share. A renovation re-solves t
 | Priya's cap move | $875 to $830 makes Broadway infeasible; group moves to Georgetown Blvd ($3,950); her private gap $25 | script section 4b |
 | Owners asking vs fair | Church St house ($4,650), the house Owners opens on: 2 of 5 rooms priced off (Back room $12 over, Basement room $5 over); Back room asks $910 against a fair range of $859 to $898, so "$12 over"; 339 of 2,000 sample students pick it first | script section 5 |
 | Owners half bath | Basement room +$32/mo typical fair rent at the same house rent (Attic -$6, Front -$6, Back $0, Parlor -$18); +$40/mo group value; slider at $30 gives +$17, at $120 gives +$65 | script section 5 |
-| Next year, Nursing junior (the tab opens here; pitch slide 2 too) | "$31 a month", plus or minus $11 (EVPI $31.19, one standard error $5.62); loses least Catherine St, Parlor room, $1,164 to $1,511/mo, best in 66% of 200 weeks; find out first: PNE 350 clinical section $23/mo, part-time job $22/mo, every other unknown $0 | script section 11a |
-| Next year, Nursing, clinical 104 settled | 45 of 200 weeks; "$23 a month", plus or minus $9; loses least Broadway St, Garden room, $1,184 to $1,624/mo, 62%; the job is now worth $22/mo. Settling 101 gives $2, 102 gives $5, 103 gives $11, with Catherine St first each time | script section 11b |
-| Next year, CS junior | "Under $1 a month" (EVPI $0.45); Catherine St, $1,447 to $1,719/mo, best in 96%; every unknown under $1. Lab job odds at 70%: still under $1 (EVPI $0.49), $1,444 to $1,711/mo, 96% | script sections 11a and 11c |
-| Next year, compute | 200 weeks routed through 30 homes in about 0.2 to 1 s in Node (Nursing is faster than CS; the browser is similar); ranking and the bars about 0.25 s; settling only filters and re-ranks, under 0.1 s | script section 11 |
-| Tests | 107 engine tests pass (`node --test "test/*.test.mjs"`), 35 view tests pass (`cd web && npm test`), the Next year tests included | run Fri Nov 20 |
+| Next semester, Nursing junior (the tab opens here; pitch slide 2 too) | "$31 a month", plus or minus $11 (EVPI $31.19, one standard error $5.62); loses least Catherine St, Parlor room, $1,164 to $1,511/mo, best in 66% of 200 weeks; find out first: PNE 350 clinical section $23/mo, part-time job $22/mo, every other unknown $0 | script section 11a |
+| Next semester, Nursing, clinical 104 settled | 45 of 200 weeks; "$23 a month", plus or minus $9; loses least Broadway St, Garden room, $1,184 to $1,624/mo, 62%; the job is now worth $22/mo. Settling 101 gives $2, 102 gives $5, 103 gives $11, with Catherine St first each time | script section 11b |
+| Next semester, CS junior | "Under $1 a month" (EVPI $0.45); Catherine St, $1,447 to $1,719/mo, best in 96%; every unknown under $1. Lab job odds at 70%: still under $1 (EVPI $0.49), $1,444 to $1,711/mo, 96% | script sections 11a and 11c |
+| Next semester, speed line (measured live; read the screen) | Nursing: 31,710 door-to-door trips (78 distinct weeks of the 200, times 30 homes) in 0.1 to 0.3 s in headless Chrome; CS: 109,080 trips (192 distinct weeks) in 0.3 to 0.4 s. Earlier node figures that count every one of the 200 weeks, repeats included: CS 113,790 trips in 0.99 s, Nursing 81,900 in 0.29 s (docs/LISTINGS.md) | script section 11, "speed line" rows (node timing) |
+| Next semester, compute | Ranking and the bars about 0.25 s; settling only filters and re-ranks, under 0.1 s, and routes nothing new | script section 11 |
+| Listings, demo posts for Jordan | Sample posts 1 and 2: Hill St near Church St $1,319/mo cost to you (summer only), Catherine St $1,284/mo (winter only, spot guessed along the street); best sample home Broadway St $1,351. Winter 2027: "Catherine St costs you $67 a month less than the best sample home." Fall 2027: "None of your pasted posts covers Fall 2027." | script sections 12 and 12b |
+| Listings, parser on the 7 sample posts | Every post parsed (rent, dates, beds, utilities, furnished); 6 cards after the duplicate merges; one post with no street asks for a pin; about 25 ms for the first post (it builds the street index), then under 11 ms each in node | script section 12 |
+| Tests | 129 engine tests pass (`node --test "test/*.test.mjs"`, 22 of them for the post reader), 36 view tests pass (`cd web && npm test`) | run Fri Nov 20 |
 
 ## Hard questions, short honest answers
 
@@ -100,9 +103,10 @@ shows a checked certificate.
 **"Where is the AI?"** The learning is the adaptive questions plus Bayesian inference over what the student values.
 There is no LLM, on purpose: it has to run offline and every output must trace back to a number.
 
-**"Why not an LLM to read my schedule or a listing?"** That is where one could fit later: turning a pasted
-schedule or a listing into the same inputs the engine already takes. It would not produce any of the numbers.
-We have not built it.
+**"Why not an LLM to read my schedule or a listing?"** A pasted post is now read by plain rules
+(`engine/listing.js`, see "Listings" below), not a model. A model could fit later as a fallback for posts the
+rules miss. It would only fill the same fields, which the student sees and can edit, and it would not produce
+any of the numbers.
 
 **"Six clicks cannot learn six weights."** Agreed. It mostly learns the travel weights. The screen shows only the
 three values the picks narrowed most, and the gray one is still mostly the starting guess. The recovery test shows
@@ -138,8 +142,9 @@ the line falls from the first question. We show the hard case on purpose.
 place, or add a job. Or import a calendar file or paste schedule lines (see below). Places are a fixed list of 31
 real Ann Arbor places, not a free address box. We have not timed it.
 
-**"Can you load a real listing now?"** Not from the screen. Listings are a JSON file read when the app is built.
-There is no upload button.
+**"Can you load a real listing now?"** Yes, one post at a time: paste it on the **Listings** tab. Quorum reads
+it in the browser, maps it and ranks it next to the sample homes. The 30 sample homes themselves are still a
+JSON file read when the app is built.
 
 **"Why is the value of time $15.2 in one place and $15.8 in another?"** $15.2 is the median, $15.8 the mean. The
 app now uses the median everywhere, so say about $15 an hour.
@@ -311,7 +316,24 @@ r5py within a median of 1 minute (section 6). The rent split is a linear program
 verifies: nobody envies anyone, caps hold, and shares add up to the rent. It runs offline in milliseconds, and the
 same inputs always give the same answer.
 
-## Next year: the price of not knowing
+## Next semester: the price of not knowing
+
+The tab was called "Next year" until Fri Nov 20. The method is the same; only the words changed.
+
+**"Why next semester, not next year?"** The lease runs 12 months, but Ann Arbor's 210 day rule (below) means a
+student signs around spring. Our reasoning: by then the coming Fall is close to known, because Fall registration
+is close or done. What the student truly does not know is the semester they have not registered for yet,
+usually Winter, plus any job. So the tab prices that semester. Dollar figures are per month while that semester
+runs. We have not checked U-M's registration calendar against a source, so do not quote a date.
+
+**"Is the speed number real?"** Yes. The gray line under the map is measured live, in the browser on this
+laptop, when the weeks are routed. It counts every door-to-door trip of every week it actually routed, for
+every home, and the wall time spent. Repeated weeks come from a cache and count as zero, so the Nursing plan
+shows 31,710 trips (78 distinct weeks of the 200, times 30 homes), and the time is 0.1 to 0.3 s in headless
+Chrome. If every week came from the cache, it shows the run that routed them. The router is Connection Scan on
+the real timetables: one scan of the day's departures serves every home at once. Earlier node figures that count
+all 200 weeks, repeats included, on the sample plans: 113,790 trips in 0.99 s (CS) and 81,900 in 0.29 s
+(Nursing). The time depends on the laptop, so read the screen.
 
 **"Where does the catalog come from? Why a sample?"** The U-M Registrar posts each term's Schedule of Classes as a
 CSV (for example FA2026.csv on ro.umich.edu). When we fetched it, the file redirected to the U-M login, so we
@@ -320,8 +342,8 @@ numbers are real, and every section, time and room is made up. The column header
 checked against a current file. A signed-in student downloads the file and clicks **Load my registrar file**. It
 is read in the browser and never uploaded.
 
-**"Do past sections predict next year?"** Not exactly, and we have not measured how well. Sections, times and
-rooms change. The assumption is that next year's mix of sections looks like the latest file. The student loads
+**"Do past sections predict next semester?"** Not exactly, and we have not measured how well. Sections, times and
+rooms change. The assumption is that next semester's mix of sections looks like the latest file. The student loads
 the newest file once it posts, and the numbers update.
 
 **"Students choose their sections. Why draw them at random?"** The model draws open sections at random, with
@@ -362,6 +384,36 @@ clinical section and the job change which home is best, so its price is $31.
 Therapeutic Nursing Care II clinical as PNE 350 to 366, 5 credits (docs/DATA.md). The four sample sections,
 their times and University Hospital as the place are made up.
 
+## Listings: paste any post
+
+**"Why not scrape Facebook groups?"** Three reasons. Facebook's terms forbid automated collection. Most housing
+groups are members only. And the posts carry other students' names and contact details, which we should not
+collect. So the student pastes a post they can already see. Quorum reads it in the browser, strips emails, phone
+numbers, links and handles before saving it, and nothing leaves the browser. Pasted posts stay in that browser
+until **Clear pasted posts**.
+
+**"How good is the parser?"** Good on the 7 sample posts, and not measured on real ones. It is rules, not a
+model: rent ("$850/mo", "850 per month", a whole-house total split per person), dates ("May 1 - Aug 15", "Jan to
+Apr", "summer"), beds, furnished, utilities, and the street, cross street or campus place. Every field shows as
+a chip, marked found or guessed, and the student can edit any of them. Among what our own review found and we
+fixed before the demo: the Listings costs did not match the You tab; now both average over the same possible
+weeks. "On Packard near Hill" was placed as Hill St, because Packard is not in our streets file; now it keeps
+Packard as the street, puts a guessed point on Hill and asks for a pin. The "best of your posts" sentence could
+name a post that does not cover the chosen semester; now it cannot. The draft stated guessed dates and a guessed
+trip as facts; now it uses dates only when the post gave them, and the trip only for a street corner or a pin.
+Known limits: a post with only a street name is placed on that street nearest the student's week (a dashed
+chip), and the cost moves with the pin, by $29 a month in one test. Years are assumed to be the next time that
+month comes after Nov 20 2026.
+
+**"Why no AI for the draft?"** The draft is a template. It is predictable, works offline and never invents a
+fact: it uses only the post's rent, dates and street, the student's first name if typed, and facts Quorum
+computed (the trip time from that spot, the first tour slot that fits the week). It stays under 90 words, and
+Quorum never sends it; there is a Copy button. A local model could polish the wording later, on the same facts.
+
+**"Is the $67 real?"** It is the same "cost to you" as the You tab, for Jordan's week, on sample post 2 against
+the best sample home. The post is made up, and its spot is a guess along Catherine St, so it shows how the
+comparison works, not a real price.
+
 ## Known limitations
 
 - Walking speed is 1.3 m/s for everyone. No hills, snow or ice.
@@ -373,7 +425,11 @@ their times and University Hospital as the place are made up.
 - No street lighting data. "Dark" is about the sun, not lamps.
 - The operator population is drawn independently from stated shares, with no joint survey data.
 - No user testing yet. The recovery test uses simulated answers.
-- Places come from a fixed list of 31. Listings load from a build-time file.
+- Places come from a fixed list of 31. The sample homes load from a build-time file.
+- Pasted posts are read by rules tested on 7 made-up posts and the unit tests, never on real posts. The streets
+  file lacks some names (Packard, Oakland, Tappan, Monroe, Benjamin, East University), so those posts need a pin.
+- A pasted post is one room with neutral features (120 sq ft, shared bath, average light), and utilities marked
+  extra are not added to its rent.
 - The calendar import keeps weekly patterns only: it ignores EXDATE and UNTIL, and reads every-other-week as weekly.
 - Tour times use each member's most likely week only, and each trip is checked on the December timetable.
 - "No pickup" or "no drop-off" flags in the middle of a trip are not modeled. Flags at a trip's first or last

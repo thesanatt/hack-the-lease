@@ -1,7 +1,8 @@
 // MapView: MapLibre GL on our own GeoJSON only (no remote tiles, no glyph server, no sprites; labels are HTML markers).
 // Props:
 //   homes          [{id, lat, lon, name?, short?}] drawn as dots
-//   places         [{id, lat, lon, label, short?}] drawn as small hollow squares with a short label (optional)
+//   places         [{id, lat, lon, label, short?, tiny?}] drawn as small hollow squares with a short label (optional);
+//                  when the short label would overlap another, tiny (e.g. a post number) is shown instead of hiding it
 //   placeLabels    bool, show place labels (default true)
 //   selectedHomeId id to highlight: an enlarged dot with an ink ring and its name (optional)
 //   labelIds       ids of homes that get a name label. Default: every home, or with rankById only the selected one.
@@ -21,6 +22,7 @@
 //                  'paths' also keeps ranks 1 to 3 in frame when rankById is given
 //   playable       bool (default true): show "Play this trip" when the paths carry dep and arr
 //   playMs         ms for one playback (default 6000)
+//   onMapClick     optional ({lng, lat}) => void: called on any click on the map (e.g. dropping a pin)
 // Named exports: FIT_STOPS (the five scale colors) and fitColor(f) so charts beside the map use the same scale.
 // The map data loads once per page and is shared by every MapView.
 // With prefers-reduced-motion the dot does not move: the control steps leg by leg instead.
@@ -185,12 +187,25 @@ function declutter(boxEl, items, ranks = []) {
   for (const it of items) {
     const el = it.label || it.el;
     el.style.visibility = 'visible';
+    if (it.alt) el.textContent = it.full;
     if (it.flip) it.el.classList.remove('flip');
-    let r = el.getBoundingClientRect();
-    if (bad(r) && it.flip) {
-      it.el.classList.add('flip');
-      const r2 = el.getBoundingClientRect();
-      if (bad(r2)) it.el.classList.remove('flip'); else r = r2;
+    const place = () => {
+      let r = el.getBoundingClientRect();
+      if (bad(r) && it.flip) {
+        it.el.classList.add('flip');
+        const r2 = el.getBoundingClientRect();
+        if (bad(r2)) it.el.classList.remove('flip'); else r = r2;
+      }
+      return r;
+    };
+    let r = place();
+    // a crowded label falls back to its short form (a post number) instead of disappearing
+    if (bad(r) && it.alt) {
+      el.textContent = it.alt;
+      if (it.flip) it.el.classList.remove('flip');
+      r = place();
+      taken.push(r);
+      continue;
     }
     if (!it.always && bad(r)) { el.style.visibility = 'hidden'; continue; }
     taken.push(r);
@@ -198,8 +213,10 @@ function declutter(boxEl, items, ranks = []) {
 }
 
 export default function MapView({ homes = [], places = [], placeLabels = true, selectedHomeId, labelIds, onHomeClick, paths = [],
-  fitById, rankById, showStreets = true, showRoutes = true, height = 420, fit = 'all', playable = true, playMs = 6000 }) {
+  fitById, rankById, showStreets = true, showRoutes = true, height = 420, fit = 'all', playable = true, playMs = 6000, onMapClick }) {
   injectCss();
+  const mapClickRef = useRef(onMapClick);
+  mapClickRef.current = onMapClick;
   const box = useRef(null);
   const map = useRef(null);
   const markers = useRef([]);
@@ -282,6 +299,7 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
       });
       m.on('mouseleave', 'homes-hit', () => { m.getCanvas().style.cursor = ''; showTip(null); });
       m.on('moveend', () => declutter(box.current, labelItems.current, rankMarks.current));
+      m.on('click', (ev) => { if (mapClickRef.current) mapClickRef.current({ lng: ev.lngLat.lng, lat: ev.lngLat.lat }); });
       setReady(true);
     });
     return () => { cancelled = true; markers.current.forEach((mk) => mk.remove()); m.remove(); map.current = null; };
@@ -369,7 +387,7 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
       }
       add(el, [p.lon, p.lat], {});
       items.push({ el: sq, always: true, prio: 0.5 });
-      if (label) items.push({ el, label, prio: 2, flip: true });
+      if (label) items.push({ el, label, prio: 2, flip: true, full: label.textContent, alt: p.tiny || null });
     }
     items.sort((a, b) => a.prio - b.prio);
     labelItems.current = items;

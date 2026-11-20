@@ -1,4 +1,4 @@
-// Controls for Next year: plan, catalog (sample or the student's own file, read in this browser only),
+// Controls for Next semester: plan, catalog (sample or the student's own file, read in this browser only),
 // one odds slider per maybe, and how early the student registers.
 // Props: plans, planId, setPlanId, source, setSource, file, onFile(name, text), maybes, odds, setOdds,
 //        priority, setPriority

@@ -3,6 +3,8 @@
 // in here except labels and the published method names. The detail lives in the presenter notes (press N).
 import { useEffect, useMemo, useState } from 'react';
 import { campusExample, studentExample, groupExample, nextYearExample, evidenceFigures, DATE_LABEL, TIMES, DEFAULT_HOME, NEXT_PLAN } from './data.js';
+import { bestRouting, onRouting } from '../next/compute.js';
+import { seconds } from '../next/format.js';
 import { DiffHistogram, RegretCurves, CheckGrid, r5Diffs, regretSeries, C } from '../evidence/charts.jsx';
 
 const int = (x) => (Number.isFinite(x) ? Math.round(x).toLocaleString('en-US') : '-');
@@ -147,9 +149,9 @@ function Legs({ legs, t0, X, y }) {
   );
 }
 
-// 2. Next year: the lease is signed before the schedule exists. The price of not knowing (EVPI), what each
+// 2. Next semester: the lease is signed before the schedule exists. The price of not knowing (EVPI), what each
 // unknown is worth finding out first (EVPPI, with about two standard errors), and the home that loses least.
-// Computed by runNextYear with the Next year tab's defaults, so both show the same dollars.
+// Computed by runNextYear with the Next semester tab's defaults, so both show the same dollars.
 function NextYear({ api }) {
   const [planId, setPlanId] = useState(NEXT_PLAN);
   const [st, setSt] = useState({ status: 'running', f: 0 });
@@ -183,9 +185,9 @@ function NextYear({ api }) {
     <Slide
       title="You sign before your schedule exists."
       aside={aside}
-      foot={r ? `${r.plan.name}: ${int(r.n)} possible weeks drawn from a sample catalog (real course numbers, made-up sections), each routed through all ${int(r.homes)} sample listings on the real timetables. Same numbers as the Next year tab.` : null}
+      foot={r ? `${r.plan.name}: ${int(r.n)} possible weeks drawn from a sample catalog (real course numbers, made-up sections), each routed through all ${int(r.homes)} sample listings on the real timetables. Same numbers as the Next semester tab.` : null}
     >
-      {st.status === 'running' && <Wait what={`Routing next year's possible weeks through every home${st.f > 0 ? `: ${Math.round(st.f * 100)}%` : ''}.`} />}
+      {st.status === 'running' && <Wait what={`Routing next semester's possible weeks through every home${st.f > 0 ? `: ${Math.round(st.f * 100)}%` : ''}.`} />}
       {(st.status === 'missing' || st.status === 'error') && <Wait what="The class catalog module or sample is not in this build." />}
       {r && (
         <div className="pd-two">
@@ -196,12 +198,12 @@ function NextYear({ api }) {
             {small ? (
               <>
                 <div className="pd-hero-v">Under $1<span> a month</span></div>
-                <div className="pd-hero-l">what not knowing next year's schedule costs on this plan</div>
+                <div className="pd-hero-l">what not knowing next semester's schedule costs on this plan</div>
               </>
             ) : (
               <>
                 <div className="pd-hero-v">{usd(r.evpi.value)}<span> a month</span></div>
-                <div className="pd-hero-l">what not knowing next year's schedule costs, plus or minus {usd(pm)}</div>
+                <div className="pd-hero-l">what not knowing next semester's schedule costs, plus or minus {usd(pm)}</div>
               </>
             )}
             {s?.home && (
@@ -468,9 +470,15 @@ function HouseDiagram({ r }) {
 function HowItWorks({ api, ev }) {
   const f = ev ? evidenceFigures(ev) : {};
   const c = api.config || {};
+  // Live throughput once the Next semester computation has run in this page (slide 2 or the tab), else the
+  // per-scan time from evidence/router.json as before.
+  const [live, setLive] = useState(bestRouting);
+  useEffect(() => onRouting(setLive), []);
   const stops = [
     { k: 'Timetables, streets', m: 'TheRide, U-M, OpenStreetMap', real: true },
-    { k: 'Router', m: `Connection Scan${f.msPerScan ? `, ${Number(f.msPerScan).toFixed(2)} ms` : ''}` },
+    live
+      ? { k: 'Router', m: 'Connection Scan', m2: `${int(live.trips)} trips in ${seconds(live.ms)}, in this browser` }
+      : { k: 'Router', m: `Connection Scan${f.msPerScan ? `, ${Number(f.msPerScan).toFixed(2)} ms` : ''}` },
     { k: 'Your week', m: 'Every trip, from every home' },
     { k: 'Picks', m: `${c.picksMin ?? 3} to ${c.picksMax ?? 6} questions` },
   ];
@@ -494,6 +502,7 @@ function HowItWorks({ api, ev }) {
             <circle cx={xs[i]} cy={y} r="15" fill={s.real ? C.ink : '#fff'} stroke={C.ink} strokeWidth="4" />
             <text x={xs[i]} y={y + 50} textAnchor={i === 0 ? 'start' : 'middle'} dx={i === 0 ? -14 : 0} className="pd-stop-k">{s.k}</text>
             <text x={xs[i]} y={y + 76} textAnchor={i === 0 ? 'start' : 'middle'} dx={i === 0 ? -14 : 0} className="pd-stop-m">{s.m}</text>
+            {s.m2 && <text x={xs[i]} y={y + 102} textAnchor="middle" className="pd-stop-m">{s.m2}</text>}
           </g>
         ))}
         {ends.map((e, i) => (
@@ -601,22 +610,22 @@ export const SLIDES = [
       'Point at the lines: same home, three campuses, walk or bus, 2:00 PM or 11:30 PM. The minutes are computed live, not typed in.',
       'Bus lines are drawn in each route\'s real color. Dashed is walking, gray is waiting at the stop. The navy band is a trip after dark.',
       'The 11:30 PM bus: fewer buses, so longer waits, and the walk is in the dark.',
-      'Second problem, the next slide: in Ann Arbor you sign months before you know your fall schedule. Ann Arbor\'s ORD-24-03 lets a landlord sign next year\'s tenant 210 days into the current lease.',
+      'Second problem, the next slide: in Ann Arbor you sign months before you know next semester\'s schedule. Ann Arbor\'s ORD-24-03 lets a landlord sign next year\'s tenant 210 days into the current lease.',
       'Bus minutes run from leaving the building to the front door, wait at the stop included. Walking is 1.3 m/s on OpenStreetMap streets.',
       'If asked: you can switch the home in the menu at the top right.',
     ],
   },
   {
-    id: 'nextyear', title: 'Next year', Comp: NextYear,
+    id: 'nextyear', title: 'Next semester', Comp: NextYear,
     notes: [
-      "Read the title. In Ann Arbor you sign next year's lease months before next year's class schedule exists.",
-      "The big number is what not knowing next year's schedule costs, in dollars a month. In plain words: how much better the pick would be if you knew the schedule first (expected value of perfect information).",
-      "The bars: what knowing each single unknown before you sign is worth. The top bar is the one to find out first. The dashed line is knowing everything at once. Each value has an error from resampling the weeks; the Next year tab draws it as a thin line under each bar.",
+      "Read the title. In Ann Arbor you sign the lease around spring, under the 210 day rule. By then the coming Fall registration is close or done; the semester after it (usually Winter) and any job are what you do not know yet. That is what this prices.",
+      "The big number is what not knowing next semester's schedule costs, in dollars a month, for each month that semester runs. In plain words: how much better the pick would be if you knew the schedule first (expected value of perfect information).",
+      "The bars: what knowing each single unknown before you sign is worth. The top bar is the one to find out first. The dashed line is knowing everything at once. Each value has an error from resampling the weeks; the Next semester tab draws it as a thin line under each bar.",
       "Under it, the home that loses least across all the possible weeks, with its range a month and how often it is the best one.",
       "How: the sample Nursing junior plan (NURS 372 and NURS 373 lectures, a PNE 350 clinical section, one Central Campus course of PSYCH 111, SOC 100 or STATS 250, and maybe a part-time job downtown on Monday and Wednesday evenings, 50% odds) drawn 200 times from the class catalog, with some sections full as at normal registration. Maya's walking limits (Maya is a fictional sample student). Each possible week is routed through every home on the real timetables and ranked as on the You tab.",
       "Be plain about the data: the catalog is SAMPLE. Course numbers are real; sections, times and rooms are made up, in the layout of the U-M Schedule of Classes file as of past years. That header is not yet checked against a current file.",
-      "The menu at the top right switches the sample plan (Nursing junior or CS junior); the Next year tab shows the same numbers for the same plan. The CS junior plan shows under $1: say what it means. One home is safe whatever that schedule turns out to be, so sign it.",
-      "Then switch to the Next year tab: click an option chip under a bar to settle that unknown and watch the numbers and the map change. A student can load their own Registrar file there; it is read in the browser and never uploaded.",
+      "The menu at the top right switches the sample plan (Nursing junior or CS junior); the Next semester tab shows the same numbers for the same plan. The CS junior plan shows under $1: say what it means. One home is safe whatever that schedule turns out to be, so sign it.",
+      "Then switch to the Next semester tab: click an option chip under a bar to settle that unknown and watch the numbers and the map change. A student can load their own Registrar file there; it is read in the browser and never uploaded.",
     ],
   },
   {
@@ -645,12 +654,13 @@ export const SLIDES = [
     id: 'how', title: 'How it works', Comp: HowItWorks,
     notes: [
       'Read the line left to right like a bus route: real timetables and streets, our router, the week, the picks, then the two outputs, the best home and the fair split.',
-      "Class catalog: the branch that joins at Your week. It reads a section file in the Registrar's layout (a labeled sample here, or a student's own file read in the browser) and draws the weeks a student could end up with next year.",
+      "Class catalog: the branch that joins at Your week. It reads a section file in the Registrar's layout (a labeled sample here, or a student's own file read in the browser) and draws the weeks a student could end up with next semester.",
       'Router: Connection Scan Algorithm (Dibbelt et al. 2017), a published method for timetable routing.',
+      'Under Router, once slide 2 or the Next semester tab has run: the door-to-door trips it routed and the time it took, measured live in this browser. Before that it shows the time per scan from the router test file.',
       'Your week: every trip of your week from every home. Walk, wait, ride and minutes after dusk, with dusk from the NOAA solar equations.',
       'Picks: each question is chosen to teach the model the most (BALD, Houlsby et al. 2011, with a particle filter). That is the AI part. No language model, on purpose: it runs offline and every number can be traced.',
       'Ranking: expected regret in $ a month over many possible fall weeks and many draws of your values (Monte Carlo).',
-      "Next year: the price of not knowing is the expected value of perfect information; the bars are its partial version per unknown (EVPPI), with bootstrap errors over the possible weeks.",
+      "Next semester: the price of not knowing is the expected value of perfect information; the bars are its partial version per unknown (EVPPI), with bootstrap errors over the possible weeks.",
       'Fair split: the envy-free rent method behind Spliddit, with private caps, solved as a linear program.',
     ],
   },

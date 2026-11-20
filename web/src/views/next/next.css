@@ -1,4 +1,4 @@
-/* Next year tab. Builds on the You tab styles (you.css): paper, ink, gray, hairline, the fit green. */
+/* Next semester tab (hash #next). Builds on the You tab styles (you.css): paper, ink, gray, hairline, the fit green. */
 .nx { --nx-green: #1F6F4A; --nx-soft: #e3eee7; }
 
 /* controls */
@@ -35,6 +35,8 @@
 .nx-nums .t3-num .v { font-size: 28px; }
 .nx-map { position: relative; border: 1px solid var(--y-line); border-radius: 8px; overflow: hidden; background: var(--y-card); min-width: 0; }
 .nx-map .map { border: 0; }
+.nx-mapcol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.nx-speed { margin: 0; font-size: 13px; color: var(--y-gray); font-variant-numeric: tabular-nums; }
 
 /* what to find out first */
 .nx-sec .you-sec-head { flex-wrap: wrap; align-items: center; }

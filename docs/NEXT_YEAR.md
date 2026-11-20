@@ -1,5 +1,13 @@
 # Next year: the price of not knowing (binding build contract)
 
+> Screen wording, Fri Nov 20: the tab and every on-screen label now say "Next semester" (the hash stays `#next`
+> and the code names stay `runNextYear` and friends). Why: the lease runs 12 months, but under Ann Arbor's 210 day
+> rule a student signs around spring, when the coming Fall registration is close or done. What they truly do not
+> know is the semester they have not registered for yet (usually Winter) and any job. Dollar figures still read
+> "a month", meaning per month while that semester runs. The tab also shows one gray line under the map with the
+> door-to-door trips routed and the time it took in this browser (`runNextYear` returns `routing`; see
+> docs/LISTINGS.md part 2). The rest of this file keeps its original "next year" wording.
+
 ## The idea in one breath
 
 A student signs a lease months before next year's class schedule exists. Quorum reads a class catalog (the
