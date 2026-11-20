@@ -1,6 +1,7 @@
 # Quorum demo script, new student flow (about 4:30, then a 30 s buffer)
 
-The top bar now reads **Saved**, **My profile**, **Browse**, **Next semester**, **Your group**, **How we know**,
+The app opens on **Home** (`#home`), a one-page pitch: hero, the problem, three steps, the proof, how we know.
+The top bar now reads **Home**, **Saved**, **My profile**, **Browse**, **Next semester**, **Your group**, **How we know**,
 **Pitch**. The old You tab, the post paster and Owners are off the bar but still open by link for Q&A:
 `#me`, `#listings`, `#operator`. The previous script is `docs/DEMO_PREVIOUS.md`.
 
@@ -24,30 +25,40 @@ The speed line under Saved is measured live; read it off the screen.
    field and no Send, and the panel works as before): on any Saved card click **Contact landlord**, type your
    own email in **To**, click **Close**. The tab keeps it, so To is filled on stage. Share the browser window
    only; To shows the address.
-6. Click **Pitch**, press **Home** for slide 1. Zoom 80% (Ctrl and minus), F11 for full screen.
+6. Click **Home** (or the Quorum wordmark) and scroll to the top. Zoom 80% (Ctrl and minus), F11 for full
+   screen. Wait until Home's proof section shows **57% -> 82%** (it computes in a second or two).
 
-Order of clicks: Pitch, My profile, Browse, Saved, My profile, Saved, Next semester, Your group, Pitch.
+Order of clicks: Home (scroll), Find my home, My profile, Browse, Saved, My profile, Saved, Next semester, Your
+group, Pitch.
 
 ## Timeline
 
 | Time | Step | Screen |
 |---|---|---|
-| 0:00 to 0:25 | 1. The problem | Pitch slide 1 |
-| 0:25 to 1:15 | 2. Drop a resume | My profile |
+| 0:00 to 0:30 | 1. The problem | Home: hero, then scroll to the problem |
+| 0:30 to 1:15 | 2. Drop a resume | My profile |
 | 1:15 to 1:35 | 3. Fit labels on every home | Browse |
 | 1:35 to 2:25 | 4. Your best saved home, and why | Saved |
 | 2:25 to 3:00 | 5. Change one thing, the ranking moves | My profile, then Saved |
 | 3:00 to 3:40 | 6. The price of not knowing next semester (cut first if long) | Next semester |
 | 3:40 to 4:30 | 7. How we know, close | Pitch, Evidence slide |
 
-## 1. The problem (Pitch slide 1)
+## 1. The problem (Home, 0:00 to 0:30)
+
+Screen: the hero, "BUILT FOR U-M STUDENTS", *Finding an apartment* **should be effortless**, yellow **Find my home
+->**. Scroll once: "10 minutes from campus." Which campus? At 11 PM? **11 min** North at 2 PM vs **39 min**
+Central at 11:30 PM (computed live, same as Pitch slide 1).
 
 > Listings say ten minutes from campus. Which campus, at what hour? On the real bus timetables this North
 > Campus listing is 11 minutes from North at 2 PM and 39 from Central at 11:30 at night.
 
-## 2. My profile: drop a resume (0:25 to 1:15)
+Scroll back up (Home key) and click **Find my home ->**. If short on time, skip the rest of Home: its steps,
+**57% -> 82%** and How we know repeat what the flow shows.
 
-Clicks: **My profile** (blank: "Add a file" and "Or write anything"). Click **Try a sample student**.
+## 2. My profile: drop a resume (0:30 to 1:15)
+
+Clicks: **Find my home** opens **My profile** (blank: "Add a file" and "Or write anything"). Click **Try a sample
+student**. A strip at the top reads Add your week, See your fit, Book a tour.
 
 Screen: "Engineering or computer science student. Most of your week is on North Campus. You get around by bus
 and on foot. No budget set." **Your week**, every row tagged **Yours**: EECS 281 Mon Wed 10:30 to 12 (EECS
@@ -75,7 +86,7 @@ week)". The five saved homes show filled hearts.
 Clicks: **Saved**. Headline: "For your week, **Broadway St house** is the best of your 5." Order: Broadway,
 Catherine St, Georgetown Blvd, East Ann St, Church St. Card 1: yellow **Best for your week** badge, **Great fit**,
 "Lower rent and quick trips. Watch out for walks home in the dark." Big **$923** a month, **9 h 2 min** a week
-(clock icon), and a ring **57%** "best weeks". The listing text is folded under **Details**. Click **Why this
+(clock icon), and a ring **57%** "best weeks" (card 1 only; the others show rank and fit label). The listing text is folded under **Details**. Click **Why this
 rank?** on card 1: "Best of all 30 homes in **57%** of the 24 weeks your schedule could turn out to be."
 
 > One sentence, two numbers per home. Why this rank opens the engine: Broadway wins in 57 percent of the 24
@@ -111,7 +122,7 @@ calendar**. Click **1**: "Leave EECS Building at 1:37 PM, bus CS then WS, there 
 Building, there at 2:59 PM." Click **Book this time**. Click **Back to Saved**: card 1 shows **Tour Monday, Nov 23,
 2:00 PM**. Click **Contact landlord**: **To** (filled before you went on), **Subject** "Your listing: Broadway St
 house", and the drafted message ending "Could I tour it on Monday, Nov 23 at 2:00 PM? Another time works too."
-Click **Send**: the button reads **Sent ✓**. If it shows an error instead, click **Open in my mail app**.
+Click **Send**: the button reads **Sent** with a check mark. If it shows an error instead, click **Open in my mail app**.
 
 > She can tour it Monday at 2, between classes: the planner checked the buses there and back to her 3 PM
 > lecture. One click books it and drafts the message to the landlord. Nothing is sent until she presses Send.

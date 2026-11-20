@@ -3,6 +3,7 @@
 // they care about; every item can be switched off or changed here, and the Saved and Browse tabs rank by it.
 import { useEffect, useRef, useState } from 'react';
 import { Button, Seg } from '../components/index.js';
+import Icon from '../components/Icon.jsx';
 import { useProfile, useSaved } from '../student/store.js';
 import { fileText } from '../student/files.js';
 import { go } from '../student/parts.jsx';
@@ -22,7 +23,7 @@ function Steps({ at }) {
         const n = i + 1, done = n < at, now = n === at;
         return (
           <li key={label} className={done ? 'done' : now ? 'now' : ''} aria-current={now ? 'step' : undefined}>
-            <span className="n" aria-hidden="true">{done ? '✓' : n}</span>
+            <span className="n" aria-hidden="true">{done ? <Icon name="check" size={14} label={null} /> : n}</span>
             {done || now ? <button type="button" className="pf-step-go" onClick={() => go(to)}>{label}</button> : <span>{label}</span>}
             {done && <span className="sr-only"> (done)</span>}
           </li>
@@ -91,6 +92,12 @@ export default function ProfileView({ api }) {
       await addFiles([new File([b], 'Sample resume (fictional student).pdf', { type: 'application/pdf' })]);
     } catch (e) { setMsg({ text: String(e.message || e), bad: true }); }
   };
+  // #profile?sample=1 (Home's "Try it with a sample student"): load the sample once, only into an empty profile.
+  const wantSample = new URLSearchParams(splitHash(window.location.hash).query || '').get('sample') === '1';
+  const sampleAsked = useRef(false);
+  useEffect(() => {
+    if (wantSample && P.empty && !sampleAsked.current) { sampleAsked.current = true; trySample(); }
+  }, [wantSample, P.empty]); // eslint-disable-line react-hooks/exhaustive-deps
   const dropProps = {
     onDragOver: (e) => { e.preventDefault(); setOver(true); },
     onDragLeave: () => setOver(false),

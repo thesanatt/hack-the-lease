@@ -9,10 +9,12 @@ const P = {
   bed: <><path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5" /><circle cx="7" cy="11" r="1.6" /></>,
   laundry: <><rect x="4" y="3" width="16" height="18" rx="2" /><circle cx="12" cy="13" r="4.5" /><path d="M7.5 6.5h.01M10.5 6.5h.01" /></>,
   calendar: <><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></>,
+  key: <><circle cx="8" cy="15" r="4" /><path d="M11 12l8-8M16 7l3 3M14 9l2 2" /></>,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
 };
 
-export const ICON_LABELS = { bus: 'Bus', walk: 'Walk', moon: 'Late nights', dollar: 'Rent', clock: 'Travel time', bed: 'Room', laundry: 'Laundry', calendar: 'Tour', star: 'Best' };
+export const ICON_LABELS = { bus: 'Bus', walk: 'Walk', moon: 'Late nights', dollar: 'Rent', clock: 'Travel time', bed: 'Room', laundry: 'Laundry', calendar: 'Tour', star: 'Best', key: 'Book', check: 'Done' };
 
 export default function Icon({ name, size = 16, label, className = '' }) {
   const body = P[name];

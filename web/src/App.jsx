@@ -16,6 +16,7 @@ const lazyView = (name) => {
 
 // Hash routes stay #me, #group, #operator, #evidence, #pitch. "Next semester" keeps #next (it was "Next year").
 const VIEWS = [
+  { id: 'home', label: 'Home', file: 'Home', Comp: lazyView('Home') },
   { id: 'saved', label: 'Saved', file: 'Saved', Comp: lazyView('Saved') },
   { id: 'profile', label: 'My profile', file: 'Profile', Comp: lazyView('Profile') },
   { id: 'browse', label: 'Browse', file: 'Browse', Comp: lazyView('Browse') },
@@ -57,7 +58,7 @@ function getEngine() {
 // The part before "?" picks the view; deep links like #me?who=maya keep their query for the view to read.
 const viewFromHash = () => {
   const { view } = splitHash(window.location.hash);
-  return VIEWS.some((v) => v.id === view) ? view : 'saved';
+  return VIEWS.some((v) => v.id === view) ? view : 'home';
 };
 const queryFromHash = () => splitHash(window.location.hash).query;
 
@@ -86,7 +87,7 @@ export default function App() {
     <div className={`frame view-${view}`}>
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to the page</a>
       <header className="topbar">
-        <a className="wordmark" href="#saved" onClick={(e) => { e.preventDefault(); go('saved'); }}>Quorum</a>
+        <a className="wordmark" href="#home" onClick={(e) => { e.preventDefault(); go('home'); }}>Quorum</a>
         <nav className="tabs" aria-label="Views">
           {VIEWS.filter((v) => !v.hidden || v.id === view).map((v) => (
             <a key={v.id} href={`#${v.id}`} className="tab" aria-current={v.id === view ? 'page' : undefined}

@@ -142,7 +142,7 @@ export default function SavedView({ api }) {
                   <div className="sv-facts">
                     <span className="sv-fact big"><Icon name="dollar" size={18} /><b>{money(it.rent)}</b><span>a month</span></span>
                     {it.week && <span className="sv-fact"><Icon name="clock" size={15} /><b>{hoursText(it.week.weeklyMin)}</b><span>a week</span></span>}
-                    {res && it.pBest != null && <FitRing p={it.pBest} />}
+                    {res && i === 0 && it.pBest != null && <FitRing p={it.pBest} />}
                   </div>
                   <div className="sv-acts" onClick={(e) => e.stopPropagation()}>
                     {T.forHome(it.home.id) ? (

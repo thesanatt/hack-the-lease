@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../components/index.js';
 import { canSend, sendEmail, mailtoHref } from './send.js';
+import Icon from '../components/Icon.jsx';
 import { go, short } from './parts.jsx';
 import { nextDate, dateLabel, clock12, tripText, tourIcs, download, landlordMessage } from './tours.js';
 
@@ -46,7 +47,7 @@ export function ContactPanel({ api, home, profile, tour, onClose }) {
       {sendOn ? (
         <div className="ct-acts">
           <Button variant="primary" small disabled={!to.trim() || sent.state === 'sending' || sent.state === 'sent'} onClick={send}>
-            {sent.state === 'sending' ? 'Sending...' : sent.state === 'sent' ? 'Sent ✓' : 'Send'}
+            {sent.state === 'sending' ? 'Sending...' : sent.state === 'sent' ? <>Sent <Icon name="check" size={14} label={null} /></> : 'Send'}
           </Button>
           <Button small onClick={copy}>{copied ? 'Copied' : 'Copy message'}</Button>
           {sent.state === 'error' && <a className="btn small" href={mailtoHref({ to: to || c?.email || '', subject, body: text })}>Open in my mail app</a>}
