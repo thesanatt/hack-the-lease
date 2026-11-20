@@ -2,7 +2,7 @@
 // transparent (budget, daily rhythm, campus, homes in common); "Rank with local AI" lets the model re-order them
 // with a reason each. Each opens to their roommate profile, calendar included when they share it.
 import { useMemo, useState } from 'react';
-import { Button } from '../components/index.js';
+import { Button, readableOn } from '../components/index.js';
 import { sampleStudents, compatibility, myCard, rankByAI } from './share.js';
 import { lastStatus } from './assistant.js';
 import { PublicCard } from '../views/RoommateView.jsx';
@@ -34,7 +34,7 @@ export default function Interested({ api, home, profile, share, savedIds }) {
           <div key={x.id} className="in-row">
             <div className="in-top" onClick={() => setOpen(open === x.id ? null : x.id)}>
               <span className="in-rank">{i + 1}</span>
-              <span className="rm-av" style={{ background: x.color }}>{x.name[0]}</span>
+              <span className="rm-av" style={{ background: x.color, color: readableOn(x.color) }}>{x.name[0]}</span>
               <div className="in-who"><b>{x.name}</b><span className="st-sub">{x.program}</span></div>
               <div className="in-score" title="Compatibility score out of 100"><i style={{ width: `${x.score}%` }} /><span>{x.score}% match</span></div>
               <button type="button" className="pf-x">{open === x.id ? 'Close' : 'View profile'}</button>

@@ -29,6 +29,7 @@ export default function Calendar({ entries = [], tours = [], options = [], chose
   const block = (s, t) => ({ top: y(s), height: Math.max(14, (t - s) * PX - 2) });
 
   return (
+    <>
     <div className="cal" style={{ gridTemplateColumns: `52px repeat(${days.length}, minmax(0, 1fr))` }}>
       <div />
       {days.map(([, l]) => <div key={l} className="cal-head">{l}</div>)}
@@ -60,5 +61,13 @@ export default function Calendar({ entries = [], tours = [], options = [], chose
         </div>
       ))}
     </div>
+    <div className="cal-legend" aria-label="Calendar colors">
+      <span><i className="k-class" />Class</span>
+      <span><i className="k-work" />Work</span>
+      <span><i className="k-study" />Study</span>
+      <span><i className="k-tour" />Tour</span>
+      {options.length > 0 && <span><i className="k-open" />Open tour time</span>}
+    </div>
+    </>
   );
 }

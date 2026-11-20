@@ -100,7 +100,7 @@ export default function TourPanel({ api, home, profile, opts, chosen, setChosen,
             <button type="button" className="pf-x" onClick={() => T.cancel(home.id)}>Cancel tour</button>
           </div>
           {contact && <ContactPanel api={api} home={home} profile={profile} tour={booked} onClose={() => setContact(false)} />}
-          <p className="st-sub" style={{ marginTop: 8 }}>To change it, pick another blue time.</p>
+          <p className="st-sub" style={{ marginTop: 8 }}>To change it, pick another gold time.</p>
         </div>
       ) : null}
 
@@ -116,7 +116,7 @@ export default function TourPanel({ api, home, profile, opts, chosen, setChosen,
                   <i>{o.rank}</i>{dateLabel(nextDate(o.day))}, {clock12(o.start)}
                 </button>
               ))}
-              <span className="st-sub">or any blue time on your calendar</span>
+              <span className="st-sub">or any gold time on your calendar</span>
             </div>
           ) : null}
 

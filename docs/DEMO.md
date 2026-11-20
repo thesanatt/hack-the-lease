@@ -123,7 +123,7 @@ and room size are checked on the cards, not priced.
 
 Optional (about 25 s): on Saved card 1 click **Schedule a tour**. My profile opens with **Tour Broadway St
 house**: best times Monday Nov 23, Wednesday Dec 2 and Friday Dec 4, all 2:00 PM (no tours over U-M Thanksgiving
-break, Wed Nov 25 to Sun Nov 29; those days roll to the next week), and every open half hour in blue on **My
+break, Wed Nov 25 to Sun Nov 29; those days roll to the next week), and every open half hour in gold on **My
 calendar**. Click **1**: "Leave EECS Building at 1:37 PM, bus CS then WS, there at 1:56 PM. Then bus 65 to Beyster
 Building, there at 2:59 PM." Click **Book this time**. Click **Back to Saved**: card 1 shows **Tour Monday, Nov 23,
 2:00 PM**. Click **Contact landlord**: **To** (filled before you went on), **Subject** "Your listing: Broadway St

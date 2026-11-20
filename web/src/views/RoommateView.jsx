@@ -2,7 +2,7 @@
 // nothing is shown until you share it, by switch or by telling Quorum ("make my calendar public").
 // In this demo it stays on this laptop; the other students you see are FICTIONAL samples.
 import { useEffect, useState } from 'react';
-import { Button } from '../components/index.js';
+import { Button, readableOn } from '../components/index.js';
 import { useProfile, useSaved } from '../student/store.js';
 import Interested from '../student/Interested.jsx';
 import Icon from '../components/Icon.jsx';
@@ -20,7 +20,7 @@ export function PublicCard({ card, shares, bio, api, compact = false }) {
   return (
     <div className="rm-card">
       <div className="rm-head">
-        <span className="rm-av" style={{ background: card.color || 'var(--accent)' }}>{(card.name || '?')[0]}</span>
+        <span className="rm-av" style={{ background: card.color || '#E3B04B', color: readableOn(card.color || '#E3B04B') }}>{(card.name || '?')[0]}</span>
         <div>
           <b>{card.name}</b>
           <div className="st-sub">{[shares.program && card.program, shares.habits && RHYTHM[card.rhythm], card.area].filter(Boolean).join(' · ') || 'No details shared'}</div>
