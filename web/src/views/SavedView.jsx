@@ -77,7 +77,7 @@ export default function SavedView({ api }) {
   }, [S.ids, res, budget, homeById]);
 
   const mapHomes = items.map((it) => ({ ...it.home, short: short(it.home.name) }));
-  const rankById = Object.fromEntries(items.slice(0, 3).map((it, i) => [it.home.id, i + 1]));
+  const rankById = Object.fromEntries(items.map((it, i) => [it.home.id, i + 1]));
   const fitById = res ? Object.fromEntries(items.map((it) => [it.home.id, it.tier === 'great' ? 1 : it.tier === 'good' ? 0.6 : 0.2])) : undefined;
   const mapPlaces = useMemo(() => {
     const ids = new Set((P.profile?.entries || []).map((e) => e.place));
