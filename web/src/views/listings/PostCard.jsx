@@ -2,7 +2,10 @@
 // guess or missing, green edge = you set it), a location chip that can ask for a pin, and "Reach out".
 // Props: post, l (effective listing), cover ({ ok, note }), pinning (bool), onEdit(patch), onPin(), onCancelPin(),
 //        onRemove(), draft (string), onDraft(text), open (bool), onToggle(), firstName, setFirstName,
-//        fit (fit.fitScores entry or null), to (the email the student typed for this post), setTo(text)
+//        fit (fit.fitScores entry or null), to (the email the student typed for this post), setTo(text),
+//        line (one plain sentence for the simple view, plain.js)
+// Simple view (docs/SIMPLE.md): Fit and the plain line; the chips fold behind "Check what we read" unless the
+// post still needs a rent or a pin, and the date note and the Fit bars are numbers-mode detail (num-detail).
 import { useEffect, useRef, useState } from 'react';
 import { fmtRange, shortStreet } from '../../../../engine/listing.js';
 import { money } from '../me/format.js';
@@ -70,13 +73,15 @@ function placeText(l) {
   return null;
 }
 
-export default function PostCard({ post, l, cover, pinning, onEdit, onPin, onCancelPin, onRemove, draft, onDraft, open, onToggle, firstName, setFirstName, fit, to = '', setTo }) {
+export default function PostCard({ post, l, cover, pinning, onEdit, onPin, onCancelPin, onRemove, draft, onDraft, open, onToggle, firstName, setFirstName, fit, to = '', setTo, line = null }) {
   const c = l.confidence || {};
   const [copied, setCopied] = useState(false);
+  const [showRead, setShowRead] = useState(false);
   const ta = useRef(null);
   const dateConf = c.start === 'edited' || c.end === 'edited' ? 'edited' : (c.start === 'missing' && c.end === 'missing') ? 'missing' : (c.start === 'guessed' || c.end === 'guessed') ? 'guessed' : 'found';
   const bedConf = c.beds === 'edited' || c.bedsInUnit === 'edited' ? 'edited' : c.beds === 'missing' && c.bedsInUnit === 'missing' ? 'missing' : c.beds === 'guessed' ? 'guessed' : 'found';
   const where = placeText(l);
+  const needs = !Number.isFinite(l.rent) || !l.location?.how;
   const locConf = l.location?.how === 'pin' ? 'edited' : l.location?.how === 'intersection' ? 'found' : l.location?.how ? 'guessed' : 'missing';
   const rentText = Number.isFinite(l.rent)
     ? `${money(l.rent)}/mo${l.rentWhole && l.rentWhole !== l.rent ? ` (${money(l.rentWhole)} split ${l.bedsInUnit} ways)` : l.rentWhole ? ' whole unit' : ''}`
@@ -98,13 +103,13 @@ export default function PostCard({ post, l, cover, pinning, onEdit, onPin, onCan
       <header className="lv-card-h">
         <span className="lv-num" aria-hidden="true">{post.n}</span>
         <h3>{l.name}</h3>
-        {post.count > 1 && <span className="lv-seen" title="The same street, rent and start month were pasted more than once">seen {post.count} times</span>}
+        {post.count > 1 && <span className="lv-seen num-detail" title="The same street, rent and start month were pasted more than once">seen {post.count} times</span>}
         <span className="lv-spacer" />
         {post.sample && <span className="lv-sample">Sample post</span>}
         <button type="button" className="textlink" onClick={onRemove} aria-label={`Remove post ${post.n}`}>Remove</button>
       </header>
 
-      <div className="lv-chips">
+      <div className={`lv-chips${needs || pinning || showRead ? '' : ' num-detail'}`}>
         <Chip conf={Number.isFinite(l.rent) ? c.rent : 'missing'} label="Rent a month" onSave={(v) => onEdit({ rent: num(v.rent) })}
           editor={<input name="rent" inputMode="numeric" defaultValue={l.rent ?? ''} size={6} aria-label="Rent a month in dollars" />}>
           {rentText}
@@ -149,9 +154,15 @@ export default function PostCard({ post, l, cover, pinning, onEdit, onPin, onCan
         )}
       </div>
 
-      {cover?.note && <p className={`lv-cover${cover.ok === false ? ' bad' : ''}`}>{cover.note}</p>}
+      {cover?.note && <p className={`lv-cover num-detail${cover.ok === false ? ' bad' : ''}`}>{cover.note}</p>}
 
-      {fit && <FitBlock s={fit} />}
+      {fit && <FitBlock s={fit} line={line} />}
+      {!fit && line && <p className="lv-cover simple-only">{line}</p>}
+      {!needs && !pinning && (
+        <button type="button" className="textlink lv-read simple-only" aria-expanded={showRead} onClick={() => setShowRead((v) => !v)}>
+          {showRead ? 'Hide what we read' : 'Check what we read'}
+        </button>
+      )}
 
       <div className="lv-reach">
         <button type="button" className="textlink" aria-expanded={open} onClick={onToggle}>{open ? 'Hide message' : 'Reach out'}</button>

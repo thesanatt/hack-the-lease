@@ -7,6 +7,21 @@
 .you h2 { font-family: inherit; font-size: 20px; font-weight: 600; margin: 0; letter-spacing: 0; text-transform: none; }
 .you h3 { font-family: inherit; font-size: 15px; font-weight: 600; margin: 0 0 8px; text-transform: none; letter-spacing: 0; }
 
+/* the answer, in words, first (simple mode and numbers mode alike) */
+.you-answer { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; max-width: 880px; padding: 4px 0 2px; }
+.you-answer-text { margin: 0; font-size: 20px; line-height: 1.35; color: var(--y-ink); }
+.you-answer-lead { display: block; font-size: 28px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; margin-bottom: 4px; }
+.you-answer-text.wait { color: var(--y-gray); min-height: 64px; }
+.you-next { text-decoration: none; display: inline-block; }
+.you-sub { margin: -4px 0 0; font-size: 15px; color: var(--y-gray); }
+
+/* simple mode: one number per card, plain words instead of the rest */
+.simple .t3-card.first .t3-num .v { font-size: 28px; }
+.simple .t3-why { font-size: 15px; white-space: normal; }
+.simple .mp-nums { grid-template-columns: minmax(0, 1fr); }
+.mp-plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 15px; }
+.mp-plain li.bad { color: #B3261E; }
+
 /* persona and what-if chips */
 .you-who, .you-whatif { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .you-who-l { font-size: 13px; color: var(--y-gray); margin-right: 4px; }
@@ -122,4 +137,15 @@
   .t3-card.ghost.first { min-height: 200px; }
   .to-legend { gap: 4px; }
   .to-key { margin-left: 0; }
+  .you-answer { gap: 12px; }
+  .you-answer-text { font-size: 18px; }
+  .you-answer-lead { font-size: 24px; }
+  .you-next { width: 100%; text-align: center; padding: 12px 16px; }
+  /* one scrolling row of names instead of three wrapped rows */
+  .you-who { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none; }
+  .you-who::-webkit-scrollbar { display: none; }
+  .you-who .chip, .you-who-l { flex: none; }
+  .you-whatif .chip-group { flex-wrap: wrap; }
+  .mp-pair { grid-template-columns: minmax(0, 1fr); }
+  .mp-this { align-self: stretch; padding: 10px 18px; }
 }

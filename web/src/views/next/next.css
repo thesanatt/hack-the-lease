@@ -108,3 +108,19 @@
 .nx-err::before, .nx-err::after { content: ''; position: absolute; top: -2px; width: 1px; height: 6px; background: inherit; }
 .nx-err::before { left: 0; }
 .nx-err::after { right: 0; }
+
+/* Simple mode: app.css hides num-detail while the root has `simple`, and hides simple-only otherwise
+   (docs/SIMPLE.md). */
+
+/* the answer, at the top of the left column */
+.nx h2.nx-answer, .nx .nx-answer { margin: 0; font-size: 28px; line-height: 1.25; font-weight: 400; letter-spacing: -0.2px; max-width: 30ch; text-wrap: pretty; }
+.nx .nx-answer strong { font-weight: 600; }
+.nx .nx-answer.nx-answer-wait { color: var(--y-gray); font-size: 20px; }
+.nx-safe-why { margin: 2px 0 0; padding-left: 30px; font-size: 15px; }
+.nx-next { margin-top: 2px; }
+.nx-next .btn.primary { display: inline-block; text-decoration: none; }
+.nx-opts-l { font-size: 13px; color: var(--y-gray); align-self: center; margin-right: 2px; }
+.simple .nx-track { height: 20px; }
+@media (max-width: 640px) {
+  .nx h2.nx-answer, .nx .nx-answer { font-size: 22px; }
+}

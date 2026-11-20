@@ -8,12 +8,33 @@ const lowerFirst = (s) => (s ? s[0].toLowerCase() + s.slice(1) : s);
 // The one sentence under "What to find out first". factor: { label, kind }, value: $/month.
 export function findOutSentence(top) {
   if (!top || !(top.value >= 1)) return 'Nothing left to find out is worth $1 a month: sign the home that loses least.';
-  const label = String(top.label || 'this');
-  let what;
-  if (top.kind === 'choice') what = `Decide ${lowerFirst(label)}`;
-  else if (top.kind === 'maybe') what = `Find out about the ${lowerFirst(label)}`;
-  else what = `Find out your ${label}`;
-  return `${what} before you sign: it is worth ${money(top.value)} a month.`;
+  return `${findOutWhat(top)} before you sign: it is worth ${money(top.value)} a month.`;
+}
+
+// "Find out your PNE 350 clinical section", "Find out about the part-time job downtown", "Decide which elective".
+export function findOutWhat(top) {
+  const label = String(top?.label || 'this');
+  if (top?.kind === 'choice') return `Decide ${lowerFirst(label)}`;
+  if (top?.kind === 'maybe') return `Find out about the ${lowerFirst(label)}`;
+  return `Find out your ${label}`;
+}
+
+// The answer at the top of the tab, in two short sentences built from the numbers the tab already shows.
+// evpi: $/month of not knowing; top: the unknown worth most ({ label, kind, value }); settledAny: something is settled.
+// Under 50 cents the price card says "Under $1", so the answer says sign now. Returns { parts: [a, b], bold }:
+// the full answer is a + ' ' + b, and parts[bold] is the part to act on.
+export function answerSentences(evpi, top, settledAny = false) {
+  if (!(evpi >= 0.5)) return { parts: ['Sign now:', 'nothing about your schedule is worth finding out first.'], bold: 0 };
+  const lead = `Not knowing ${settledAny ? 'the rest of ' : ''}your schedule costs you about ${money(evpi)} a month.`;
+  if (top && top.value >= 1) return { parts: [lead, `${findOutWhat(top)} before you sign.`], bold: 1 };
+  return { parts: [lead, 'No one thing is worth finding out first, so sign the safe pick.'], bold: 1 };
+}
+
+// One plain line for the safe home, from its chance of being the best home across the possible weeks.
+export function safeLine(pBest) {
+  if (pBest >= 0.9) return 'It is the best home for you in almost every week you could end up with.';
+  if (pBest >= 0.5) return 'It is the best home for you in most of the weeks you could end up with.';
+  return 'It costs you the least on average, whatever your schedule turns out to be.';
 }
 
 // Wall time for the routing line: tenths of a second from 0.1 s up, whole milliseconds below.

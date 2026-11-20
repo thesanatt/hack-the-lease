@@ -1,7 +1,9 @@
 // "Your top 3": one card per home with three big numbers, a mini week ribbon and one why sentence.
+// Simple mode (no "Show the numbers"): name, room, cost to you, the ribbon and the reason in plain words.
 // Props: api, rank (decide.meRank), notes (Map homeId -> explain Note), weekMap, routineWeek, dusk, selected, onSelect(id)
 import { AutoStrip } from '../../components/index.js';
 import { money } from './format.js';
+import { plainReason } from './answer.js';
 
 // Short labels for the one-line reason on each card.
 const SHORT = {
@@ -24,7 +26,7 @@ export function cardReasons(notes, ids) {
     used.add(r.key);
     const good = r.dollars >= 0;
     const label = SHORT[r.key] ? SHORT[r.key](good) : r.label;
-    return { good, label, amt: `${money(Math.abs(r.dollars))}/mo`, side: good ? 'better' : 'worse', title: r.text };
+    return { good, label, plain: plainReason(r.key, good, label), amt: `${money(Math.abs(r.dollars))}/mo`, side: good ? 'better' : 'worse', title: r.text };
   });
 }
 
@@ -36,9 +38,9 @@ export function lateNights(week) {
 }
 export const hours = (min) => (Number.isFinite(min) ? (min / 60).toFixed(1) : '--');
 
-function Num({ value, unit, label, title }) {
+function Num({ value, unit, label, title, className = '' }) {
   return (
-    <div className="t3-num" title={title}>
+    <div className={`t3-num ${className}`} title={title}>
       <span className="v">{value}<span className="u">{unit}</span></span>
       <span className="l">{label}</span>
     </div>
@@ -59,23 +61,24 @@ function Card({ api, i, row, note, reason, week, routineWeek, dusk, sel, onSelec
         </h3>
       </div>
       <div className="t3-sub">
-        <span className="t3-room">{row.roomLabel || note?.roomLabel || ''}{rent != null ? `, ${money(rent)}/mo with utilities` : ''}</span>
+        <span className="t3-room">{row.roomLabel || note?.roomLabel || ''}{rent != null && <span className="num-detail">, {money(rent)}/mo with utilities</span>}</span>
         <span className="t3-sample">Sample listing</span>
       </div>
       <div className="t3-body">
         <div className="t3-nums">
           <Num value={money(-row.meanU)} unit="/mo" label="cost to you"
             title="Cost to you: rent and utilities plus what travel time, darkness and trips with no ride cost you, less what the room is worth to you. Averaged over the weeks you might have." />
-          <Num value={hours(week?.weeklyMin)} unit="h/wk" label="getting around" title="Door to door, your most likely week" />
-          <Num value={n ?? '--'} unit="/wk" label="late nights"
+          <Num className="num-detail" value={hours(week?.weeklyMin)} unit="h/wk" label="getting around" title="Door to door, your most likely week" />
+          <Num className="num-detail" value={n ?? '--'} unit="/wk" label="late nights"
             title="Nights a week with a trip that has no ride, or walking or biking after dusk" />
         </div>
         <div className="t3-ribbon">
           {week && <AutoStrip compact trips={week.trips} entries={routineWeek} dusk={dusk} />}
         </div>
       </div>
+      {reason && <p className="t3-why simple-only" title={reason.title}><b className={reason.good ? 'good' : 'bad'}>{reason.plain}</b></p>}
       {reason && (
-        <p className="t3-why" title={reason.title}>
+        <p className="t3-why num-detail" title={reason.title}>
           <span>{reason.label}:</span> <b className={reason.good ? 'good' : 'bad'}>{reason.amt}</b>
           <span className="t3-vs"> {reason.side} than a typical home</span>
         </p>

@@ -1,7 +1,8 @@
 // Trade-offs: every home as a dot, all in $/month (x) against hours a week getting around (y), colored by fit.
 // The top pick is ringed and the home with the cheapest rent is marked. Hand-written SVG, one axis each way.
 // Props: api, rank (decide.meRank), weekMap, fitById ({homeId: 0..1, 1 = best}), selected, onSelect(id)
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { plainTradeoff } from './answer.js';
 import { money } from './format.js';
 import { hours } from './TopThree.jsx';
 import { priceFrom } from './HomeList.jsx';
@@ -11,7 +12,23 @@ import { FIT_STOPS, fitColor } from '../../components/MapView.jsx';
 export const FIT_RAMP = FIT_STOPS;
 export { fitColor };
 
-const W = 1200, H = 250, M = { l: 44, r: 20, t: 24, b: 38 };
+// Drawn at the width of its box (like AutoStrip), so ticks stay readable on a phone instead of scaling to 4 px.
+const WMAX = 1200, M = { l: 44, r: 20, t: 24, b: 38 };
+// A callback ref: the ghost box and the chart box are different elements, so the observer follows whichever is mounted.
+function useBoxWidth(fallback) {
+  const [el, ref] = useState(null);
+  const [w, setW] = useState(fallback);
+  useEffect(() => {
+    if (!el) return undefined;
+    const set = () => { const cw = Math.round(el.clientWidth); if (cw > 100) setW(cw); };
+    set();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [el]);
+  return [ref, w];
+}
 
 function niceStep(span, n) {
   const raw = span / n, p = 10 ** Math.floor(Math.log10(raw));
@@ -20,16 +37,20 @@ function niceStep(span, n) {
 
 export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSelect }) {
   const [hover, setHover] = useState(null);
+  const [boxRef, boxW] = useBoxWidth(WMAX);
+  const W = Math.max(300, Math.min(WMAX, boxW - 8));
+  const narrow = W < 640;
+  const H = narrow ? 240 : 250;
   const pts = useMemo(() => (rank || []).map((r, i) => {
     const w = weekMap?.get(r.homeId);
     const h = api.data.homeById.get(r.homeId);
     // from = the home's cheapest room with utilities (the "From" column): what "cheapest rent" means on screen.
     return { id: r.homeId, i, x: -r.meanU, y: w ? w.weeklyMin / 60 : null, price: r.price, from: h ? priceFrom(h) : r.price, name: h?.name || r.homeId };
   }).filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y)), [rank, weekMap, api]);
-  if (!pts.length) return <div className="to-chart ghost" aria-busy="true" />;
+  if (!pts.length) return <div className="to-chart ghost" aria-busy="true" ref={boxRef} />;
 
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
-  const xStep = niceStep(Math.max(...xs) - Math.min(...xs) || 100, 5);
+  const xStep = niceStep(Math.max(...xs) - Math.min(...xs) || 100, narrow ? 3 : 5);
   const x0 = Math.floor(Math.min(...xs) / xStep) * xStep, x1 = Math.ceil(Math.max(...xs) / xStep) * xStep;
   // The y axis starts near the data, not at 0: hours sit in a narrow band and a zero base leaves half the chart empty.
   const yStep = niceStep((Math.max(...ys) - Math.min(...ys)) || 1, 4);
@@ -61,8 +82,9 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
 
   return (
     <div className="to">
-      {sentence && <p className="to-sentence">{sentence}</p>}
-      <div className="to-chart">
+      {sentence && <p className="to-sentence num-detail">{sentence}</p>}
+      {top && cheap && <p className="to-sentence simple-only">{plainTradeoff(top, cheap, money)}</p>}
+      <div className="to-chart" ref={boxRef}>
         <svg viewBox={`0 0 ${W} ${H}`} role="img"
           aria-label={`${pts.length} homes by cost to you a month and hours a week getting around. ${sentence || ''} The full ranking table is under Details.`}
           onMouseLeave={() => setHover(null)}>
@@ -73,7 +95,7 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
             </g>
           ))}
           {xt.map((v) => <text key={`x${v}`} className="to-tick" x={X(v)} y={H - M.b + 18} textAnchor="middle">{money(v)}</text>)}
-          <text className="to-axis" x={W - M.r} y={H - 6} textAnchor="end">Cost to you, per month</text>
+          <text className="to-axis" x={W - M.r} y={H - 4} textAnchor="end">Cost to you, per month</text>
           <text className="to-axis" x={M.l} y={10} textAnchor="start">Hours a week getting around</text>
           {pts.slice().reverse().map((p) => (
             <circle key={p.id} cx={X(p.x)} cy={Y(p.y)} r={p.id === hover ? 8 : 6.5} fill={fitColor(fitById?.[p.id])}
@@ -110,7 +132,8 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
         {FIT_RAMP.map((c) => <i key={c} style={{ background: c, boxShadow: 'inset 0 0 0 1px rgba(26,26,26,0.35)' }} />)}
         <span>Best fit</span>
         <span className="to-key"><svg width="16" height="16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1A1A1A" strokeWidth="2" /></svg>Top pick{top ? `, ${top.name}` : ''}</span>
-        <span className="to-key"><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="#1A1A1A" strokeWidth="1.5" /></svg>Cheapest rent{cheap && cheap.id !== top?.id ? `, from ${money(cheap.from)}, ${cheap.name}` : ''}</span>
+        <span className="to-key"><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="#1A1A1A" strokeWidth="1.5" /></svg><span>Cheapest rent{cheap && cheap.id !== top?.id ? <><span className="num-detail">, from {money(cheap.from)}</span>, {cheap.name}</> : ''}</span></span>
+        <span className="to-key simple-only">Each dot is a home. Lower left is better.</span>
       </div>
     </div>
   );

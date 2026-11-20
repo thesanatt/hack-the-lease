@@ -167,3 +167,24 @@
 @media (prefers-reduced-motion: reduce) {
   .lv-pchip { transition: none; }
 }
+
+/* Simple view (docs/SIMPLE.md): plain words next to the one number. simple-only and num-detail are app.css. */
+.lv-help { margin: -4px 0 0; font-size: 13px; color: var(--l-gray); }
+.lv-fit-line { align-self: center; font-size: 15px; color: var(--l-ink); flex: 1; min-width: 160px; }
+.lv-fit.zero .lv-fit-line { color: var(--l-gray); }
+.lv-read { align-self: flex-start; font-size: 13px; }
+.lv-line { flex-basis: 100%; padding-left: 26px; color: var(--l-ink); }
+.lv-answer { font-size: 20px; line-height: 1.3; max-width: 46em; }
+.simple .lv-tbl .nm { width: auto; }
+.simple .lv-tbl .fit { text-align: right; }
+.lv-next { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--l-line); }
+.lv-next-btn { display: inline-block; padding: 10px 16px; border-radius: 8px; background: var(--l-ink); color: var(--l-paper, #F7F5F0);
+  font-size: 15px; font-weight: 600; text-decoration: none; }
+.lv-next-btn:hover { background: #000; }
+.lv-next-btn:focus-visible { outline: 2px solid var(--l-fit); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .simple .lv-tbl tr { grid-template-columns: minmax(0, 1fr) auto; }
+  .simple .lv-tbl td.nm { grid-column: 1; }
+  .simple .lv-tbl td.fit { grid-row: auto; }
+  .lv-next-btn { display: block; text-align: center; }
+}

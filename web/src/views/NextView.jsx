@@ -125,13 +125,13 @@ export default function NextView({ api }) {
           aria-valuenow={busy ? Math.round(busy.f * 100) : 100} aria-label="Computing">
           {busy && <div style={{ width: `${Math.max(4, Math.round(busy.f * 100))}%` }} />}
         </div>
-        <Hero res={res} busy={busy} />
+        <Hero res={res} busy={busy} settledAny={Object.keys(settled).length > 0} />
         <div className="nx-mapcol">
           <div className="nx-map">
             <MapView homes={mapHomes} places={mapPlaces} selectedHomeId={shown} onHomeClick={setSelHome} labelIds={[]}
               fitById={fitById || undefined} rankById={rankById || undefined} height={440} fit="all" />
           </div>
-          {speed && <p className="nx-speed">{speed}</p>}
+          {speed && <p className="nx-speed num-detail">{speed}</p>}
         </div>
       </section>
 
@@ -145,10 +145,12 @@ export default function NextView({ api }) {
         </div>
       )}
 
-      {res && !res.empty && <Weeks res={res} selected={shown} onSelect={setSelHome} />}
+      {res && !res.empty && <div className="num-detail"><Weeks res={res} selected={shown} onSelect={setSelHome} /></div>}
 
       {res && !res.empty && (
-        <Details res={res} source={source} file={file} sample={sample} k={K} seed={SEED} />
+        <div className="num-detail">
+          <Details res={res} source={source} file={file} sample={sample} k={K} seed={SEED} />
+        </div>
       )}
     </div>
   );

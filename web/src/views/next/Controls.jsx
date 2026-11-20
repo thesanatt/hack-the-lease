@@ -68,11 +68,11 @@ export default function Controls({ plans, planId, setPlanId, source, setSource, 
         </span>
         <button type="button" className="btn quiet small" onClick={() => input.current?.click()}>Load my registrar file</button>
         <input ref={input} type="file" accept=".csv,text/csv" hidden onChange={pick} data-testid="nx-file" />
-        {p && <span className="nx-fileline">{p.sections.length} sections, {placed} placed on the map</span>}
+        {p && <span className="nx-fileline num-detail">{p.sections.length} sections, {placed} placed on the map</span>}
         {file?.error && <span className="nx-fileline bad">That file did not read: {file.error}</span>}
         {source === 'sample' && <span className="nx-sample">Sample catalog</span>}
       </div>
-      <div className="you-whatif" role="group" aria-label="What might change">
+      <div className="you-whatif num-detail" role="group" aria-label="What might change">
         {maybes.map((m) => (
           <OddsChip key={m.id} m={m} value={odds[m.id] ?? m.odds ?? 0.5}
             onCommit={(x) => setOdds((o) => ({ ...o, [m.id]: x }))} />

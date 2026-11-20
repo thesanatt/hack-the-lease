@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { AutoStrip } from '../../components/index.js';
 import { money } from './format.js';
 import { darkOf } from './HomeList.jsx';
+import { nightCounts, countWord } from './answer.js';
 import './calendar/parts.css';
 
 // Nights with a trip that has no allowed ride or walks after dark. Counted from the week's own trips.
@@ -20,13 +21,23 @@ export function lateNights(week) {
 const hours = (min) => (min == null || !Number.isFinite(min) ? '--' : (min / 60).toFixed(1));
 
 // A number with its unit; the two cards sit side by side, so the numbers compare directly.
-function Num({ text, unit, flag, title }) {
+function Num({ text, unit, flag, title, className = '' }) {
   return (
-    <div className="mp-num" title={title}>
+    <div className={`mp-num ${className}`} title={title}>
       <span className="v">{text}</span>
       <span className="u">{unit}{flag && <span className="mp-flag"> {flag}</span>}</span>
     </div>
   );
+}
+
+// The late nights in words, for simple mode. Same counting as lateNights.
+function plainNights(week) {
+  const c = nightCounts(week);
+  const n = (k) => `${countWord(k)} night${k === 1 ? '' : 's'} a week`;
+  if (!week) return '';
+  if (c.any === 0) return 'Never walk in the dark';
+  if (c.noRide > 0) return `Stuck without a ride ${n(c.noRide)}`;
+  return `Walk in the dark ${n(c.dark)}`;
 }
 
 function Option({ api, opt, other, week, otherWeek, routineWeek, onPick, busy, tag, dusk }) {
@@ -41,18 +52,22 @@ function Option({ api, opt, other, week, otherWeek, routineWeek, onPick, busy, t
       <div className="mp-opt-card">
         <div>
           <h3 className="mp-name">{home?.name}</h3>
-          <div className="room">{r.label}, {r.sqft} sq ft, {bath}</div>
+          <div className="room">{r.label}<span className="num-detail">, {r.sqft} sq ft</span>, {bath}</div>
         </div>
         {week && <AutoStrip compact trips={week.trips} entries={routineWeek} dusk={dusk ?? undefined} />}
         <div className="mp-nums">
           <Num worse={opt.rent > other.rent + 0.5} text={money(opt.rent)} unit="a month, rent + utilities"
             title="Asking rent plus an equal share of utilities" />
-          <Num worse={tA > tB + 3} text={hours(tA)} unit="hours a week getting around"
+          <Num className="num-detail" worse={tA > tB + 3} text={hours(tA)} unit="hours a week getting around"
             title="Door to door, every trip in the week" />
-          <Num worse={nA > nB} text={String(nA)} flag={week?.stranded?.length > 0 ? 'with no ride' : null}
+          <Num className="num-detail" worse={nA > nB} text={String(nA)} flag={week?.stranded?.length > 0 ? 'with no ride' : null}
             unit={nA === 1 ? 'late night' : 'late nights'}
             title={`Nights with no ride or walking in the dark. ${dark} min a week after dark${week?.stranded?.length ? `, ${week.stranded.length} trips with no ride` : ''}.`} />
         </div>
+        <ul className="mp-plain simple-only">
+          <li className={tA > tB + 3 ? 'bad' : ''}>{tA < tB - 3 ? 'Shorter trips' : tA > tB + 3 ? 'Longer trips' : 'About the same trip time'}</li>
+          <li className={nA > nB ? 'bad' : ''}>{plainNights(week)}</li>
+        </ul>
       </div>
       <button type="button" className="mp-this" onClick={onPick} disabled={busy}
         aria-label={`This one: ${home?.name}, week ${tag}`}>This one</button>

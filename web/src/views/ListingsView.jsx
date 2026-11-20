@@ -14,6 +14,7 @@ import {
 import PostCard from './listings/PostCard.jsx';
 import Compare from './listings/Compare.jsx';
 import { fitScores, datesScore } from './listings/fit.js';
+import { fitLine, missingLine, answerSentence } from './listings/plain.js';
 import { pickFromHash } from '../hashParam.js';
 import './listings/listings.css';
 
@@ -109,6 +110,15 @@ export default function ListingsView({ api }) {
     return fitScores(rows, { dates: (r) => (r.kind === 'post' ? datesScore(coverById.get(r.postId), conf.get(r.postId)) : 100) });
   }, [rows, fresh, items, coverById]);
   const sentence = rows && fresh ? bestSentence(rows, money, { fits: (r) => coverById.get(r.postId)?.ok, semLabel: sem.label }) : null;
+  // Plain words for the simple view (docs/SIMPLE.md), built from the same rows, Fit scores and dates.
+  const endById = useMemo(() => new Map(items.filter((it) => it.l).map((it) => [it.post.id, it.l.end || null])), [items]);
+  const answer = rows && fresh ? answerSentence(rows, money, {
+    coverOf: (r) => coverById.get(r.postId), endOf: (r) => endById.get(r.postId), semLabel: sem.label,
+  }) : null;
+  const lines = useMemo(() => (fits && rows
+    ? new Map(rows.map((r) => [r.id, fitLine(fits.get(r.id), r.kind === 'post' ? coverById.get(r.postId) : null)]))
+    : null), [fits, rows, coverById]);
+  if (rows && fresh) console.log('DBG', JSON.stringify(rows.map((r) => [r.name, Math.round(r.cost), r.dollars && Object.fromEntries(Object.entries(r.dollars).map(([k, v]) => [k, Math.round(v)]))])));
   const topHomeIds = useMemo(() => (ranked ? ranked.rows.filter((r) => r.kind === 'home').slice(0, 3).map((r) => r.id) : []), [ranked]);
 
   // draft for the open card
@@ -174,7 +184,7 @@ export default function ListingsView({ api }) {
 
   return (
     <div className="lv">
-      <p className="lv-lede">Paste posts you can see. Quorum does not collect posts on its own, and nothing leaves this browser.</p>
+      <p className="lv-lede num-detail">Paste posts you can see. Quorum does not collect posts on its own, and nothing leaves this browser.</p>
 
       <div className="lv-who">
         <span role="group" aria-label="Whose week" className="lv-group">
@@ -199,6 +209,7 @@ export default function ListingsView({ api }) {
         <div className="lv-left">
           <div className="lv-paste">
             <label htmlFor="lv-text" className="lv-paste-l">Paste a post from any group or site</label>
+            <p className="lv-help simple-only">Copy a room post from a group chat or Facebook, paste it here and press Add. It stays on your computer.</p>
             <textarea id="lv-text" value={text} rows={4} onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) add(); }}
               placeholder="Subletting my room on Hill St near Church, May 1 to Aug 15, $780/mo utilities included..." />
@@ -222,7 +233,11 @@ export default function ListingsView({ api }) {
                 open={openId === it.post.id} onToggle={() => setOpenId((o) => (o === it.post.id ? null : it.post.id))}
                 draft={openId === it.post.id ? (drafts[it.post.id] ?? autoDraft) : ''}
                 onDraft={(v) => setDrafts((d) => ({ ...d, [it.post.id]: v }))}
-                fit={fits?.get(postPointId(it.post)) || null} to={it.post.to || ''} setTo={(v) => setTo(it.post.id, v)}
+                fit={fits?.get(postPointId(it.post)) || null}
+                line={fits?.get(postPointId(it.post))
+                  ? fitLine(fits.get(postPointId(it.post)), coverById.get(it.post.id))
+                  : missingLine(it.l, routable(it.l)) || (coverById.get(it.post.id)?.ok === false ? fitLine(null, coverById.get(it.post.id)) : null)}
+                to={it.post.to || ''} setTo={(v) => setTo(it.post.id, v)}
                 firstName={firstName} setFirstName={(v) => { setFirstName(v); setDrafts((d) => { const n = { ...d }; delete n[it.post.id]; return n; }); }} />
             ))}
           </div>
@@ -242,8 +257,12 @@ export default function ListingsView({ api }) {
         <h2 id="lv-cmp-h">How they compare for your week</h2>
         <Compare rows={rows} notes={notes} sentence={sentence}
           waiting={!fresh ? 'Routing your week from each place' : (!items.length ? 'Paste a post to see it next to the best sample homes.' : null)}
-          unranked={unranked} fits={fits} />
+          unranked={unranked} fits={fits} answer={answer} lines={lines} />
       </section>
+
+      <div className="lv-next">
+        <a className="lv-next-btn" href="#group">Living with friends? Split a house</a>
+      </div>
     </div>
   );
 }

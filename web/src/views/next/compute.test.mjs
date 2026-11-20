@@ -8,7 +8,7 @@ import * as decide from '../../../../engine/decide.js';
 import * as prefs from '../../../../engine/prefs.js';
 import { CONFIG } from '../../../../engine/config.js';
 import { runNextYear, costMatrix, campusShares, oddsKey, weekSignature, clearNextYearCache, regretByHome, bestRouting, NEXT_DEFAULT_PLAN } from './compute.js';
-import { findOutSentence, money } from './format.js';
+import { findOutSentence, money, answerSentences, safeLine } from './format.js';
 
 const places = JSON.parse(readFileSync(new URL('../../../public/data/places.json', import.meta.url), 'utf8'));
 const placeById = new Map(places.map((p) => [p.id, p]));
@@ -161,6 +161,19 @@ test('the find-out sentence is plain', () => {
     'Decide which elective before you sign: it is worth $12 a month.');
   assert.match(findOutSentence({ label: 'x', kind: 'maybe', value: 0.2 }), /^Nothing left/);
   assert.equal(money(1234.4), '$1,234');
+});
+
+test('the answer at the top is built from the price and the top unknown', () => {
+  const full = (a) => a.parts.join(' ');
+  const clin = { label: 'PNE 350 clinical section', kind: 'section', value: 22.51 };
+  assert.equal(full(answerSentences(31.19, clin)),
+    'Not knowing your schedule costs you about $31 a month. Find out your PNE 350 clinical section before you sign.');
+  assert.equal(full(answerSentences(23.29, { label: 'Part-time job downtown', kind: 'maybe', value: 21.68 }, true)),
+    'Not knowing the rest of your schedule costs you about $23 a month. Find out about the part-time job downtown before you sign.');
+  assert.equal(full(answerSentences(0.45, { label: 'x', kind: 'maybe', value: 0.3 })),
+    'Sign now: nothing about your schedule is worth finding out first.');
+  assert.match(full(answerSentences(3, { label: 'x', kind: 'maybe', value: 0.8 })), /No one thing is worth finding out first/);
+  for (const v of [0.96, 0.655, 0.3]) assert.doesNotMatch(safeLine(v), /\d/);
 });
 
 test('the Details regret of the top home equals the price (EVPI)', async () => {

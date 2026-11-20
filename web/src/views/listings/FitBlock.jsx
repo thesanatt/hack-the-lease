@@ -1,8 +1,10 @@
 // "Fit NN/100" with the four category bars small under it. Used on each post card and in the comparison table.
-// Props: s ({ fit, price, around, nights, dates } from fit.fitScores), compact (table cell: number and bars only)
+// Props: s ({ fit, price, around, nights, dates } from fit.fitScores), compact (table cell: number and bars only),
+//        line (optional plain sentence shown next to the number in the simple view)
+// The four small bars are numbers-mode detail (class num-detail, docs/SIMPLE.md).
 import { CATEGORIES, FIT_TITLE } from './fit.js';
 
-export default function FitBlock({ s, compact = false }) {
+export default function FitBlock({ s, compact = false, line = null }) {
   if (!s) return null;
   const all = CATEGORIES.map((c) => `${c.label} ${s[c.key] ?? '--'}`).join(', ');
   return (
@@ -11,7 +13,8 @@ export default function FitBlock({ s, compact = false }) {
       <span className="lv-fit-n" aria-hidden="true">
         {!compact && <span className="lv-fit-k">Fit </span>}{s.fit}<span className="lv-fit-u">/100</span>
       </span>
-      <span className="lv-fit-cats" aria-hidden="true">
+      {line && <span className="lv-fit-line simple-only">{line}</span>}
+      <span className="lv-fit-cats num-detail" aria-hidden="true">
         {CATEGORIES.map((c) => (
           <span key={c.key} className="lv-fit-c" title={`${c.label}: ${s[c.key] ?? '--'}/100. ${c.title}.`}>
             {!compact && <span className="lv-fit-l">{c.label}</span>}

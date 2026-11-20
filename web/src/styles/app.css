@@ -76,6 +76,27 @@ code { font-family: var(--font-mono); font-size: 13px; }
   display: flex; flex-wrap: wrap; gap: var(--s1) var(--s5);
 }
 
+/* ------------------------------------------------------------------ simple mode (docs/SIMPLE.md)
+   The app root carries "simple" while "Show the numbers" is off. Every view marks its secondary elements with
+   num-detail (hidden in simple mode) and may mark plain-words stand-ins with simple-only (hidden in numbers mode). */
+.simple .num-detail { display: none !important; }
+.frame:not(.simple) .simple-only { display: none !important; }
+.numswitch {
+  display: inline-flex; align-items: center; gap: var(--s2); background: none; border: 0; padding: 4px 0; cursor: pointer;
+  font-size: var(--fs-13); color: var(--ink-2); white-space: nowrap;
+}
+.numswitch-track {
+  position: relative; width: 30px; height: 18px; border-radius: 999px; background: var(--line-2); flex: none;
+  transition: background-color 150ms ease;
+}
+.numswitch-knob {
+  position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--card);
+  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.2); transition: transform 150ms ease;
+}
+.numswitch[aria-checked='true'] .numswitch-track { background: var(--ink); }
+.numswitch[aria-checked='true'] .numswitch-knob { transform: translateX(12px); }
+.numswitch:hover .numswitch-l { color: var(--ink); }
+
 /* ------------------------------------------------------------------ panel */
 .panel { margin-bottom: var(--s7); min-width: 0; }
 .panel-head { display: flex; align-items: baseline; gap: var(--s2) var(--s4); margin-bottom: var(--s4); flex-wrap: wrap; }
@@ -284,6 +305,10 @@ details > summary:hover { color: var(--ink); }
   .footer { padding: var(--s3) var(--s4); }
   .jumpbar { top: 0; margin-top: 0; }
   .pick { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .numswitch-long { display: none; }
+  .numswitch-l { text-transform: capitalize; }
 }
 
 /* print: the decision on paper */

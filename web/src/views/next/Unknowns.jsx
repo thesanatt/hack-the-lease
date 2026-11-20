@@ -53,12 +53,13 @@ export default function Unknowns({ res, settled, onSettle, onUnsettle }) {
               <span className="nx-track" aria-hidden="true">
                 <span className="nx-fill" style={{ width: x(r.value) }} />
                 {r.se > 0 && span(r)[1] > span(r)[0] && (
-                  <span className="nx-err" title="About two standard errors"
+                  <span className="nx-err num-detail" title="About two standard errors"
                     style={{ left: x(span(r)[0]), width: `calc(${x(span(r)[1])} - ${x(span(r)[0])})` }} />
                 )}
               </span>
               <span className="nx-bar-v">{money(r.value)}<span className="nx-unit">/mo</span></span>
               <span className="nx-opts" role="group" aria-label={`Settle ${r.label}`}>
+                <span className="nx-opts-l simple-only">Know it? Settle it:</span>
                 {(r.options || []).map((o) => {
                   const c = counts.get(o.id) || 0;
                   return (
@@ -75,7 +76,7 @@ export default function Unknowns({ res, settled, onSettle, onUnsettle }) {
         })}
         {!rows.length && <p className="nx-none">Nothing is left unknown.</p>}
         {(hidden > 0 || all) && rows.length > ALWAYS && (
-          <button type="button" className="btn quiet small nx-more" onClick={() => setAll((v) => !v)}>
+          <button type="button" className="btn quiet small nx-more num-detail" onClick={() => setAll((v) => !v)}>
             {all ? 'Show fewer' : `${hidden} more, each under $1 a month`}
           </button>
         )}

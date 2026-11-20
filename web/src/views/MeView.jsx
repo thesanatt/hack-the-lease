@@ -1,6 +1,7 @@
 // You: one student's real week through every candidate home on the real timetables, about six pairwise picks
 // to learn what time and room features are worth, then a ranking across the fall weeks they might have.
-// Layout: map plus "Your top 3", Details, the trade-off chart with What if chips, the picks, then the week.
+// Layout: the answer in words, map plus "Your top 3", Details, the trade-off chart with What if chips, the picks,
+// then the week. Simple mode (the app root's "simple" class) hides everything marked num-detail.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, MapView, NotBuilt } from '../components/index.js';
 import { useConfigVersion } from '../engine/useConfig.js';
@@ -19,6 +20,7 @@ import Tradeoff from './me/Tradeoff.jsx';
 import Details from './me/Details.jsx';
 import { editableWeek, modalRoutine, uncertainRoutine, lateEntry, moveToCentral, TERM_CHOICES, autoAnswer, DAY_LABEL } from './me/routine.js';
 import { pct } from './me/format.js';
+import { answerFor } from './me/answer.js';
 import './me/verdict/you.css';
 import { pickFromHash } from '../hashParam.js';
 
@@ -226,8 +228,25 @@ export default function MeView({ api }) {
     ? `${homeById.get(shownHome)?.name}: ${DAY_LABEL[trip.day]} ${trip.time}${routeNames.length ? `, bus ${routeNames.join(' then ')}` : trip.mode === 'walk' ? ', on foot' : ''}`
     : null;
 
+  const topId = rank?.[0]?.homeId;
+  const answerText = topId ? answerFor({ name: homeById.get(topId)?.name, note: notes?.get(topId), week: weekMap?.get(topId) }) : null;
+
   return (
     <div className="you">
+      {week && (
+        <section className="you-answer simple-only" aria-label="The answer" aria-live="polite">
+          {answerText ? (
+            <p className="you-answer-text">
+              <span className="you-answer-lead">{answerText.lead}</span>{' '}
+              <span className="you-answer-rest">{answerText.rest}</span>
+            </p>
+          ) : (
+            <p className="you-answer-text wait" role="status">Finding the best home for {persona.name}'s week</p>
+          )}
+          <a className="btn primary you-next" href="#next">What if your schedule changes?</a>
+        </section>
+      )}
+
       <div className="you-who" role="group" aria-label="Whose week">
         <span className="you-who-l">Whose week</span>
         {personas.map((p) => (
@@ -255,6 +274,7 @@ export default function MeView({ api }) {
       )}
 
       {week && decide && prefs && (
+        <div className="num-detail">
         <Details api={api} ranked={ranked} notes={notes} shownHome={shownHome} homeById={homeById} persona={persona}
           baseline={baseline} onClearBaseline={() => setBaseline(null)} onSelect={select}>
           {shownWeek && (
@@ -272,12 +292,13 @@ export default function MeView({ api }) {
             </div>
           )}
         </Details>
+        </div>
       )}
 
       {week && decide && prefs && (
         <section className="you-sec" aria-labelledby="you-to">
           <h2 id="you-to">Trade-offs</h2>
-          <div className="you-whatif" role="group" aria-label="What if">
+          <div className="you-whatif num-detail" role="group" aria-label="What if">
             <span className="you-who-l">What if</span>
             {lab && (
               <button type="button" className="chip" aria-pressed={labCentral} onClick={() => { snapshot(); setLabCentral((v) => !v); }}
@@ -313,13 +334,14 @@ export default function MeView({ api }) {
             <h2 id="you-picks">Teach it what you care about</h2>
             <Button small variant="quiet" onClick={resetPicks}>Start over</Button>
           </div>
+          <p className="you-sub simple-only">Which week would you rather live? A few picks teach it what matters to you.</p>
           {homeOptions && (
             <PickCard api={api} pair={pair} options={cands?.options || []} weekMap={weekMap} routineWeek={modal.week}
               nPicks={post?.nPicks ?? 0} stop={stopShown} canAuto={!!persona.theta} onAnswer={answer} onAuto={onAuto}
               onAutoAll={onAutoAll} last={last} busy={busy} personaName={persona.name} dusk={duskS} />
           )}
           {(post?.nPicks ?? 0) >= 1 && (
-            <div className="you-learned">
+            <div className="you-learned num-detail">
               <Learned summary={summary} prior={post?.prior || {}} info={PARAM_INFO} truth={persona.theta} />
             </div>
           )}

@@ -1,4 +1,5 @@
-// App frame: one top bar (wordmark, five tabs, the Sample data chip, a quiet Assumptions link), the view, and
+// App frame: one top bar (wordmark, tabs, the "Show the numbers" switch, the Sample data chip, a quiet Assumptions
+// link in numbers mode), the view, and
 // the attribution footer. No rail, no per-view preamble: each view leads with its own picture.
 // Each view is `export default function XView({ api })`. Views other than Me are loaded through
 // import.meta.glob, so a missing file shows a note instead of breaking the build.
@@ -57,6 +58,12 @@ const viewFromHash = () => {
 };
 const queryFromHash = () => splitHash(window.location.hash).query;
 
+// "Show the numbers": off by default (simple mode, the class "simple" on the app root). Remembered in this
+// browser only; a private window or blocked storage just starts in simple mode.
+const NUMBERS_KEY = 'quorum.numbers';
+const readNumbers = () => { try { return window.localStorage.getItem(NUMBERS_KEY) === '1'; } catch { return false; } };
+const writeNumbers = (on) => { try { window.localStorage.setItem(NUMBERS_KEY, on ? '1' : '0'); } catch { /* not remembered */ } };
+
 export default function App() {
   const [api, setApi] = useState(null);
   const [error, setError] = useState(null);
@@ -64,6 +71,8 @@ export default function App() {
   const [view, setView] = useState(viewFromHash);
   const [query, setQuery] = useState(queryFromHash);
   const [drawer, setDrawer] = useState(false);
+  const [numbers, setNumbers] = useState(readNumbers);
+  const toggleNumbers = () => { const next = !numbers; writeNumbers(next); setNumbers(next); };
 
   useEffect(() => {
     const fn = (msg, f) => setProgress({ msg, f });
@@ -79,7 +88,7 @@ export default function App() {
   const Comp = current?.Comp;
 
   return (
-    <div className={`frame view-${view}`}>
+    <div className={`frame view-${view}${numbers ? ' numbers' : ' simple'}`}>
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to the page</a>
       <header className="topbar">
         <a className="wordmark" href="#me" onClick={(e) => { e.preventDefault(); go('me'); }}>Quorum</a>
@@ -92,10 +101,15 @@ export default function App() {
           ))}
         </nav>
         <span className="spacer" />
+        <button type="button" className="numswitch" role="switch" aria-checked={numbers} aria-label="Show the numbers" onClick={toggleNumbers}
+          title={numbers ? 'Showing every number. Switch off for the short answer.' : 'Shows ranges, hours, counts and the details behind each answer.'}>
+          <span className="numswitch-track" aria-hidden="true"><span className="numswitch-knob" /></span>
+          <span className="numswitch-l" aria-hidden="true"><span className="numswitch-long">Show the </span>numbers</span>
+        </button>
         <span className="chip-sample" title="Homes, rents and rooms are made up. People are fictional. Bus timetables, streets and places are real.">
           Sample data
         </span>
-        <button type="button" className="textlink" onClick={() => setDrawer(true)} disabled={!api}>Assumptions</button>
+        <button type="button" className="textlink num-detail" onClick={() => setDrawer(true)} disabled={!api}>Assumptions</button>
       </header>
       <main className="main" id="main" tabIndex={-1}>
         {error && (

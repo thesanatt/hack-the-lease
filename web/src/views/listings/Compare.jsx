@@ -1,12 +1,15 @@
 // "How they compare for your week": pasted posts ranked with the three best sample homes, one bar each for
 // cost to you a month, then hours a week, late nights and the rent.
 // Props: rows (compute.shownRows), notes (Map postId -> cover note), sentence, waiting (string | null),
-//        unranked [{ n, name, why }], fits (Map id -> fit.fitScores entry)
+//        unranked [{ n, name, why }], fits (Map id -> fit.fitScores entry),
+//        answer (plain answer sentence for the simple view), lines (Map id -> plain line, plain.js)
+// Simple view (docs/SIMPLE.md): the answer, then place, Fit and one plain line per row. The cost bars, hours,
+// late nights and rent columns are numbers-mode detail (class num-detail).
 import { money } from '../me/format.js';
 import { FIT_TITLE } from './fit.js';
 import FitBlock from './FitBlock.jsx';
 
-export default function Compare({ rows: allRows, notes, sentence, waiting, unranked, fits }) {
+export default function Compare({ rows: allRows, notes, sentence, waiting, unranked, fits, answer = null, lines = null }) {
   // Places whose dates miss the semester (Fit 0) go last, so the top of the table is a place you can use.
   // The sort is stable: each group stays in order of cost to you.
   const missed = (r) => (fits?.get(r.id)?.dates === 0 ? 1 : 0);
@@ -17,7 +20,8 @@ export default function Compare({ rows: allRows, notes, sentence, waiting, unran
   const base = costs.length ? Math.max(0, Math.floor((Math.min(...costs) - 100) / 100) * 100) : 0;
   return (
     <div className="lv-cmp">
-      {sentence && <p className="lv-best">{sentence}</p>}
+      {answer && <p className="lv-best lv-answer simple-only">{answer}</p>}
+      {sentence && <p className={`lv-best${answer ? ' num-detail' : ''}`}>{sentence}</p>}
       {waiting && <p className="lv-wait" role="status">{waiting}</p>}
       {rows?.length > 0 && (
         <table className="lv-tbl">
@@ -25,10 +29,10 @@ export default function Compare({ rows: allRows, notes, sentence, waiting, unran
             <tr>
               <th scope="col" className="nm">Place</th>
               {fits && <th scope="col" className="fit" title={`${FIT_TITLE} Small bars: price, getting around, nights, dates.`}>Fit</th>}
-              <th scope="col" className="bar" title="Rent plus what travel time, darkness and trips with no ride cost you, less what the room is worth to you, averaged over the weeks your schedule could turn out to be. Same numbers as the You tab. Hours and late nights are for your most likely week.">Cost to you a month{base > 0 && <span className="u"> (bars start at {money(base)})</span>}</th>
-              <th scope="col" className="n">Getting around</th>
-              <th scope="col" className="n" title="Nights a week with a trip that has no ride, or walking or biking after dusk">Late nights</th>
-              <th scope="col" className="n">Rent</th>
+              <th scope="col" className="bar num-detail" title="Rent plus what travel time, darkness and trips with no ride cost you, less what the room is worth to you, averaged over the weeks your schedule could turn out to be. Same numbers as the You tab. Hours and late nights are for your most likely week.">Cost to you a month{base > 0 && <span className="u"> (bars start at {money(base)})</span>}</th>
+              <th scope="col" className="n num-detail">Getting around</th>
+              <th scope="col" className="n num-detail" title="Nights a week with a trip that has no ride, or walking or biking after dusk">Late nights</th>
+              <th scope="col" className="n num-detail">Rent</th>
             </tr>
           </thead>
           <tbody>
@@ -41,15 +45,16 @@ export default function Compare({ rows: allRows, notes, sentence, waiting, unran
                     <span className="lv-nm">{r.name}</span>
                     {r.kind === 'home' && <span className="lv-sub">Sample listing</span>}
                     {note && <span className="lv-sub bad">{note}</span>}
+                    {!note && lines?.get(r.id) && <span className="lv-sub lv-line simple-only">{lines.get(r.id)}</span>}
                   </div></td>
                   {fits && <td className="fit"><FitBlock s={fits.get(r.id)} compact /></td>}
-                  <td className="bar">
+                  <td className="bar num-detail">
                     <span className="lv-bar"><i style={{ width: `${Math.max(2, ((Math.max(base, r.cost) - base) / Math.max(1, max - base)) * 100)}%` }} /></span>
                     <span className="lv-v">{money(r.cost)}<span className="u">/mo</span></span>
                   </td>
-                  <td className="n" data-l="Getting around">{r.hours != null ? r.hours.toFixed(1) : '--'}<span className="u"> h/wk</span></td>
-                  <td className="n" data-l="Late nights">{r.late ?? '--'}<span className="u">/wk</span></td>
-                  <td className="n" data-l="Rent">{money(r.rent)}{r.utilitiesExtra && <span className="u" title="Utilities are extra and not counted"> + util.</span>}</td>
+                  <td className="n num-detail" data-l="Getting around">{r.hours != null ? r.hours.toFixed(1) : '--'}<span className="u"> h/wk</span></td>
+                  <td className="n num-detail" data-l="Late nights">{r.late ?? '--'}<span className="u">/wk</span></td>
+                  <td className="n num-detail" data-l="Rent">{money(r.rent)}{r.utilitiesExtra && <span className="u" title="Utilities are extra and not counted"> + util.</span>}</td>
                 </tr>
               );
             })}
