@@ -10,6 +10,7 @@ import {
 } from './group/logic.js';
 import { MemberCard } from './group/Members.jsx';
 import EnvyMatrix from './group/EnvyMatrix.jsx';
+import JumpBar from '../components/JumpBar.jsx';
 import { useConfigVersion } from '../engine/useConfig.js';
 
 const EF_SPREAD = 0.25; // log-sd of the value draws for the EF rate (assumption; demo members have no posterior)
@@ -139,7 +140,7 @@ function GroupBody({ api }) {
     const newCap = Math.max(0, Math.floor((need - 1) / 10) * 10 - 20);
     setCaps((c) => ({ ...c, [id]: newCap }));
     setReveal((r) => ({ ...r, [id]: true }));
-    setSelected(target.home.id);
+    setSelected(null); // the split panel follows the new top house (houses that fit every cap rank first)
     setLastMove({ kind: 'cap', memberId: id, houseId: target.home.id, from: capOf(members[i]), to: newCap });
   };
 
@@ -157,8 +158,15 @@ function GroupBody({ api }) {
   const privateInfo = (m, i) => {
     const info = { cap: capOf(m), house: chosen?.home.name, feasible: chosen ? chosen.feasible : true };
     if (chosen?.res) info.rent = chosen.res.prices[chosen.res.assignment[i]];
-    if (chosen && !chosen.feasible && reveal[m.id] && fair?.privateGap) {
-      try { info.gap = fair.privateGap(chosen.problem, i, { cfg, compensateCommute: !!cfg?.compensateCommute }); } catch { info.gap = NaN; }
+    // The gap is for the shown house if it does not fit, else (for the member whose cap was lowered) for the house the cap broke.
+    let gapRow = chosen && !chosen.feasible ? chosen : null;
+    if (!gapRow && lastMove?.kind === 'cap' && lastMove.memberId === m.id && !lastMove.impossible) {
+      const broken = rows.find((r) => r.home.id === lastMove.houseId);
+      if (broken && !broken.feasible) gapRow = broken;
+    }
+    if (gapRow) info.gapHouse = gapRow.home.name;
+    if (gapRow && reveal[m.id] && fair?.privateGap) {
+      try { info.gap = fair.privateGap(gapRow.problem, i, { cfg, compensateCommute: !!cfg?.compensateCommute }); } catch { info.gap = NaN; }
     }
     return info;
   };
@@ -168,6 +176,13 @@ function GroupBody({ api }) {
 
   return (
     <div className="qv-grid">
+      <div className="qv-span-12">
+        <JumpBar items={[
+          { label: 'Members', find: 'The group' }, { label: 'Two moves', find: 'Two moves' },
+          { label: 'House ranking', find: 'House ranking' }, { label: 'The split', find: 'The split' },
+          { label: 'Envy matrix', find: 'Envy matrix' },
+        ]} />
+      </div>
       <div className="qv-span-12">
         <Panel kicker="The group" title={`${members.length} members, private caps`} right={<Label>FICTIONAL</Label>}>
           <div className="qv-members">
@@ -214,7 +229,7 @@ function GroupBody({ api }) {
                 <input aria-label="Shift start" type="time" value={lateDraft.start} onChange={(e) => setLateDraft((d) => ({ ...d, start: e.target.value }))} />
                 <span>to</span>
                 <input aria-label="Shift end" type="time" value={lateDraft.end} onChange={(e) => setLateDraft((d) => ({ ...d, end: e.target.value }))} />
-                <Button tone="primary" onClick={doLateMove} disabled={!hasWeek}>Add the shift</Button>
+                <Button tone="quiet" onClick={doLateMove} disabled={!hasWeek}>Add the shift</Button>
               </div>
               {!hasWeek && <Pending what="engine/week.js" detail="Commutes and the late-shift move need it. Rent splits below still work without it." />}
               <MoveResult move={lastMove} members={members} rows={rows} baseline={baseline.current} weeks={weeks} />
@@ -429,12 +444,14 @@ function MoveResult({ move, members, rows, baseline }) {
     const row = rows.find((r) => r.home.id === move.houseId);
     if (move.impossible) return <Note>No cap for {m?.name} makes {row?.home.name || 'this house'} infeasible: their envy-free rent can go to $0.</Note>;
     const nextFeasible = rows.find((r) => r.feasible);
+    const name = row?.home.name || 'The top house';
     return (
       <Note tone="warn">
-        {m?.name}'s cap was lowered (the new value is in {m?.name}'s private view). {row?.home.name} now
-        {row && !row.feasible ? ' has no envy-free split that fits every cap.' : ' still fits.'}
-        {nextFeasible ? ` The top feasible house is now ${nextFeasible.home.name}.` : ' No house fits every cap now.'}
-        {' '}Only {m?.name}'s private view shows how far the cap is from working.
+        {row && !row.feasible ? `${name} no longer has a split under every cap.` : `${name} still has a split under every cap.`}
+        {row && !row.feasible && (nextFeasible
+          ? ` The group moves to ${nextFeasible.home.name}.`
+          : ' No house has a split under every cap now.')}
+        {' '}The new cap and the gap are only in {m?.name}'s private view.
       </Note>
     );
   }

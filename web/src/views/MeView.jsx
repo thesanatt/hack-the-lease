@@ -3,16 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Panel, Pill, Button, Seg, Stat, MapView, NotBuilt } from '../components/index.js';
 import { useConfigVersion } from '../engine/useConfig.js';
+import JumpBar from '../components/JumpBar.jsx';
 import { rng } from '../../../engine/rng.js';
 import { PARAM_INFO, utility } from '../../../engine/model.js';
 import WeekEditor from './me/WeekEditor.jsx';
 import HomeList from './me/HomeList.jsx';
 import TripExplainer, { tripLegs, tripPaths } from './me/TripExplainer.jsx';
 import PickCard from './me/PickCard.jsx';
-import Learned from './me/Learned.jsx';
+import Learned, { fmtEstimate } from './me/Learned.jsx';
 import Ranking from './me/Ranking.jsx';
 import { editableWeek, modalRoutine, uncertainRoutine, lateEntry, moveToCentral, TERM_CHOICES, autoAnswer, DAY_LABEL } from './me/routine.js';
-import { money, hm } from './me/format.js';
+import { money, hm, pct } from './me/format.js';
 
 const SCENARIO_SEED = 11;
 
@@ -77,10 +78,11 @@ export default function MeView({ api }) {
     return [c, p, ms];
   }, [homeOptions, pickVersion, version]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const topPBest = useMemo(() => {
+  const topBest = useMemo(() => {
     if (!prefs?.pBestHomes || !post || !homeOptions) return null;
-    return Math.max(...prefs.pBestHomes(post, homeOptions).map((x) => x.pBest));
+    return prefs.pBestHomes(post, homeOptions).reduce((a, b) => (b.pBest > a.pBest ? b : a));
   }, [homeOptions, pickVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const topPBest = topBest ? topBest.pBest : null;
   const stop = prefs && post ? prefs.shouldStop(post, post.nPicks, topPBest, pair?.ig ?? null, cfg) : null;
   const summary = useMemo(() => (prefs && post ? prefs.summary(post, cfg) : null), [pickVersion, version]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -97,7 +99,11 @@ export default function MeView({ api }) {
         const thetas = prefs.draws(post, cfg.posteriorDraws, 3);
         const rank = decide.meRank({ homes, weeksByScenario, thetas, cfg });
         const ev = decide.evpi ? decide.evpi(rank.tensor).evpi : null;
-        const mean = prefs.posteriorMean ? prefs.posteriorMean(post) : null;
+        // One point estimate everywhere: the posterior median, the same statistic "What the picks say" shows.
+        const sum = prefs.summary ? prefs.summary(post, cfg) : null;
+        const mean = sum
+          ? Object.fromEntries(Object.entries(sum).map(([k, s]) => [k, s.median]))
+          : (prefs.posteriorMean ? prefs.posteriorMean(post) : null);
         const be = [];
         if (rank.length >= 2 && mean && decide.breakEven) {
           const [a, b] = rank;
@@ -107,7 +113,7 @@ export default function MeView({ api }) {
           }
         }
         const t2 = performance.now();
-        setRanked({ rank, ev, be, mean, scenMs: t1 - t0, rankMs: t2 - t1, nScen: scen.length, nDraws: thetas.length });
+        setRanked({ rank, ev, be, mean, pointKind: sum ? 'median' : 'mean', pv: pickVersion, scenMs: t1 - t0, rankMs: t2 - t1, nScen: scen.length, nDraws: thetas.length });
       } catch (e) { console.error(e); setRanked({ error: String(e.message || e) }); }
     }, 0);
     return () => clearTimeout(id);
@@ -177,6 +183,15 @@ export default function MeView({ api }) {
   const snapshot = () => setBaseline((b) => b || (ranked?.rank ? new Map(ranked.rank.map((r, i) => [r.homeId, i])) : null));
   const changeS = cfg.changeDefaultS;
 
+  // The stop rule looks at the most likely week only; the ranking covers every sampled week. Say both in one sentence.
+  const stopShown = (() => {
+    if (!stop || stop.reason !== 'pbest' || !topBest) return stop;
+    const nm = homeById.get(topBest.id)?.name || 'One home';
+    const r = ranked?.pv === pickVersion ? ranked?.rank?.find((x) => x.homeId === topBest.id) : null;
+    const across = r && ranked.nScen ? `Across all ${ranked.nScen} possible weeks: ${pct(r.pBest)}.` : 'Across all possible weeks: computing.';
+    return { ...stop, text: `${nm} is best on your most likely week (${topBest.pBest.toFixed(2)}). ${across}` };
+  })();
+
   const routeNames = useMemo(() => [...new Set(trip?.rides?.map((r) => r.route) || [])], [trip]);
   const mapPlaces = useMemo(() => {
     const ids = new Set(effEntries.filter((e) => e.on !== false).map((e) => e.place));
@@ -188,6 +203,10 @@ export default function MeView({ api }) {
 
   return (
     <div>
+      <JumpBar items={[
+        { label: 'Persona', find: 'Me' }, { label: 'Your week', find: 'Your week' }, { label: 'Homes', find: 'Homes' },
+        { label: 'Picks', find: 'Which week would you rather live?' }, { label: 'Ranking', find: 'Ranking' },
+      ]} />
       <Panel title="Me" kicker="One student. Pick a persona, edit the week, answer a few picks, read the ranking."
         aside={<Pill tone="muted">SAMPLE</Pill>}>
         <p className="small muted">{api.data.homesLabel} {api.data.personasLabel}</p>
@@ -253,7 +272,7 @@ export default function MeView({ api }) {
             aside={<Button small variant="quiet" onClick={resetPicks}>Start over</Button>}>
             {homeOptions && (
               <PickCard api={api} pair={pair} options={cands?.options || []} weekMap={weekMap} routineWeek={modal.week}
-                nPicks={post?.nPicks ?? 0} stop={stop} canAuto={!!persona.theta} onAnswer={answer} onAuto={onAuto}
+                nPicks={post?.nPicks ?? 0} stop={stopShown} canAuto={!!persona.theta} onAnswer={answer} onAuto={onAuto}
                 onAutoAll={onAutoAll} last={last} busy={busy} />
             )}
           </Panel>
@@ -300,19 +319,21 @@ export default function MeView({ api }) {
                   {ranked.be.map((b) => {
                     const nm = (k) => homeById.get(k === 'A' ? b.A : b.B)?.name;
                     const what = b.param === 'vTime' ? 'your time is worth' : 'an hour walking after dark costs you';
+                    const est = `$${fmtEstimate(b.current)}`;
+                    const kind = ranked.pointKind === 'median' ? 'median estimate' : 'estimate';
                     if (b.value != null && b.value > 300) {
-                      return <p key={b.param} className="small muted">{nm(b.belowWins)} stays ahead unless {what} more than $300 per hour, far above your estimate of {money(b.current, 1)} per hour.</p>;
+                      return <p key={b.param} className="small muted">{nm(b.belowWins)} stays ahead unless {what} more than $300 per hour, far above your {kind} of {est} per hour.</p>;
                     }
                     return b.value != null ? (
                       <p key={b.param}>
                         {nm(b.aboveWins)} wins if {what} more than <strong className="mono">{money(b.value)}</strong> per hour; below
-                        that, {nm(b.belowWins)}. Current estimate {money(b.current, 1)} per hour.
+                        that, {nm(b.belowWins)}. Your {kind} from the picks: {est} per hour.
                       </p>
                     ) : (
                       <p key={b.param} className="small muted">{b.param === 'vTime' ? 'Value of time' : 'Darkness'}: no break-even between the top two ({b.reason}).</p>
                     );
                   })}
-                  <p className="small muted">Top two homes, other weights at the posterior mean.</p>
+                  <p className="small muted">Top two homes, other weights at their {ranked.pointKind === 'median' ? 'median, as in What the picks say' : 'posterior mean'}.</p>
                 </div>
               </div>
             </>

@@ -2,6 +2,7 @@
 // Props: api, pair ({i, j, ig, mu, s2}), options (flat option list), weekMap, routineWeek, nPicks, stop ({stop, text}),
 //        canAuto (persona has demo theta), onAnswer(choice 'A'|'B'|'skip'), onAuto(), onAutoAll(), last (last pick summary),
 //        busy
+import { useEffect, useState } from 'react';
 import { Button, Pill, WeekStrip } from '../../components/index.js';
 import { hm, money } from './format.js';
 import { darkOf } from './HomeList.jsx';
@@ -32,13 +33,19 @@ export default function PickCard({ api, pair, options, weekMap, routineWeek, nPi
   const A = pair ? options[pair.i] : null, B = pair ? options[pair.j] : null;
   const closeness = pair ? (Math.abs(pair.mu) < 0.5 ? 'You look close to 50/50 on this one' : 'The model leans one way here') : '';
   const unknown = pair ? (pair.s2 > 1 ? 'along a trade-off the model knows little about' : 'along a trade-off it already knows fairly well') : '';
+  // Once the stop rule fires, the next question stays folded until asked for, so a stray click cannot answer it.
+  const [more, setMore] = useState(false);
+  useEffect(() => { setMore(false); }, [nPicks, stop?.stop]);
+  const folded = !!stop?.stop && !more;
   return (
     <div>
       <div className="row-flex" style={{ marginBottom: 8 }}>
         <Pill tone={stop?.stop ? 'good' : 'ink'}>{nPicks} picks</Pill>
         <span className="small">{stop?.text}{stop?.stop ? ' You can stop here; more picks are optional.' : ''}</span>
       </div>
-      {pair && A && B ? (
+      {folded && pair && A && B ? (
+        <Button variant="quiet" onClick={() => setMore(true)} disabled={busy}>Ask another question (optional)</Button>
+      ) : pair && A && B ? (
         <>
           <div className="pick">
             <Option api={api} tag="A" opt={A} week={weekMap.get(A.homeId)} routineWeek={routineWeek} />

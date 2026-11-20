@@ -26,7 +26,8 @@ export function MemberCard({ m, color, revealed, onToggle, privateInfo, onCap, p
 
 function PrivatePanel({ m, info, onCap }) {
   if (!info) return null;
-  const { cap, rent, house, feasible, gap, gapLoading } = info;
+  const { cap, rent, house, feasible, gap, gapLoading, gapHouse } = info;
+  const blocked = gapHouse || house;
   const room = cap != null && rent != null ? cap - rent : null;
   return (
     <div className="qv-private" role="region" aria-label={`${m.name}'s private view`}>
@@ -46,11 +47,11 @@ function PrivatePanel({ m, info, onCap }) {
           )}
         </div>
       )}
-      {!feasible && (
+      {(!feasible || gapHouse) && (
         <div style={{ marginTop: 4 }}>
           {gapLoading ? 'Working out your gap...' : gap > 0.5
-            ? <>For {house} to have a split that fits every cap, your cap would need to rise by <b className="qv-mono">{usd(gap)}</b>.</>
-            : <>Your cap is not what blocks {house}. Someone else's cap is binding, and their gap is in their own private view.</>}
+            ? <>For {blocked} to have a split that fits every cap, your cap would need to rise by <b className="qv-mono">{usd(gap)}</b>.</>
+            : <>Your cap is not what blocks {blocked}. Someone else's cap is binding, and their gap is in their own private view.</>}
         </div>
       )}
     </div>

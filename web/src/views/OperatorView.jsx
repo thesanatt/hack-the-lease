@@ -137,13 +137,13 @@ function OperatorBody({ api }) {
             <Note tone="bad">Pricing failed: {res.error}</Note>
           ) : !res ? <p className="qv-muted">Solving {G} groups...</p> : (
             <>
-              <h3 className="qv-kicker" style={{ margin: '4px 0 6px' }}>An envy-free split for typical synthetic groups</h3>
+              <h3 className="qv-kicker" style={{ margin: '4px 0 6px' }}>Low, typical and high fair rent across {res.base.solved} synthetic groups</h3>
               <div className="qv-scroll">
                 <table className="qv-table" style={{ opacity: busy ? 0.6 : 1 }}>
                   <thead>
                     <tr>
                       <th>Room</th><th>Features</th>
-                      <th className="num" title="10th percentile across synthetic groups">p10 /mo</th><th className="num" title="Median across synthetic groups">p50 /mo</th><th className="num" title="90th percentile across synthetic groups">p90 /mo</th>
+                      <th className="num" title="1 in 10 synthetic groups split this room lower">Low /mo</th><th className="num" title="Half the synthetic groups split this room lower, half higher">Typical /mo</th><th className="num" title="1 in 10 synthetic groups split this room higher">High /mo</th>
                       <th className="num">Asking /mo</th><th style={{ minWidth: 180 }}>Range across groups</th>
                     </tr>
                   </thead>
@@ -159,7 +159,7 @@ function OperatorBody({ api }) {
                           <td className="num">{usd(r.p90)}</td>
                           <td className="num qv-muted">{usd(room.asking)}</td>
                           <td>
-                            <div className="qv-range" aria-label={`p10 ${usd(r.p10)}, p50 ${usd(r.p50)}, p90 ${usd(r.p90)}`}>
+                            <div className="qv-range" aria-label={`low ${usd(r.p10)}, typical ${usd(r.p50)}, high ${usd(r.p90)}`}>
                               <div className="track" />
                               <div className="band" style={{ left: pos(r.p10), width: `calc(${pos(r.p90)} - ${pos(r.p10)})` }} />
                               <div className="mid" style={{ left: pos(r.p50) }} />
@@ -173,39 +173,42 @@ function OperatorBody({ api }) {
                 </table>
               </div>
               <p className="qv-small qv-muted">
-                Bar: p10 to p90 across {res.base.solved} synthetic groups, tick at p50, dotted line at the asking rent.
-                Each group's rents sum to {usd(home.rent)}; the medians of separate rooms need not add up to it exactly.
+                Bar: low to high fair rent, the middle 8 in 10 of {res.base.solved} synthetic groups. Tick: typical rent.
+                Dotted line: asking rent. Each group's rents sum to {usd(home.rent)}; the typical rents of separate rooms
+                need not add up to it exactly.
                 {res.base.failed ? ` ${res.base.failed} groups failed to solve and are left out.` : ''}
                 {res.base.negative ? ` ${res.base.negative} groups needed a negative room rent.` : ''}
                 {' '}Preference-based, synthetic, not market rents.
               </p>
+              <AskingCallout home={home} rooms={res.base.rooms} />
             </>
           )}
         </Panel>
       </div>
 
       <div className="qv-span-6">
-        <Panel kicker="What drives these rents" title="Prior medians">
+        <Panel kicker="What drives these rents" title="Our assumed room values">
           <table className="qv-table">
-            <thead><tr><th>Room feature</th><th className="num">Median</th><th className="num">Log-sd</th><th>Unit</th></tr></thead>
+            <thead><tr><th>Room feature</th><th className="num">Typical value</th><th>Unit</th></tr></thead>
             <tbody>
               {priorRows.map((p) => (
-                <tr key={p.k}><td>{p.label}</td><td className="num">{usd(p.median, p.k === 'wSize' ? 1 : 0)}</td><td className="num">{p.sigma ?? 'n/a'}</td><td className="qv-small">{p.unit}</td></tr>
+                <tr key={p.k}><td>{p.label}</td><td className="num">{usd(p.median, p.k === 'wSize' ? 1 : 0)}</td><td className="qv-small">{p.unit}</td></tr>
               ))}
             </tbody>
           </table>
           <div className="qv-stack" style={{ marginTop: 14 }}>
-            <Slider id="wbath" label="Private bathroom median" unit="$/month" value={wBath} min={0} max={200} step={5}
+            <Slider id="wbath" label="Private bathroom, typical value" unit="$/month" value={wBath} min={0} max={200} step={5}
               onChange={setBathMed} fmt={(v) => usd(v)} />
-            <Slider id="wsize" label="Room size median" unit="$/month per 10 sq ft" value={wSize} min={0} max={30} step={0.5}
+            <Slider id="wsize" label="Room size, typical value" unit="$/month per 10 sq ft" value={wSize} min={0} max={30} step={0.5}
               onChange={setSizeMed} fmt={(v) => usd(v, 1)} />
             <div className="qv-row">
-              <Button tone="quiet" onClick={() => { setBathMed(null); setSizeMed(null); }} disabled={bathMed == null && sizeMed == null}>Back to the stated priors</Button>
+              <Button tone="quiet" onClick={() => { setBathMed(null); setSizeMed(null); }} disabled={bathMed == null && sizeMed == null}>Back to our assumed values</Button>
             </div>
           </div>
           <p className="qv-small qv-muted" style={{ marginBottom: 0 }}>
-            Every student's room values are log-normal around these medians (assumptions, not survey data). Commute does
-            not enter: it is the same for every room of one house. Each slider position reuses the same random draws.
+            Each synthetic student's room values spread around these typical values. They are our assumptions, not
+            survey data. Commute is left out: it is the same for every room of one house. Every slider position uses the
+            same synthetic students.
           </p>
         </Panel>
       </div>
@@ -225,13 +228,17 @@ function OperatorBody({ api }) {
               {res?.delta ? (
                 <>
                   <div className="qv-stats">
-                    <Stat label={`${home.rooms[res.renoIdx].label}: change in p50 fair share`} value={`${signedUsd(res.delta.roomP50)}/mo`} note="same house rent" />
-                    <Stat label="change in median group headroom" value={`${signedUsd(res.delta.headroom)}/mo`} note="room for a higher total rent" />
+                    <Stat label={`${home.rooms[res.renoIdx].label}: change in typical fair rent`} value={`${signedUsd(res.delta.roomP50)}/mo`} note="same house rent" />
+                    <Stat label="how much more the groups value the whole house" value={`${signedUsd(res.delta.headroom)}/mo`} note="typical group" />
                   </div>
-                  <p className="qv-small qv-muted" style={{ margin: 0 }}>
-                    The house rent stays {usd(home.rent)}, so the renovated room's higher share comes out of the other rooms.
-                    Headroom is the median over groups of the sum of members' values for their rooms minus the rent; its
-                    change is how much more the same groups value the house. Re-solved allocations, not summed willingness to pay.
+                  <p style={{ margin: 0 }}>
+                    At the same house rent of {usd(home.rent)}, this change moves money between rooms. The{' '}
+                    {home.rooms[res.renoIdx].label} pays more and the other rooms pay less. The total rent does not change.
+                  </p>
+                  <p className="qv-small" style={{ margin: '6px 0 0' }}>
+                    The bath value is an assumption. A half bath counts as half of a private bath, and the Private
+                    bathroom slider sets that value, now <b className="qv-mono">{usd(wBath)}/mo</b>. Move the slider and
+                    these numbers move with it.
                   </p>
                 </>
               ) : <p className="qv-muted">Solving...</p>}
@@ -243,11 +250,37 @@ function OperatorBody({ api }) {
       {opData && (
         <div className="qv-span-12">
           <Note>
-            The build-time file operator.json is loaded ({opData.label || 'SYNTHETIC population'}). The numbers above are recomputed live in this browser for the selected house.
+            Every number on this page is computed live in this browser for the selected house, from SYNTHETIC students.
           </Note>
         </div>
       )}
     </div>
+  );
+}
+
+// Asking rents against typical fair rents for this house: which rooms are priced too high or too low, and by how much.
+const NEAR = 10; // dollars a month; closer than this counts as about right
+function AskingCallout({ home, rooms }) {
+  const rows = home.rooms
+    .map((room, j) => ({ label: room.label, ask: room.asking, fair: rooms[j]?.p50 }))
+    .filter((x) => Number.isFinite(x.ask) && Number.isFinite(x.fair))
+    .map((x) => ({ ...x, d: x.ask - x.fair }));
+  if (!rows.length) return null;
+  const by = (a, b) => Math.abs(b.d) - Math.abs(a.d);
+  const high = rows.filter((x) => x.d >= NEAR).sort(by);
+  const low = rows.filter((x) => x.d <= -NEAR).sort(by);
+  const near = rows.filter((x) => Math.abs(x.d) < NEAR);
+  const list = (xs) => xs.map((x) => `${x.label} by ${usd(Math.abs(x.d))}`).join(', ');
+  const askSum = rows.reduce((t, x) => t + x.ask, 0);
+  return (
+    <Note>
+      <b>Asking rent against typical fair rent.</b>{' '}
+      {low.length ? `Priced too low: ${list(low)}. ` : ''}
+      {high.length ? `Priced too high: ${list(high)}. ` : ''}
+      {near.length ? `Within ${usd(NEAR)} of typical: ${near.map((x) => x.label).join(', ')}. ` : ''}
+      {!low.length && !high.length ? 'Every asking rent is close to its typical fair rent. ' : ''}
+      The asking rents add up to {usd(askSum)} a month; the house rent is {usd(home.rent)}.
+    </Note>
   );
 }
 

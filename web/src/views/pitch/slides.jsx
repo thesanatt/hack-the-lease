@@ -311,7 +311,7 @@ function Next() {
         <li><b>Real students.</b> Check that six picks match what students say they value. Picks like these tend to understate the value of time (Small 2012).</li>
         <li><b>Fall timetables.</b> Today one December week stands in for both terms. Daylight is already computed per term date.</li>
         <li><b>Late night and weather.</b> FlexRide is on demand and not in the timetables. Walking is 1.3 m/s for everyone, with no hills or snow.</li>
-        <li><b>One router fix.</b> Honor the timetable's no-pickup flags on one route. The router check lists the trips.</li>
+        <li><b>Mid-trip stop limits.</b> A stop in the middle of a trip where the bus only drops off or only picks up is not modeled yet. First and last stops already are.</li>
       </ul>
     </>
   );

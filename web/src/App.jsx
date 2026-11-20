@@ -45,12 +45,12 @@ export default function App() {
     const fn = (msg, f) => setProgress({ msg, f });
     progressListeners.add(fn);
     getEngine().then((a) => { setApi(a); if (import.meta.env.DEV) window.__quorum = a; }).catch((e) => { console.error(e); setError(e); });
-    const onHash = () => setView(viewFromHash());
+    const onHash = () => { setView(viewFromHash()); window.scrollTo(0, 0); };
     window.addEventListener('hashchange', onHash);
     return () => { progressListeners.delete(fn); window.removeEventListener('hashchange', onHash); };
   }, []);
 
-  const go = (id) => { window.location.hash = id; setView(id); };
+  const go = (id) => { window.location.hash = id; setView(id); window.scrollTo(0, 0); };
   const current = VIEWS.find((v) => v.id === view);
   const Comp = current?.Comp;
 

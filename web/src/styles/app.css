@@ -31,7 +31,10 @@ a { color: var(--accent); }
 .wordmark { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
 .tagline { color: var(--ink-2); font-size: 14px; }
 .topbar .spacer { flex: 1; }
-.rail { border-right: 1px solid var(--ink); padding: var(--s4) 0; display: flex; flex-direction: column; }
+.rail {
+  border-right: 1px solid var(--ink); padding: var(--s4) 0; display: flex; flex-direction: column;
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; background: var(--paper); z-index: 5;
+}
 .rail button {
   all: unset; cursor: pointer; display: block; padding: var(--s2) var(--s4);
   font-family: var(--font-display); font-size: 18px; border-left: 4px solid transparent;
@@ -44,6 +47,7 @@ a { color: var(--accent); }
 .footer {
   grid-column: 1 / -1; border-top: 1px solid var(--ink); padding: var(--s2) var(--s5);
   font-size: 12px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4);
+  position: relative; z-index: 6; background: var(--paper); /* sits above the sticky rail at the page bottom */
 }
 
 /* panel */
@@ -197,8 +201,8 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 .scrolly table.tt thead th { position: sticky; top: 0; background: var(--paper); z-index: 1; }
 .scroll-hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
 /* projector: on a 1920 px wide screen everything scales up by a fifth so it reads from the back of a room */
-@media (min-width: 1680px) { html { zoom: 1.2; } }
-@media (min-width: 2400px) { html { zoom: 1.5; } }
+@media (min-width: 1680px) { html { zoom: 1.2; } .rail { height: calc(100vh / 1.2); } }
+@media (min-width: 2400px) { html { zoom: 1.5; } .rail { height: calc(100vh / 1.5); } }
 @media (max-width: 1879px) {
   .grid-week { grid-template-columns: minmax(0, 1fr); }
 }
@@ -208,7 +212,7 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 }
 @media (max-width: 720px) {
   .frame { grid-template-columns: minmax(0, 1fr); }
-  .rail { flex-direction: row; border-right: none; border-bottom: 1px solid var(--ink); padding: 0; overflow-x: auto; }
+  .rail { flex-direction: row; border-right: none; border-bottom: 1px solid var(--ink); padding: 0; overflow-x: auto; height: auto; }
   .rail button { border-left: none; border-bottom: 3px solid transparent; font-size: 15px; padding: var(--s2) var(--s3); }
   .rail button[aria-current='page'] { border-bottom-color: var(--accent); }
   .rail .railnote { display: none; }
@@ -217,3 +221,15 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
   .footer { padding: var(--s2) var(--s4); }
   .pick { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* pressed toggles stay readable under the pointer */
+.btn[aria-pressed='true']:hover:not(:disabled) { background: var(--ink-2); color: var(--paper); }
+
+/* jump links: sticky at the top of long views */
+.jumpbar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
+  margin: 0 0 10px; padding: 8px 0; background: var(--paper); border-bottom: 1px solid var(--line); }
+.jumpbar-label { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.jumpbar-link { font: inherit; font-size: 15px; background: none; border: none; padding: 2px 0; cursor: pointer;
+  color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.jumpbar-link:hover { color: var(--accent); }
+.jumpbar-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

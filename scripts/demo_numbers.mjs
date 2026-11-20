@@ -55,6 +55,27 @@ const optionFor = (home, room, w) => {
 console.log(`Quorum demo numbers. Data: ${homes.length} SYNTHETIC homes, ${personas.length} FICTIONAL personas, ${places.length} real places.`);
 console.log(`Loaded timetables, streets and ${homes.length + places.length} points in ${Math.round(performance.now() - tLoad)} ms.`);
 
+// ---------- 0. Pitch slide 1 (same call as web/src/views/pitch/data.js campusExample) ----------
+{
+  const SLIDE_HOME = 'h23', SLIDE_DAY = 'tue', SLIDE_DATE = '2026-12-01';
+  const CAMPUSES = [['ugli', 'Central Campus'], ['beyster', 'North Campus'], ['uh', 'Medical Campus']];
+  const TIMES = [[14 * 3600, '2:00 PM'], [23.5 * 3600, '11:30 PM']];
+  H(`0. Pitch slide 1: one listing, ${nm(SLIDE_HOME)} (${homeById.get(SLIDE_HOME).area}), minutes home on Tue Dec 1 2026`);
+  const cells = [];
+  for (const [pid, campus] of CAMPUSES) {
+    let walk = null; const bus = [];
+    for (const [t] of TIMES) {
+      const res = planner.leaveAt(SLIDE_DAY, pid, t, [SLIDE_HOME])?.get(SLIDE_HOME);
+      if (walk == null && res?.walk) walk = Math.round(res.walk.sec / 60);
+      bus.push(res?.transit ? Math.round((res.transit.arrive - t) / 60) : null);
+    }
+    cells.push(walk, ...bus);
+    say(`${campus.padEnd(15)} (${placeById.get(pid)?.label}): walk ${walk ?? 'no route'} min, bus leaving ${TIMES[0][1]} ${bus[0] ?? 'no bus'} min, bus leaving ${TIMES[1][1]} ${bus[1] ?? 'no bus'} min`);
+  }
+  const fin = cells.filter(Number.isFinite);
+  say(`range on the slide: ${Math.min(...fin)} to ${Math.max(...fin)} min. Civil dusk that day ${clk(week.dusk(SLIDE_DATE, cfg))}.`);
+}
+
 // ---------- Jordan ----------
 const jordan = personas.find((p) => p.id === 'jordan');
 const entries = editableWeek(jordan);
@@ -95,7 +116,9 @@ function rankNow(post, effEntries, dates = cfg.termDates) {
   const thetas = prefs.draws(post, cfg.posteriorDraws, 3);
   const rank = decide.meRank({ homes, weeksByScenario, thetas, cfg });
   const ev = decide.evpi(rank.tensor).evpi;
-  const mean = prefs.posteriorMean(post);
+  // Same point estimate as MeView: every weight at its posterior MEDIAN (what "What the picks say" shows).
+  const sm = prefs.summary(post, cfg);
+  const mean = Object.fromEntries(Object.entries(sm).map(([k, x]) => [k, x.median]));
   const [a, b] = rank;
   const arg = (r) => ({ home: homeById.get(r.homeId), weeks: weeksByScenario.map((m) => m.get(r.homeId)) });
   const be = ['vTime', 'vDark'].map((param) => ({ ...decide.breakEven(arg(a), arg(b), param, mean, cfg), A: a.homeId, B: b.homeId }));
@@ -120,6 +143,8 @@ function printRank(r, k = 3, baseline = null) {
 
 H('2a. Me mode, Jordan, before any pick (posterior = prior)');
 let post = prefs.createPosterior({ seed: 7, cfg });
+const S0 = prefs.summary(post, cfg);
+for (const k of model.PARAMS) say(`prior ${k}: median ${usd(S0[k].median, 1)}, 80% ${usd(S0[k].lo, 1)} to ${usd(S0[k].hi, 1)}`);
 const r0 = rankNow(post, entries);
 printRank(r0);
 
@@ -138,6 +163,12 @@ for (let k = 0; k < cfg.picksMax; k++) {
   prefs.update(post, A, B, choice, cfg);
   nAuto++;
   say(`pick ${nAuto}: A ${nm(A.homeId)} ${A.room.label} vs B ${nm(B.homeId)} ${B.room.label}, IG ${p.ig.toFixed(3)} nats -> ${choice} (P(A) ${Math.round(pA * 100)}%)`);
+  // What the pick card shows for each side (PickCard.jsx Option), so a presenter can answer it by hand.
+  for (const [tag, o] of [['A', A], ['B', B]]) {
+    const w = weekMap.get(o.homeId), r = o.room;
+    const dk = w.darkWalkMin + cfg.darkBikeFactor * (w.darkBikeMin || 0) + (w.darkLongWaitMin || 0);
+    say(`   ${tag}: ${homeById.get(o.homeId).area}, ${r.label} ${r.sqft} sq ft, ${r.bath} bath, light ${r.light}; rent with utilities ${usd(o.rent)}/mo; door to door ${Math.round(w.weeklyMin)} min/wk; walking or waiting ${Math.round((w.walkMin || 0) + (w.waitMin || 0))} min/wk; after dark ${Math.round(dk)} min/wk; no ride ${w.stranded.length}/wk`);
+  }
 }
 {
   const c = prefs.buildCandidates(post, homeOptions);
@@ -149,6 +180,23 @@ const S = prefs.summary(post, cfg);
 for (const k of model.PARAMS) say(`learned ${k}: median ${usd(S[k].median, 1)}, 80% ${usd(S[k].lo, 1)} to ${usd(S[k].hi, 1)}${S[k].mostlyPrior ? '  (mostly prior)' : ''}   [demo truth ${jordan.theta[k]}]`);
 const r1 = rankNow(post, entries);
 printRank(r1);
+const tb = prefs.pBestHomes(post, homeOptions).reduce((a, b) => (b.pBest > a.pBest ? b : a));
+say(`stop-rule pill now reads: "${nm(tb.id)} is best on your most likely week (${tb.pBest.toFixed(2)}). Across all ${r1.nScen} possible weeks: ${Math.round(100 * r1.rank[0].pBest)}%." (${pct(r1.rank[0].pBest)} of ${r1.nScen} weeks x ${r1.nDraws} value draws)`);
+say(`(break-even uses every weight at its posterior median, as the app does; the posterior mean of vTime would be ${usd(prefs.posteriorMean(post).vTime, 1)}/h)`);
+say(`what the picks changed: leader room ${r0.rank[0].roomLabel} -> ${r1.rank[0].roomLabel}; regret ${usd(r0.rank[0].expRegret)} -> ${usd(r1.rank[0].expRegret)}; P(best) ${pct(r0.rank[0].pBest)} -> ${pct(r1.rank[0].pBest)}; vTime 80% ${usd(S0.vTime.lo, 1)}-${usd(S0.vTime.hi, 1)} -> ${usd(S.vTime.lo, 1)}-${usd(S.vTime.hi, 1)}; vStrand median ${usd(S0.vStrand.median, 1)} -> ${usd(S.vStrand.median, 1)}; value of knowing ${usd(r0.ev)} -> ${usd(r1.ev)}`);
+
+// ---------- 2c. Baseline: a plain listing filter ----------
+H('2c. Baseline: a listing filter "cheapest home in North Campus", ranked by Quorum for Jordan');
+{
+  const priceFrom = (h) => Math.min(...h.rooms.map((r) => (r.asking ?? h.rent / h.rooms.length) + (h.utilities || 0) / h.rooms.length));
+  const north = homes.filter((h) => h.area === 'North Campus').sort((x, y) => priceFrom(x) - priceFrom(y));
+  say(`North Campus homes by "From /mo" (cheapest room, asking rent plus an equal share of utilities): ${north.map((h) => `${h.name} ${usd(priceFrom(h))}`).join('; ')}`);
+  const pick = north[0];
+  for (const [lbl, r] of [['before any pick', r0], ['after the picks', r1]]) {
+    const i = r.rank.findIndex((x) => x.homeId === pick.id), row = r.rank[i], lead = r.rank[0];
+    say(`${lbl}: the filter picks ${pick.name}, which Quorum ranks #${i + 1} of ${r.rank.length}: expected regret ${usd(row.expRegret)}/mo vs ${usd(lead.expRegret)} for #1 ${nm(lead.homeId)}, ${usd(row.expRegret - lead.expRegret)}/mo worse; P(best) ${pct(row.pBest)}; all-in ${usd(-row.meanU)} vs ${usd(-lead.meanU)}`);
+  }
+}
 
 // ---------- 3. Sensitivity ----------
 H(`3a. Sensitivity: "Move ${lab.label.toLowerCase()} to Central" (same picks)`);
@@ -156,6 +204,12 @@ const moved = moveToCentral(entries, lab.id, placeById);
 say(`lab moves from ${placeById.get(lab.place).label} to ${placeById.get(moved.find((e) => e.id === lab.id).place).label}`);
 const r2 = rankNow(post, moved);
 printRank(r2, 3, r1.rank);
+{
+  const iB = r2.rank.findIndex((x) => x.homeId === r1.rank[0].homeId);
+  const t3 = r2.rank.slice(0, 3).map((x) => x.expRegret);
+  say(`old leader ${nm(r1.rank[0].homeId)} falls from #1 to #${iB + 1} (expected regret ${usd(r2.rank[iB].expRegret)}/mo, P(best) ${pct(r2.rank[iB].pBest)})`);
+  say(`top three spread ${usd(Math.max(...t3) - Math.min(...t3))}/mo (${t3.map((x) => usd(x)).join(', ')}); leader P(best) ${pct(r2.rank[0].pBest)}`);
+}
 
 for (const term of ['sep', 'dec']) {
   H(`3b. Sensitivity: Daylight "${TERM_CHOICES[term].label}" instead of "Whole lease (6 dates)" (lab back on North)`);
@@ -186,7 +240,8 @@ const top = s0.rows[0];
 const printSplit = (row) => {
   members.forEach((m, i) => {
     const j = row.res.assignment[i];
-    say(`   ${m.name.padEnd(6)} ${row.home.rooms[j].label.padEnd(16)} ${usd(row.res.prices[j], 2)}   (cap ${usd(row.problem.members[i].cap)}, under cap by ${usd(row.problem.members[i].cap - row.res.prices[j], 2)})`);
+    const net = row.U && Number.isFinite(row.U[i]) ? `, net cost ${usd(-row.U[i])}/mo` : '';
+    say(`   ${m.name.padEnd(6)} ${row.home.rooms[j].label.padEnd(16)} ${usd(row.res.prices[j], 2)}   (cap ${usd(row.problem.members[i].cap)}, under cap by ${usd(row.problem.members[i].cap - row.res.prices[j], 2)}${net})`);
   });
   say(`   sum ${usd(row.res.prices.reduce((s, x) => s + x, 0), 2)} = rent ${usd(row.home.rent)}; utilities ${usd(row.home.utilities)} split evenly, ${usd(row.home.utilities / members.length, 2)} each`);
 };
@@ -197,6 +252,7 @@ top.check.envy.forEach((r, i) => r.forEach((e, j) => { if (i !== j) off.push({ e
 off.sort((a, b) => a.e - b.e);
 say(`envy matrix: checker ${top.check.ok ? 'passed' : 'FAILED'}, smallest margin ${usd(off[0].e, 2)} (${members[off[0].i].name} looking at ${members[off[0].j].name}'s room), largest ${usd(off[off.length - 1].e, 2)}`);
 say(`   zero margins (ties held by the maximin rule): ${off.filter((x) => x.e < 0.005).length} of ${off.length}`);
+{ const ps = top.res.prices; say(`   split range ${usd(Math.min(...ps))} to ${usd(Math.max(...ps))}; net cost = rent share + utilities share + commute time in dollars - the room's value to that person`); }
 say(`   envy-free rate over ${top.res.efSamples ?? cfg.efSamples} value draws: ${pct(top.res.efRate)}; widest-margin slack ${Number.isFinite(top.res.robustSlack) ? usd(top.res.robustSlack, 2) : 'n/a'}; distinct favorite rooms ${new Set(top.problem.members.map((x) => G.favoriteRoom(x.values))).size}`);
 say('   rows (who looks), columns (whose room), dollars per month:');
 say('          ' + members.map((m) => m.name.padStart(8)).join(''));
@@ -220,8 +276,14 @@ const tRow = s1.rows.find((r) => r.home.id === top.home.id);
 say(`${top.home.name} now ${tRow.feasible ? 'still feasible' : 'has no envy-free split under every cap'}; top feasible house now ${s1.rows.find((r) => r.feasible)?.home.name || 'none'}`);
 const gap = fair.privateGap(tRow.problem, ci, { cfg, compensateCommute: !!cfg.compensateCommute });
 say(`${members[ci].name}'s private view on ${top.home.name}: cap would need to rise by ${usd(gap)} (${gap.toFixed(2)})`);
+say(`Shown for ${top.home.name} after the cut (smallest worst overrun, not envy-free under every cap):`); printSplit(tRow);
 const nf = s1.rows.find((r) => r.feasible);
-if (nf) { say(`Split of ${nf.home.name} with the lower cap:`); printSplit(nf); }
+if (nf) {
+  say(`Split of ${nf.home.name} with the lower cap (the split panel moves here by itself):`); printSplit(nf);
+  const o2 = []; nf.check.envy.forEach((r, i) => r.forEach((e, j) => { if (i !== j) o2.push(e); }));
+  say(`   checker ${nf.check.ok ? 'passed' : 'FAILED'}; zero margins ${o2.filter((e) => e < 0.005).length} of ${o2.length}; envy-free rate over value draws ${pct(nf.res.efRate)}; worst-off net cost ${usd(-nf.E)}/mo (was ${usd(-top.E)} in ${top.home.name})`);
+  say(`   feasible houses after the cut, best first: ${s1.rows.filter((r) => r.feasible).map((r) => `${r.home.name} worst-off ${usd(-r.E)}`).join('; ')}`);
+}
 for (const cut of [10, 25, 50]) {
   const s = solve({ [tightest]: members[ci].cap - cut });
   say(`check: cap cut by exactly ${usd(cut)} -> ${top.home.name} ${s.rows.find((r) => r.home.id === top.home.id).feasible ? 'feasible' : 'infeasible'}; top feasible ${s.rows.find((r) => r.feasible)?.home.name}`);
@@ -242,8 +304,23 @@ const opMs = performance.now() - to;
 say(`${home.name} (${home.area}), house rent ${usd(home.rent)}, ${home.rooms.length} rooms, ${op.groups} synthetic groups from a population of ${cfg.population} (seed 11), ${Math.round(opMs)} ms incl. the renovation re-solve`);
 say(`prior medians: private bath ${usd(wBath)}/mo, size ${usd(wSize, 1)}/mo per 10 sq ft, light ${usd(model.PARAM_INFO.wLight.prior.median)}/mo per level`);
 home.rooms.forEach((rm, j) => { const r = op.rooms[j]; say(`   ${rm.label.padEnd(16)} ${String(rm.sqft).padStart(3)} sq ft ${rm.bath.padEnd(7)} floor ${String(rm.floor).padEnd(8)} light ${rm.light}: p10 ${usd(r.p10)} p50 ${usd(r.p50)} p90 ${usd(r.p90)}  asking ${usd(rm.asking)}`); });
+{
+  const gaps = home.rooms.map((rm, j) => ({ label: rm.label, asking: rm.asking, fair: op.rooms[j].p50, gap: rm.asking - op.rooms[j].p50 }));
+  say(`asking minus fair (p50): ${gaps.map((g) => `${g.label} ${g.gap >= 0 ? '+' : ''}${usd(g.gap)}`).join('; ')}`);
+  const lo = gaps.reduce((a, b) => (b.gap < a.gap ? b : a)), hi = gaps.reduce((a, b) => (b.gap > a.gap ? b : a));
+  say(`most underpriced: ${lo.label} asking ${usd(lo.asking)} vs fair ${usd(lo.fair)} (${usd(-lo.gap)} under); most overpriced: ${hi.label} asking ${usd(hi.asking)} vs fair ${usd(hi.fair)} (${usd(hi.gap)} over); asking rents sum to ${usd(gaps.reduce((t, g) => t + g.asking, 0))}`);
+}
 if (op.renovationDelta) {
   say(`half bath added to ${home.rooms[reno.j].label}: its p50 fair share ${op.renovationDelta.roomP50 >= 0 ? '+' : ''}${usd(op.renovationDelta.roomP50)}/mo at the same house rent; median group headroom ${op.renovationDelta.headroom >= 0 ? '+' : ''}${usd(op.renovationDelta.headroom)}/mo`);
+}
+
+if (reno) {
+  // The half bath counts as half of a private bath (engine/model.js), so its value follows the assumed bath median.
+  for (const wb of [30, 120]) {
+    const o = operator.roomPricing({ home, groups, renovation: { roomId: home.rooms[reno.j].id, bath: 'half' }, cfg, medians: { wBath: wb, wSize }, prior: population.prior });
+    say(`   with the private bathroom slider at ${usd(wb)}/mo: half bath ${o.renovationDelta.roomP50 >= 0 ? '+' : ''}${usd(o.renovationDelta.roomP50)}/mo room share, ${o.renovationDelta.headroom >= 0 ? '+' : ''}${usd(o.renovationDelta.headroom)}/mo headroom`);
+  }
+  say(`   +${usd(op.renovationDelta.headroom)}/mo headroom is ${usd(12 * op.renovationDelta.headroom)} a year. No build cost is in the data, so no payback is computed.`);
 }
 
 // ---------- 6. Evidence files ----------
@@ -254,4 +331,10 @@ say(`R2 reference router (${R2.service_date}, ${R2.day}): ${R2.equal} of ${R2.qu
 say(`R6 r5py ${R6.r5py_version}: ${R6.result.pairs} place-to-home pairs, ${R6.result.both_reachable} reachable in both, median abs diff ${R6.result.median_abs_error_min.toFixed(1)} min, within 2 min ${pct(R6.result.share_within_2_min)}, p90 ${R6.result.p90_abs_error_min} min, mean signed (Quorum minus R5) ${R6.result.mean_signed_error_min_quorum_minus_r5} min`);
 say(`LP: F1 ${LP.F1.envyFree} of ${LP.F1.instances} random instances envy-free and checker-ok, F2 closed form ${LP.F2.closedForm.match}/${LP.F2.closedForm.instances}, F4 to F6 published examples pass: ${LP.F4.pass && LP.F5.pass && LP.F6.pass}`);
 say(`Recovery: ${RC.trials} SYNTHETIC trials x ${RC.picks} picks. ${RC.headline.text}`);
+say(`   answers are simulated from the same logit choice model the posterior assumes (${RC.setup.answers})`);
+for (const off of [false, true]) {
+  const x = RC.results.find((r) => r.policy === 'bald' && r.tauScale === 1 && r.offPrior === off);
+  if (x) say(`   ${off ? 'off-prior' : 'prior'} set, BALD, tau x1, 80% interval coverage after ${RC.picks} picks: ${model.PARAMS.map((k) => `${k} ${pct(x.coverage[k])}`).join(', ')}`);
+}
+say(`R6 detail: ${R6.result.pairs - R6.result.both_reachable} of ${R6.result.pairs} trips not reachable in both routers (only in Quorum: ${R6.result.reachable_only_in_quorum ?? 'n/a'})`);
 console.log('\nDone.');

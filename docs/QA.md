@@ -40,7 +40,9 @@ look good on it. We sort by expected regret and show P(best) beside it (Rucker a
 **Value of knowing the schedule.** How much better the choice would be, on average, if the student knew the
 fall week before signing (expected value of perfect information), in dollars a month.
 
-**Break-even.** Keep every other weight at its estimate and slide one, value of time, until the top two homes tie.
+**Break-even.** Keep every other weight at its median and slide one, value of time, until the top two homes tie.
+The app uses the posterior median as its one point estimate everywhere, the same number "What the picks say"
+shows.
 
 **Maximin envy-free split and the envy matrix.** First give rooms to people so the group's total value is as high
 as possible. Then set rents so they add up to the house rent exactly, nobody would rather have someone else's
@@ -66,11 +68,15 @@ p10, p50 and p90 across those groups is its fair share. A renovation re-solves t
 | Preference learning | 300 synthetic trials: smart questions beat random questions on regret in all 6 settings tested (latest run: $19.4 a month lower on the off-prior set) | `evidence/recovery.json`, `scripts/recovery.mjs` |
 | Speed | Jordan's week over 30 homes about 23 to 35 ms; 24 weeks x 30 homes x 200 draws ranked in about 30 to 40 ms | panel headers in the app; script sections 1 and 2 |
 | Jordan's late trip | Georgetown Blvd 19 min with 13.5 min walking (over the 10 min cap); Broadway St 18 min with 6.3 min walking | script section 1 |
-| Jordan's ranking after 3 picks | Broadway St $36 regret, P(best) 74%; value of knowing $31/mo; break-even $79/h vs estimate $15.8/h | script section 2b |
-| Lab moved to Central | Lawrence St goes from 3rd to 1st, $52 regret; value of knowing $34/mo | script section 3a |
-| Group split, Broadway St, $4,150 | $773 / $883 / $859 / $779 / $854 | script section 4 |
-| Priya's cap move | $875 to $830 makes Broadway infeasible; group moves to Georgetown Blvd; her private gap $25 | script section 4b |
-| Operator half bath | Basement room +$30/mo fair share; +$32/mo group headroom | script section 5 |
+| Pitch slide 1 | Plymouth Rd apartment (North Campus): from Beyster 11 min at 2 PM, 24 at 11:30 PM; from the UgLi 31 and 39; range 11 to 53 min | script section 0 |
+| Jordan before any pick | Broadway St $38 regret, P(best) 71%; value of knowing $18/mo; break-even $75/h vs median $14.9/h | script section 2a |
+| Jordan's ranking after 3 picks | Broadway St $36 regret, P(best) 74%; value of knowing $31/mo; break-even $75/h vs median $15.2/h | script section 2b |
+| Filter baseline | Cheapest North Campus home, Georgetown Blvd ($821 from), ranks #8 of 30 for Jordan: $269 regret, $233/mo worse than Broadway; P(best) 9.4% | script section 2c |
+| Lab moved to Central | Broadway falls #1 to #9; top three Lawrence St $52, Church St $54, Lincoln Ave $58 (spread $6); leader P(best) 28%; value of knowing $34/mo | script section 3a |
+| Group split, Broadway St, $4,150 | $773 / $883 / $859 / $779 / $854; 4 of 20 envy margins exactly $0; envy-free in 2% of value draws | script section 4 |
+| Priya's cap move | $875 to $830 makes Broadway infeasible; group moves to Georgetown Blvd ($3,950); her private gap $25 | script section 4b |
+| Operator asking vs fair | South Forest Ave: Primary with bath asks $1,100 vs typical fair $1,161 ($61 low); Basement asks $965 vs $928 ($37 high) | script section 5 |
+| Operator half bath | Basement room +$30/mo fair share at the same house rent; +$32/mo group value; slider at $30 gives +$15, at $120 gives +$57 | script section 5 |
 | Tests | 64 engine tests pass (`npm test`), 15 view tests pass (`cd web && npm test`) | run Fri Nov 20 |
 
 ## Hard questions, short honest answers
@@ -89,12 +95,69 @@ shows a checked certificate.
 **"Where is the AI?"** The learning is the adaptive questions plus Bayesian inference over what the student values.
 There is no LLM, on purpose: it has to run offline and every output must trace back to a number.
 
+**"Why not an LLM to read my schedule or a listing?"** That is where one could fit later: turning a pasted
+schedule or a listing into the same inputs the engine already takes. It would not produce any of the numbers.
+We have not built it.
+
 **"Six clicks cannot learn six weights."** Agreed. It mostly learns the travel weights. The rest are tagged "mostly
 prior" on screen. The recovery test shows how much it learns.
+
+**"What did the picks change? Broadway was first before them."** The leader stayed, and we say so. The room
+changed from the Garden room to the Attic room. The 80% range for Jordan's value of time went from $5.3 to $40.5
+an hour down to $6.9 to $25.3. The cost of a trip with no ride went from a median of $14 to $33. Value of
+knowing the schedule went from $18 to $31 a month. In the recovery test, these questions give $19.4 a month
+lower regret than random questions on the off-prior set.
+
+**"The pill says 1.00, the ranking says 74%. Which is it?"** Both, on different questions. 1.00 is on Jordan's
+single most likely week, which is what the stop rule checks. 74% is across all 24 possible weeks and 200 draws of
+Jordan's values. The pill prints both in one line.
+
+**"Has a real student done the picks? Did you test with users?"** No. There has been no user testing and no
+formal interviews. We have not timed a real person on the picks. In the demo, pick 1 is answered by hand and the
+rest by Jordan's fictional values. You may speak from your own housing search, if it is true.
+
+**"Your recovery test is circular."** Partly, yes. It simulates answers from the same logit choice model the
+posterior assumes, so it checks the inference and the question picker, not real people. Real students are the
+next test. It also shows one weak spot: when the true cost of a dark walk sits far above our prior, the 80%
+interval covers it only 8 to 9% of the time after 6 picks (81% when truths come from the prior). That is why the
+app tags that weight "mostly prior".
+
+**"How does a student enter their own week?"** In **Your week** on Me: toggle an entry, change its days, times and
+place, or add a job. Places are a fixed list of 31 real Ann Arbor places, not a free address box. We have not
+timed it.
+
+**"Can you load a real listing now?"** Not from the screen. Listings are a JSON file read when the app is built.
+There is no upload button.
+
+**"Why is the value of time $15.2 in one place and $15.8 in another?"** $15.2 is the median, $15.8 the mean. The
+app now uses the median everywhere, so say about $15 an hour.
+
+**"After the lab move, is Lawrence Street really first?"** Not in a way that matters. The top three are within $6
+a month and the leader is best in only 28% of draws. The honest reading: for Jordan the lab location now matters
+more than which house.
+
+**"Why does value of knowing go up after the picks?"** The picks raised the cost of a trip with no ride from a
+median of $14 to $33, and those trips depend on whether the late lab happens. We think that is the main reason.
+We have not isolated it.
+
+**"Does this tell students to wait before signing?"** No. The ranking is computed over 24 possible fall weeks so
+a student can sign early with a home that holds up across them. The $31 a month is the cost of not knowing, which
+is why we rank this way. The screen says "if finding out costs less than that, find out before you sign". That
+means ask the department about the lab time, not hold off on the lease.
+
+**"How is this better than a rent and distance filter?"** The filter "cheapest home on North Campus" picks
+Georgetown Blvd. For Jordan's real week Quorum ranks it 8th, $233 a month worse in expected regret than
+Broadway. The 11 minute dark walk home twice a week is on screen. It is still best in 9% of draws, which is why
+we sort by regret and not by chance of being best.
 
 **"Is the router right?"** It matched an independent reference router exactly on 3,000 trips. Against R5 it is
 within 1 minute at the median. R5 differs by design: it waits at least 60 s before every boarding and allows
 1,000 m transfers; ours allows 500 m.
+
+**"Your Python reference router reads your own stops and footpaths. How independent is it?"** It checks the
+search, not the inputs: it shares our preprocessed stops, footpaths and change times by design. The independent
+check is r5py. R5 builds its own network from the raw GTFS zips and the OpenStreetMap file. On 720 trips the
+median difference is 1.0 minute and 87.5% are within 2 minutes. 30 trips are reachable in Quorum but not in R5.
 
 **"Probability of best is misleading."** Yes, so we sort by expected regret and show P(best) beside it.
 
@@ -108,8 +171,21 @@ December timetable for both terms. Snow and ice are not modeled.
 for a real user.
 
 **"The envy-free rate is 2%."** True, and the app shows it. In this house two room assignments give the group the
-same total value, so some margins must be exactly $0. A small error in anyone's values breaks a tie by a few
-dollars. We report it instead of hiding it.
+same total value, so some margins must be exactly $0 (4 of 20 here). A small error in anyone's values breaks a
+tie by a few dollars. We report it instead of hiding it.
+
+**"Why does the group land on Broadway, then Georgetown?"** The rule makes the worst-off member as well off as
+possible among houses with a split under every cap. Broadway's worst-off net cost is $1,871 a month. Church St is
+lower at $1,726, but no split there fits every cap. After Priya's cut, Georgetown is the only house that fits
+every cap. Caps are hard limits. Georgetown is worse for Jordan: Jordan's net cost goes from $1,410 to $1,829 a
+month.
+
+**"Worst-off $1,871 a month, but rents are about $800?"** It is net cost, not rent: rent share plus utilities plus
+commute time in dollars, minus what the room is worth to that person.
+
+**"Priya paid $859, now Broadway shows $855 for her. Why?"** After the cut no envy-free split fits every cap, so
+the Broadway split shown is the one with the smallest worst overrun. Priya's share there is $855.40, $25 over her
+new cap.
 
 **"Can a roommate game it?"** Every envy-free rule can be gamed by misreporting values (Gal et al. 2017, Procaccia
 et al. 2018). We do not claim otherwise. Caps are private, so nobody can tune theirs to someone else's.
@@ -117,6 +193,31 @@ et al. 2018). We do not claim otherwise. Caps are private, so nobody can tune th
 **"Why should a housing company pay?"** Hypothesis, not tested: an owner of irregular houses gets groups that
 arrive already agreed on rooms and rent, a fair price per room, and the dollar effect of a renovation. We have no
 customer interviews and no price.
+
+**"Company or feature? Why wouldn't a listing site or Spliddit add this?"** We have no customer evidence, so we
+claim no moat. What we have in hand: the group workflow with private caps, room-level prices for houses whose
+rooms differ, and a real transit engine under both.
+
+**"What would a pilot look like? What do you need from us?"** A hypothesis: five irregular houses for one leasing
+season. You give the room features (size, bath, floor, light), the asking rents and the house rent, plus a few
+picks from current residents. Groups use Group mode. Then we compare the fair shares with which rooms sat empty.
+Ask them what tool they use today; do not guess.
+
+**"Isn't the half bath number just your $60 bath assumption?"** Yes, today. A half bath counts as half of a
+private bath, and the bath value is our assumption, shown on the slider. At $30 the half bath gives +$15, at $120
+it gives +$57. With picks from a house's own residents it would be measured instead. What the engine adds is
+turning those values into room rents a whole group accepts with nobody envying.
+
+**"Is +$30 new revenue? What is the payback?"** No new revenue. At the same house rent the $30 moves to the
+basement room from the other rooms. Groups value the house $32 a month more, about $387 a year. We have no build
+cost data, so we make no payback claim.
+
+**"Should this house rent for $6,100 at all?"** The view splits a fixed house rent. It does not set it. The +$32
+group value is the only signal about the total.
+
+**"Is the 210 day rule right?"** Ann Arbor ORD-24-03, Sections 8:530 and 8:531, adopted 4 March 2024: no showing
+or signing a new tenant until 210 days into the current lease. "About March 30 for a Sept 1 lease" is our
+arithmetic. We did not read later amendments, if any. Source: SYSTEM_DESIGN.md, reference AnnArborORD24-03.
 
 **"Students ride free, why count transit?"** We count time, not fares.
 
@@ -129,6 +230,10 @@ location history. Caps never leave the solver.
 **"What happens without wifi?"** It works. Everything, data included, is served from the laptop. The app makes no
 network calls.
 
+**"Georgetown says $821 in the homes list but $921 in the ranking. Which is it?"** Both. $821 is the cheapest room
+in that house ("from"). The ranking prices the room that is best for Jordan, which is the primary room with its own
+bath at $921. The ranking always picks each student's best room at its asking rent.
+
 ## Known limitations
 
 - Walking speed is 1.3 m/s for everyone. No hills, snow or ice.
@@ -139,5 +244,7 @@ network calls.
 - The walk and wait multipliers come from European studies, not US ones.
 - No street lighting data. "Dark" is about the sun, not lamps.
 - The operator population is drawn independently from stated shares, with no joint survey data.
+- No user testing yet. The recovery test uses simulated answers.
+- Places come from a fixed list of 31. Listings load from a build-time file.
 - "No pickup" or "no drop-off" flags in the middle of a trip are not modeled. Flags at a trip's first or last
   stop are (the reference check found that case on route 63 and the pipeline now handles it).

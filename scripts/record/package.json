@@ -1,0 +1,10 @@
+{
+  "name": "quorum-record",
+  "private": true,
+  "type": "module",
+  "description": "Records the backup demo video with Playwright. Not needed to run the app.",
+  "devDependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "playwright": "^1.49.1"
+  }
+}

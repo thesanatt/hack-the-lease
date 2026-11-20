@@ -4,6 +4,7 @@ import { Pill } from '../../components/index.js';
 
 const Z80 = 1.2815515655446004;
 const fmt = (v) => (v >= 100 ? Math.round(v) : v >= 10 ? v.toFixed(0) : v.toFixed(1));
+export const fmtEstimate = (v) => (Number.isFinite(v) ? String(fmt(v)) : '--');
 
 export default function Learned({ summary, prior, info, truth }) {
   if (!summary) return null;
