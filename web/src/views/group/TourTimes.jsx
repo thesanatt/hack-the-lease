@@ -6,6 +6,7 @@ import { modOf } from './kit.jsx';
 import { modalRoutine } from './logic.js';
 import { DAY_SHORT, clock12 } from './tours/format.js';
 import './tours/tours.css';
+import { tourIcs, mailtoHref, slotDates, slotLabel } from '../../../../engine/book.js';
 
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
 const FROM = 9 * 3600, TO = 19 * 3600, STEP = 1800;
@@ -67,7 +68,7 @@ export default function TourTimes({ api, chosen, members, weeks, cfg, colors }) 
                   <span><i className="gv-sw" style={{ background: '#efe8da' }} />Someone has class</span>
                 </div>
               </div>
-              <Draft house={house} n={n} slots={r.slots} tours={tours} />
+              <Draft house={house} n={n} slots={r.slots} tours={tours} names={people.map((p) => p.name)} />
             </div>
           )}
       </div>
@@ -125,9 +126,9 @@ function TourGrid({ people, picks, works }) {
   );
 }
 
-function Draft({ house, n, slots, tours }) {
+function Draft({ house, n, slots, tours, names }) {
   const text = useMemo(
-    () => (slots.length ? tours.tourMessage({ houseName: house.name, groupSize: n, slots }) : ''),
+    () => (slots.length ? tours.tourMessage({ houseName: house.name, groupSize: n, slots, dates: slotDates(slots) }) : ''),
     [house, n, slots, tours],
   );
   const ref = useRef(null);
@@ -155,6 +156,22 @@ function Draft({ house, n, slots, tours }) {
     setStatus(selectAll() ? 'Copied' : 'Selected. Press Ctrl+C.');
   };
 
+  // Book: download a calendar invite for this slot and open a prefilled email. The student hits send.
+  const book = (s) => {
+    const label = slotLabel(s);
+    try {
+      const ics = tourIcs({ slot: s, houseName: house.name, attendees: names, description: `Group tour of ${house.name}.` });
+      const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = `tour-${s.day}-${house.id}.ics`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) { console.warn(e); }
+    const body = tours.tourMessage({ houseName: house.name, groupSize: n, slots: [s], dates: slotDates([s]) });
+    window.location.href = mailtoHref({ subject: `Group tour of ${house.name}: ${label}?`, body });
+    setStatus(`Invite saved for ${label}. Your email app has the request ready.`);
+  };
+
   if (!slots.length) return <p className="gv-gray">No weekday time works for all {n} at {house.name}.</p>;
   return (
     <div className="gv-draft">
@@ -164,6 +181,7 @@ function Draft({ house, n, slots, tours }) {
             <span className="n">{k + 1}</span>
             <span className="when">{DAY_SHORT[s.day]} {clock12(s.start).toUpperCase()}</span>
             <span className="gv-small gv-gray">{s.travelMin} min of travel for the group</span>
+            <button type="button" className="gv-btn" onClick={() => book(s)} title={`Calendar invite + email for ${slotLabel(s)}`}>Book</button>
           </li>
         ))}
       </ol>
