@@ -21,7 +21,7 @@ function FitRing({ p }) {
         <circle cx="28" cy="28" r={r} fill="none" stroke="var(--sky-soft)" strokeWidth="6" />
         <circle cx="28" cy="28" r={r} fill="none" stroke="var(--sky)" strokeWidth="6" strokeLinecap="round"
           strokeDasharray={`${(c * pct) / 100} ${c}`} transform="rotate(-90 28 28)" />
-        <text x="28" y="32.5" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--navy)">{pct}%</text>
+        <text x="28" y="32.5" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--cream)">{pct}%</text>
       </svg>
       <span>best weeks</span>
     </div>
@@ -102,7 +102,7 @@ export default function SavedView({ api }) {
       <div className="st-head">
         <div>
           <h1>Saved homes</h1>
-          {best ? <p className="st-lead" style={{ color: 'var(--ink)', marginTop: 6 }}>For your week, <b>{short(best.home.name)}</b> is the best of your {items.length}.</p>
+          {best ? <p className="st-lead" style={{ color: 'var(--text)', marginTop: 6 }}>For your week, <b>{short(best.home.name)}</b> is the best of your {items.length}.</p>
             : <p>{items.length} saved. {busy ? 'Ranking them for your week...' : ''}</p>}
         </div>
         <div className="st-head-r">

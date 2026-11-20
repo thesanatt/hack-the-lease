@@ -2,7 +2,8 @@
 // the attribution footer. No rail, no per-view preamble: each view leads with its own picture.
 // Each view is `export default function XView({ api })`. Views other than Me are loaded through
 // import.meta.glob, so a missing file shows a note instead of breaking the build.
-import { Component, Suspense, lazy, useEffect, useState } from 'react';
+import { Component, Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { loadSerif } from './fonts.js';
 import { createEngine } from './engine/index.js';
 import { AssumptionsDrawer } from './components/index.js';
 import MeView from './views/MeView.jsx';
@@ -17,13 +18,14 @@ const lazyView = (name) => {
 // Hash routes stay #me, #group, #operator, #evidence, #pitch. "Next semester" keeps #next (it was "Next year").
 const VIEWS = [
   { id: 'home', label: 'Home', file: 'Home', Comp: lazyView('Home') },
-  { id: 'saved', label: 'Saved', file: 'Saved', Comp: lazyView('Saved') },
   { id: 'profile', label: 'My profile', file: 'Profile', Comp: lazyView('Profile') },
   { id: 'browse', label: 'Browse', file: 'Browse', Comp: lazyView('Browse') },
-  { id: 'next', label: 'Next semester', file: 'Next', Comp: lazyView('Next') },
-  { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group') },
-  { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence') },
-  { id: 'pitch', label: 'Pitch', file: 'Pitch', Comp: lazyView('Pitch') },
+  { id: 'saved', label: 'Saved', file: 'Saved', Comp: lazyView('Saved') },
+  // In the top bar's More menu; their hash links (#next, #group, #evidence, #pitch) work as before.
+  { id: 'next', label: 'Next semester', file: 'Next', Comp: lazyView('Next'), more: true },
+  { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group'), more: true },
+  { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence'), more: true },
+  { id: 'pitch', label: 'Pitch', file: 'Pitch', Comp: lazyView('Pitch'), more: true },
   // Off the top bar, still reachable by link for Q&A: the full You view, the post paster, the owners view.
   { id: 'me', label: 'You (detail)', file: 'Me', Comp: MeView, hidden: true },
   { id: 'listings', label: 'Paste a post', file: 'Listings', Comp: lazyView('Listings'), hidden: true },
@@ -62,6 +64,43 @@ const viewFromHash = () => {
 };
 const queryFromHash = () => splitHash(window.location.hash).query;
 
+// "More": the views off the main four, plus Assumptions. A button that opens a small list of links;
+// Esc closes it and returns focus to the button, a click outside closes it. The button is underlined when
+// the current view is one of its items.
+function MoreMenu({ view, go, onAssumptions, assumptionsOn }) {
+  const [open, setOpen] = useState(false);
+  const btn = useRef(null), box = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') { setOpen(false); btn.current?.focus(); } };
+    const onDown = (e) => { if (!box.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onDown);
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onDown); };
+  }, [open]);
+  const items = VIEWS.filter((v) => v.more);
+  const inMore = items.some((v) => v.id === view);
+  return (
+    <div className="more" ref={box}>
+      <button type="button" ref={btn} className={`tab more-btn${inMore ? ' on' : ''}`} aria-haspopup="true" aria-expanded={open}
+        aria-controls="more-list" onClick={() => setOpen((o) => !o)}>
+        More<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
+      </button>
+      {open && (
+        <ul id="more-list" className="more-list" aria-label="More views">
+          {items.map((v) => (
+            <li key={v.id}>
+              <a href={`#${v.id}`} aria-current={v.id === view ? 'page' : undefined}
+                onClick={(e) => { e.preventDefault(); setOpen(false); go(v.id); }}>{v.label}</a>
+            </li>
+          ))}
+          <li className="more-sep"><button type="button" disabled={!assumptionsOn} onClick={() => { setOpen(false); onAssumptions(); }}>Assumptions</button></li>
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [api, setApi] = useState(null);
   const [error, setError] = useState(null);
@@ -70,6 +109,7 @@ export default function App() {
   const [query, setQuery] = useState(queryFromHash);
   const [drawer, setDrawer] = useState(false);
 
+  useEffect(() => { loadSerif(); }, []);
   useEffect(() => {
     const fn = (msg, f) => setProgress({ msg, f });
     progressListeners.add(fn);
@@ -89,7 +129,7 @@ export default function App() {
       <header className="topbar">
         <a className="wordmark" href="#home" onClick={(e) => { e.preventDefault(); go('home'); }}>Quorum</a>
         <nav className="tabs" aria-label="Views">
-          {VIEWS.filter((v) => !v.hidden || v.id === view).map((v) => (
+          {VIEWS.filter((v) => !v.more && (!v.hidden || v.id === view)).map((v) => (
             <a key={v.id} href={`#${v.id}`} className="tab" aria-current={v.id === view ? 'page' : undefined}
               onClick={(e) => { e.preventDefault(); go(v.id); }}>
               {v.label}
@@ -100,7 +140,7 @@ export default function App() {
         <span className="chip-sample" title="Homes, rents and rooms are made up. People are fictional. Bus timetables, streets and places are real.">
           Sample data
         </span>
-        <button type="button" className="textlink" onClick={() => setDrawer(true)} disabled={!api}>Assumptions</button>
+        <MoreMenu view={view} go={go} onAssumptions={() => setDrawer(true)} assumptionsOn={!!api} />
       </header>
       <main className="main" id="main" tabIndex={-1}>
         {error && (

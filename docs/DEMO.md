@@ -1,8 +1,9 @@
 # Quorum demo script, new student flow (about 4:30, then a 30 s buffer)
 
 The app opens on **Home** (`#home`), a one-page pitch: hero, the problem, three steps, the proof, how we know.
-The top bar now reads **Home**, **Saved**, **My profile**, **Browse**, **Next semester**, **Your group**, **How we know**,
-**Pitch**. The old You tab, the post paster and Owners are off the bar but still open by link for Q&A:
+The top bar reads **Home**, **My profile**, **Browse**, **Saved**, then **Sample data** and a **More** menu on the
+right: **More > Next semester**, **More > Your group**, **More > How we know**, **More > Pitch**, **More >
+Assumptions**. Their links (`#next`, `#group`, `#evidence`, `#pitch`) work as before. The old You tab, the post paster and Owners are off the bar but still open by link for Q&A:
 `#me`, `#listings`, `#operator`. The previous script is `docs/DEMO_PREVIOUS.md`.
 
 What is sample: the resume (a FICTIONAL student, Alex Rivera, labeled on the PDF; its class times are made
@@ -20,7 +21,7 @@ The speed line under Saved is measured live; read it off the screen.
 3. Pre-save the five homes (saves 15 s on stage): click **Browse**, then the heart on **Broadway St house**,
    **Catherine St house**, **East Ann St house**, **Church St house**, **Georgetown Blvd house**. Browse shows nine
    homes a page; East Ann is on page 2 (page tabs at the bottom). The button top right reads **Saved (5)**.
-4. Warm up Next semester as in the previous script (click it, wait for **$31 a month**).
+4. Warm up Next semester: **More > Next semester**, wait for **$31 a month**.
 5. Only for the Send line in the tour step (needs the keys in the repo-root `.env`; without them there is no To
    field and no Send, and the panel works as before): on any Saved card click **Contact landlord**, type your
    own email in **To**, click **Close**. The tab keeps it, so To is filled on stage. Share the browser window
@@ -28,8 +29,8 @@ The speed line under Saved is measured live; read it off the screen.
 6. Click **Home** (or the Quorum wordmark) and scroll to the top. Zoom 80% (Ctrl and minus), F11 for full
    screen. Wait until Home's proof section shows **57% -> 82%** (it computes in a second or two).
 
-Order of clicks: Home (scroll), Find my home, My profile, Browse, Saved, My profile, Saved, Next semester, Your
-group, Pitch.
+Order of clicks: Home (scroll), Find my home, My profile, Browse, Saved, My profile, Saved, More > Next semester,
+More > Pitch.
 
 ## Timeline
 
@@ -40,8 +41,8 @@ group, Pitch.
 | 1:15 to 1:35 | 3. Fit labels on every home | Browse |
 | 1:35 to 2:25 | 4. Your best saved home, and why | Saved |
 | 2:25 to 3:00 | 5. Change one thing, the ranking moves | My profile, then Saved |
-| 3:00 to 3:40 | 6. The price of not knowing next semester (cut first if long) | Next semester |
-| 3:40 to 4:30 | 7. How we know, close | Pitch, Evidence slide |
+| 3:00 to 3:40 | 6. The price of not knowing next semester (cut first if long) | More > Next semester |
+| 3:40 to 4:30 | 7. How we know, close | More > Pitch, Evidence slide |
 
 ## 1. The problem (Home, 0:00 to 0:30)
 
@@ -129,12 +130,14 @@ Click **Send**: the button reads **Sent** with a check mark. If it shows an erro
 
 ## 6. Next semester (3:00 to 3:40), cut first if long
 
+Clicks: **More > Next semester**.
+
 As in `docs/DEMO_PREVIOUS.md` step 2, short version: **$31 a month** for the sample nursing junior, the clinical
 section is worth **$23 a month** to find out first; CS junior **under $1**: sign now.
 
 ## 7. Close (3:40 to 4:30)
 
-Pitch, **End**, Left arrow twice (Evidence slide). Same words as `docs/DEMO_PREVIOUS.md` step 7.
+**More > Pitch**, **End**, Left arrow twice (Evidence slide). Same words as `docs/DEMO_PREVIOUS.md` step 7.
 
 ## If something breaks
 

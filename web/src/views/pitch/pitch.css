@@ -1,7 +1,7 @@
 /* Pitch deck inside the app. One picture and one sentence per slide. Paper, ink, hairlines; Source Serif only
    for slide titles; IBM Plex Sans for everything else. No gradients, no glass, a plain cut between slides. */
 .pd {
-  --pd-ink: var(--navy); --pd-gray: #5a6275; --pd-line: #DEDAD2; --pd-paper: #F7F5F0; --pd-green: var(--sky-ink);
+  --pd-ink: var(--cream); --pd-gray: var(--muted); --pd-line: #2b2925; --pd-paper: var(--ink); --pd-green: var(--gold);
   position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 120px);
   background: var(--pd-paper); color: var(--pd-ink);
   font-family: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
@@ -37,7 +37,7 @@
 .pd-tip { font-size: 14px; fill: var(--pd-ink); }
 
 /* slide 1: trips as lines */
-.pd-picker select { font: inherit; font-size: 15px; color: var(--pd-ink); background: #fff; border: 1px solid var(--pd-line); border-radius: 8px; padding: 6px 10px; max-width: 280px; margin-top: 10px; }
+.pd-picker select { font: inherit; font-size: 15px; color: var(--pd-ink); background: var(--card); border: 1px solid var(--pd-line); border-radius: 8px; padding: 6px 10px; max-width: 280px; margin-top: 10px; }
 .pd-lane-h { font-size: 22px; font-weight: 600; fill: var(--pd-ink); }
 .pd-lane-s { font-size: 15px; fill: var(--pd-gray); }
 .pd-lane-k { font-size: 15px; fill: var(--pd-gray); }
@@ -81,7 +81,7 @@
 .pd-ev-c { font-size: 13px; color: var(--pd-gray); }
 .pd-ev-c b { font-weight: 600; }
 
-.pd-notes { border-top: 1px solid var(--pd-line); background: #fff; padding: 12px 16px; font-size: 15px; line-height: 1.5; border-radius: 8px; }
+.pd-notes { border-top: 1px solid var(--pd-line); background: var(--card); padding: 12px 16px; font-size: 15px; line-height: 1.5; border-radius: 8px; }
 .pd-notes h4 { font-size: 13px; font-weight: 600; margin: 0 0 6px; color: var(--pd-gray); }
 .pd-notes ul { margin: 0; padding-left: 1.1em; }
 
@@ -103,10 +103,17 @@
 .pd-aside .pd-chip, .pd-aside .pd-picker select { margin-top: 10px; }
 
 /* brand pass: each slide title sits on a navy band (the charts stay on paper so route colors and dashes read) */
-.pd-headrow { background: var(--navy); color: #ffffff; border-radius: 12px; padding: clamp(14px, 2.2vh, 28px) clamp(18px, 2vw, 32px); align-items: center; }
-.pd-headrow .pd-title { color: #ffffff; }
-.pd-headrow .pd-green { color: var(--sun); }
-.pd-headrow .pd-gray, .pd-headrow p { color: #dbe3f5; }
-.pd-headrow .pd-chip { color: #ffffff; border-color: #ffffff; }
+.pd-headrow { background: transparent; border-bottom: 1px solid var(--rule-gold); border-radius: 0; color: var(--cream); border-radius: 12px; padding: clamp(14px, 2.2vh, 28px) clamp(18px, 2vw, 32px); align-items: center; }
+.pd-headrow .pd-title { color: var(--cream); font-family: 'Instrument Serif', 'Source Serif 4', Georgia, serif; font-style: italic; font-weight: 400; }
+.pd-headrow .pd-green { color: var(--gold); }
+.pd-headrow .pd-gray, .pd-headrow p { color: var(--muted); }
+.pd-headrow .pd-chip { color: var(--cream); border-color: var(--gold); }
 .pd-headrow .pd-picker select { margin-top: 0; }
 .pd-bar .pd-ticks button[aria-current='step'] { background: var(--sky); }
+
+/* night theme: charts keep their light print palette on a cream panel, so dashes, route colors and the
+   after-dark band read exactly as designed (cream panel on ink page). */
+.pd-visual { background: var(--cream); border-radius: 14px; padding: 18px 22px; box-shadow: 0 0 0 1px var(--rule-gold);
+  --pd-ink: #1A1A1A; --pd-gray: #5f5a52; --pd-line: #DEDAD2; --pd-paper: #F7F5F0; --pd-green: #1F6F4A;
+  --text: #1A1A1A; --ink-2: #3d3d3a; --muted: #5f5a52; --line: #DEDAD2; --line-2: #c9c4b8; --card: #ffffff; --paper: #F7F5F0; --paper-2: #efebe2;
+  color: #1A1A1A; }

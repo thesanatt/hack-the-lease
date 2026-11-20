@@ -46,7 +46,7 @@ const INK = '#1A1A1A';
 const GRAY = '#6B6B6B';
 const HAIR = '#DEDAD2';
 // Sequential fit scale: light sand (worst) to deep green (best), interpolated in OKLab, lightness monotone.
-export const FIT_STOPS = ['#c9d3df', '#a5c6e8', '#7fb4ea', '#62A7EA', '#2f78c2']; // gray to sky, as --fit-1..5 in tokens.css
+export const FIT_STOPS = ['#8a8274', '#a38f66', '#bf9a56', '#d4a54f', '#E3B04B']; // gray to gold, readable on the light map
 
 const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 export function fitColor(f) {

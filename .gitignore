@@ -23,3 +23,4 @@ scripts/record/.video/
 .env*
 .vercel
 .vercel/
+web/public/img/hero-local.jpg

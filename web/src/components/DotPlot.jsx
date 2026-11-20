@@ -4,12 +4,12 @@
 //   max      right end of the axis (shared across rows so rows compare); default max(dots)
 //   min      left end (default 0)
 //   width    px (default 220), height px (default 34)
-//   color    dot fill (default var(--ink))
+//   color    dot fill (default var(--text))
 //   marker   number, draws a thin vertical line (e.g. the mean) (optional)
 //   axis     bool, draws tick labels under the plot (default false)
 //   format   tick label formatter (default "$v")
 //   title    accessible description
-export default function DotPlot({ dots = [], max, min = 0, width = 220, height = 34, color = 'var(--ink)', marker, axis = false, format, title }) {
+export default function DotPlot({ dots = [], max, min = 0, width = 220, height = 34, color = 'var(--text)', marker, axis = false, format, title }) {
   const n = dots.length;
   if (!n) return null;
   const hi = max ?? Math.max(...dots, 1);

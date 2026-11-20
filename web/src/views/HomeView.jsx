@@ -5,7 +5,7 @@
 //   - the proof pair: the sample student's resume (public/samples/sample_resume.pdf, FICTIONAL), read in this
 //     browser like My profile reads it, ranked by student/rank.js computeRanking, before and after the one
 //     line DEMO.md step 5 adds. The number is Broadway's share of possible weeks where it is best of all 30.
-// Photo: Svetlana Kravtsova, Pexels License (credited in the footer line). Font: Instrument Serif, OFL.
+// Photo: Yusuf P, Pexels License (credited in the footer line). Font: Instrument Serif, OFL.
 import { useEffect, useRef, useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import { campusExample } from './pitch/data.js';
@@ -14,20 +14,12 @@ import { fileText } from '../student/files.js';
 import { readProfile, redactContact } from '../../../engine/profile.js';
 import { applyEdits } from '../student/store.js';
 import '@fontsource/ibm-plex-sans/latin-700.css';
+import { loadSerif } from '../fonts.js';
 import './home.css';
 
 const go = (id) => { window.location.hash = id; };
 const ADD_LINE = "Budget $950 a month. I don't like walking home alone at night."; // DEMO.md step 5, word for word
 const PROOF_HOME = 'Broadway St house';
-
-let fontP = null;
-function loadSerif() {
-  if (!fontP && typeof FontFace === 'function') {
-    const f = new FontFace('Instrument Serif', `url(${new URL('./fonts/instrument-serif-latin-400-italic.woff2', document.baseURI)}) format('woff2')`, { style: 'italic', weight: '400' });
-    fontP = f.load().then((ff) => document.fonts.add(ff)).catch(() => null);
-  }
-  return fontP;
-}
 
 // Fade each section in once as it scrolls into view. Reduced motion: shown at once (CSS also turns it off).
 function useReveal() {
@@ -96,10 +88,10 @@ export default function HomeView({ api }) {
 
   return (
     <div className="hm" ref={ref}>
-      <section className="hm-hero" aria-labelledby="hm-h1" style={{ backgroundImage: `url(${new URL('./img/hero-house.jpg', document.baseURI)})` }}>
+      <section className="hm-hero" aria-labelledby="hm-h1" style={{ backgroundImage: `url(${new URL('./img/hero.jpg', document.baseURI)})` }}>
         <div className="hm-hero-in">
           <p className="hm-label">Built for U-M students</p>
-          <h1 id="hm-h1"><em>Finding an apartment</em><strong>should be effortless</strong></h1>
+          <h1 id="hm-h1"><em>Finding an apartment</em><strong>should be <span className="gold">effortless</span></strong></h1>
           <button type="button" className="hm-pill" onClick={() => go('profile')}>Find my home <span aria-hidden="true">-&gt;</span></button>
         </div>
       </section>
@@ -151,7 +143,7 @@ export default function HomeView({ api }) {
         <button type="button" className="hm-pill" onClick={() => go('profile?sample=1')}>Try it with a sample student <span aria-hidden="true">-&gt;</span></button>
       </section>
 
-      <p className="hm-credit">Photo: Svetlana Kravtsova, Pexels. Homes and the student are samples.</p>
+      <p className="hm-credit">Photo: Yusuf P, Pexels. Homes and the student are samples.</p>
     </div>
   );
 }
