@@ -23,3 +23,7 @@
   font-size: 13px; line-height: 1.5; color: var(--ink, #1d1a16); background: var(--paper-2, #f3ede2);
   border: 1px solid var(--line, #d6cdbd); border-radius: var(--r, 4px); padding: var(--s2, 8px); }
 .qt-text:focus-visible { outline: 2px solid var(--accent, #b4441c); outline-offset: 2px; }
+
+/* Agent email panel (Book) */
+.gv-agent { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.gv-agent input, .gv-agent textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 6px 8px; border: 1px solid #d8d1c3; border-radius: 6px; }

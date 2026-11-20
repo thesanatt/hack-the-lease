@@ -34,6 +34,43 @@ export default function CalendarDrop({ places, placeById, entries, setEntries, p
   const [msg, setMsg] = useState(null); // { tone, text }
   const [over, setOver] = useState(false);
   const fileRef = useRef(null);
+  const aiRef = useRef(null);
+  const [ai, setAi] = useState({ busy: false, notes: [], on: null }); // on: null unknown, true/false from /api/status
+
+  useEffect(() => {
+    let live = true;
+    fetch('./api/status').then((r) => (r.ok ? r.json() : null)).then((j) => { if (live) setAi((a) => ({ ...a, on: !!j?.extract })); })
+      .catch(() => { if (live) setAi((a) => ({ ...a, on: false })); });
+    return () => { live = false; };
+  }, []);
+
+  // AI read: Gemini rewrites messy files (screenshots, PDFs, notes) as plain lines; parseSchedule and the preview
+  // below do the rest, so the student confirms every line before anything is applied.
+  const readWithAI = async (fileList) => {
+    if (!consent) { setMsg({ tone: 'warn', text: 'Tick the box first. Nothing was read.' }); return; }
+    const files = [...(fileList || [])].slice(0, 5);
+    if (!files.length && !paste.trim()) return;
+    setAi((a) => ({ ...a, busy: true, notes: [] })); setMsg(null);
+    try {
+      const enc = await Promise.all(files.map(async (f) => {
+        const buf = new Uint8Array(await f.arrayBuffer());
+        let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+        return { name: f.name, mime: f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : 'text/plain'), data: btoa(bin) };
+      }));
+      const r = await fetch('./api/extract', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ files: enc, text: files.length ? '' : paste, places: places.map((p) => ({ id: p.id, label: p.label })) }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+      if (!j.lines?.trim()) { setMsg({ tone: 'warn', text: 'The AI found no weekly schedule in that.' }); }
+      else read(j.lines, `AI read of ${files.map((f) => f.name).join(', ') || 'pasted text'}`);
+      setAi((a) => ({ ...a, busy: false, notes: j.notes || [] }));
+    } catch (e) {
+      setAi((a) => ({ ...a, busy: false }));
+      setMsg({ tone: 'bad', text: `AI read failed: ${e.message}` });
+    }
+  };
   const dlgRef = useRef(null);
 
   // a new persona starts with a clean box
@@ -118,7 +155,7 @@ export default function CalendarDrop({ places, placeById, entries, setEntries, p
               <input type="checkbox" checked={consent} onChange={(ev) => { setConsent(ev.target.checked); if (ev.target.checked) setMsg(null); }} />
               <span>
                 Use my calendar to build my week
-                <small>Read in this browser only. Never uploaded or stored.</small>
+                <small>Read in this browser only, unless you choose the AI option. Never stored.</small>
               </span>
             </label>
 
@@ -141,7 +178,23 @@ export default function CalendarDrop({ places, placeById, entries, setEntries, p
                 <textarea id="mp-paste" rows={3} value={paste} disabled={!consent} placeholder={PASTE_HINT}
                   onChange={(ev) => setPaste(ev.target.value)} />
                 <button type="button" className="mp-btn" disabled={!consent || !paste.trim()} onClick={() => read(paste, 'pasted text')}>Read these lines</button>
+                {ai.on && <button type="button" className="mp-btn" disabled={!consent || !paste.trim() || ai.busy} onClick={() => readWithAI([])}>Messy text? Let AI read it</button>}
               </div>
+            )}
+
+            {ai.on && (
+              <div className="mp-paste">
+                <button type="button" className="mp-btn" disabled={!consent || ai.busy} onClick={() => aiRef.current?.click()}>
+                  {ai.busy ? 'AI is reading…' : 'Any messy file: screenshot, PDF, syllabus (AI)'}
+                </button>
+                <small className="mp-gray">This option sends the file to Google Gemini to read. You confirm every line below before it is used.</small>
+                <input ref={aiRef} type="file" multiple accept="image/*,.pdf,application/pdf,.txt,text/plain" style={{ display: 'none' }}
+                  onChange={(ev) => { readWithAI(ev.target.files); ev.target.value = ''; }} />
+              </div>
+            )}
+
+            {ai.notes.length > 0 && (
+              <div className="mp-msg" role="status"><b>AI notes:</b> {ai.notes.join(' ')}</div>
             )}
 
             {msg && <div className={`mp-msg ${msg.tone}`} role="status">{msg.text}</div>}

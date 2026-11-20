@@ -156,7 +156,9 @@ function Draft({ house, n, slots, tours, names }) {
     setStatus(selectAll() ? 'Copied' : 'Selected. Press Ctrl+C.');
   };
 
-  // Book: download a calendar invite for this slot and open a prefilled email. The student hits send.
+  // Book: save a calendar invite for this slot, then open the agent's email (editable). Send goes through
+  // /api/send (Resend) after the student clicks it; with no key on the server it falls back to the mail app.
+  const [mail, setMail] = useState(null); // { slot, to, subject, body, state: 'edit'|'sending'|'sent'|'error', note }
   const book = (s) => {
     const label = slotLabel(s);
     try {
@@ -168,8 +170,25 @@ function Draft({ house, n, slots, tours, names }) {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) { console.warn(e); }
     const body = tours.tourMessage({ houseName: house.name, groupSize: n, slots: [s], dates: slotDates([s]) });
-    window.location.href = mailtoHref({ subject: `Group tour of ${house.name}: ${label}?`, body });
-    setStatus(`Invite saved for ${label}. Your email app has the request ready.`);
+    setMail({ slot: s, to: mail?.to || '', subject: `Group tour of ${house.name}: ${label}?`, body, state: 'edit', note: '' });
+    setStatus(`Calendar invite saved for ${label}.`);
+  };
+  const sendMail = async () => {
+    setMail((m) => ({ ...m, state: 'sending', note: '' }));
+    try {
+      const r = await fetch('./api/send', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ to: mail.to, subject: mail.subject, text: mail.body }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 501 || r.status === 404) {
+        window.location.href = mailtoHref({ to: mail.to, subject: mail.subject, body: mail.body });
+        setMail((m) => ({ ...m, state: 'edit', note: 'No email key on the server, so your mail app opened instead.' }));
+        return;
+      }
+      if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+      setMail((m) => ({ ...m, state: 'sent', note: `Sent to ${m.to}.` }));
+    } catch (e) {
+      setMail((m) => ({ ...m, state: 'error', note: String(e.message || e) }));
+    }
   };
 
   if (!slots.length) return <p className="gv-gray">No weekday time works for all {n} at {house.name}.</p>;
@@ -187,8 +206,24 @@ function Draft({ house, n, slots, tours, names }) {
       </ol>
       <div className="gv-draft-actions">
         <button type="button" className="gv-btn primary" onClick={copy}>Copy message</button>
-        <span className="gv-small gv-gray" role="status" aria-live="polite">{status || 'Quorum sends nothing.'}</span>
+        <span className="gv-small gv-gray" role="status" aria-live="polite">{status || 'Nothing is sent until you press Send.'}</span>
       </div>
+      {mail && (
+        <div className="gv-msg gv-agent" aria-label="Tour request email">
+          <p className="gv-small"><b>Agent email</b> for {slotLabel(mail.slot)}. Check it, then send.</p>
+          <input type="email" placeholder="Landlord or leasing office email" value={mail.to} disabled={mail.state === 'sending'}
+            onChange={(e) => setMail({ ...mail, to: e.target.value, state: mail.state === 'sent' ? 'edit' : mail.state })} aria-label="To" />
+          <input type="text" value={mail.subject} onChange={(e) => setMail({ ...mail, subject: e.target.value })} aria-label="Subject" />
+          <textarea rows={Math.min(12, mail.body.split('\n').length + 1)} value={mail.body} onChange={(e) => setMail({ ...mail, body: e.target.value })} aria-label="Message" />
+          <div className="gv-draft-actions">
+            <button type="button" className="gv-btn primary" disabled={!mail.to.trim() || mail.state === 'sending' || mail.state === 'sent'} onClick={sendMail}>
+              {mail.state === 'sending' ? 'Sending…' : mail.state === 'sent' ? 'Sent ✓' : 'Send'}
+            </button>
+            <button type="button" className="gv-btn" onClick={() => setMail(null)}>Close</button>
+            <span className={`gv-small ${mail.state === 'error' ? 'gv-note' : 'gv-gray'}`} role="status">{mail.note}</span>
+          </div>
+        </div>
+      )}
       <details className="gv-msg" ref={box}>
         <summary>See the message</summary>
         <textarea ref={ref} readOnly value={text} rows={Math.min(14, text.split('\n').length + 1)}
