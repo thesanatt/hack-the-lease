@@ -38,4 +38,24 @@ const server = createServer((req, res) => {
   createReadStream(file).pipe(res);
 });
 
-server.listen(port, () => console.log(`Quorum: serving ${root} at http://localhost:${port}`));
+// If the port is taken (often Quorum itself, started twice), say so in plain words and try the next one.
+// One 'listening' handler reads the port actually bound, so a failed attempt never prints a wrong address.
+let onError = null;
+server.on('listening', () => {
+  if (onError) server.off('error', onError);
+  console.log(`Quorum: serving ${root} at http://localhost:${server.address().port}`);
+});
+function start(p, triesLeft) {
+  onError = (e) => {
+    if (e.code === 'EADDRINUSE' && triesLeft > 0) {
+      console.log(`Port ${p} is busy (Quorum may already be running at http://localhost:${p}). Trying ${p + 1}.`);
+      start(p + 1, triesLeft - 1);
+    } else {
+      console.error(`Quorum could not start: ${e.message}`);
+      process.exit(1);
+    }
+  };
+  server.once('error', onError);
+  server.listen(p);
+}
+start(port, 10);
