@@ -7,13 +7,14 @@
 //   POST /api/send     { to, subject, text } -> { id }    Sends one email through Resend.
 //   GET  /api/status   -> { extract: bool, send: bool }    Which keys are set, so the page can hide what cannot work.
 //
-// Env (web/.env or the shell): GEMINI_API_KEY, GEMINI_MODEL (default gemini-flash-latest),
+// Env (.env, web/.env or the shell): GEMINI_API_KEY, GEMINI_MODEL (optional, tried first; see geminiModels),
 //                              RESEND_API_KEY, RESEND_FROM (default "Quorum <onboarding@resend.dev>")
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 
 export function loadEnv(dir) {
-  for (const f of [path.join(dir, '.env'), path.join(dir, '..', '.env')]) {
+  // dir is web/ (node serve.mjs) or web/dist/ (node dist/serve.mjs); the repo-root .env is checked too.
+  for (const f of [path.join(dir, '.env'), path.join(dir, '..', '.env'), path.join(dir, '..', '..', '.env')]) {
     if (!existsSync(f)) continue;
     for (const line of readFileSync(f, 'utf8').split(/\r?\n/)) {
       const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
@@ -61,7 +62,6 @@ Return JSON only: {"lines": ["..."], "notes": ["short plain sentences about anyt
 export async function extract(body) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return [501, { error: 'No GEMINI_API_KEY on the server.' }];
-  const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
   const parts = [{ text: extractPrompt(body.places) }];
   if (body.text?.trim()) parts.push({ text: `Pasted text:\n${body.text.slice(0, 20000)}` });
   for (const f of (body.files || []).slice(0, 5)) {
@@ -70,17 +70,37 @@ export async function extract(body) {
     else parts.push({ inline_data: { mime_type: f.mime, data: f.data } });
   }
   if (parts.length < 2) return [400, { error: 'Nothing to read. Add a file or paste text.' }];
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0, responseMimeType: 'application/json' } }),
-  });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) return [502, { error: `Gemini: ${j?.error?.message || r.status}` }];
-  const raw = j?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
-  const out = parseModelJson(raw);
-  if (!out) return [502, { error: 'Gemini answered, but not in the expected format. Try again.' }];
-  return [200, { lines: out.lines.join('\n'), notes: out.notes, model }];
+  const body2 = JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0, responseMimeType: 'application/json' } });
+  let last = 'no model answered';
+  for (const model of geminiModels()) {
+    let r, j;
+    try {
+      r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: body2,
+        signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
+      });
+      j = await r.json().catch(() => ({}));
+    } catch (e) { last = `${model} timed out`; continue; }
+    if (!r.ok) {
+      last = j?.error?.message || String(r.status);
+      if (RETRYABLE.has(r.status)) continue; // busy, rate limited or retired: try the next model
+      return [502, { error: `Gemini: ${last}` }];
+    }
+    const raw = j?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
+    const out = parseModelJson(raw);
+    if (!out) { last = 'answer not in the expected format'; continue; }
+    return [200, { lines: out.lines.join('\n'), notes: out.notes, model }];
+  }
+  return [502, { error: `Gemini: ${last}. Try again, or type the lines yourself.` }];
+}
+
+// Free Flash models get busy (503) or retired (404) without warning, so try a short list in order.
+// GEMINI_MODEL, when set, goes first. Each try is capped so a slow model never hangs the page.
+const MODEL_TIMEOUT_MS = 20000;
+const RETRYABLE = new Set([404, 429, 500, 503, 504]);
+export function geminiModels() {
+  const list = [process.env.GEMINI_MODEL, 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-flash-lite-latest', 'gemini-flash-latest'];
+  return [...new Set(list.filter(Boolean))];
 }
 
 export function parseModelJson(raw) {
@@ -106,9 +126,12 @@ export async function sendMail(body) {
     }),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) return [502, { error: `Resend: ${j?.message || r.status}` }];
+  if (!r.ok) return [502, { error: `Resend: ${redactEmails(j?.message || r.status)}` }];
   return [200, { id: j.id }];
 }
+
+// Resend's errors can name the account owner's address (e.g. the test-sender limit). The page may be on a projector.
+export const redactEmails = (s) => String(s).replace(/[^\s@()<>"']+@[^\s@()<>"']+\.[A-Za-z]{2,}/g, '[account email]');
 
 // Returns true when the request was an /api/ call (handled here).
 export async function handleApi(req, res) {

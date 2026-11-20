@@ -219,6 +219,9 @@ function Draft({ house, n, slots, tours, names }) {
             <button type="button" className="gv-btn primary" disabled={!mail.to.trim() || mail.state === 'sending' || mail.state === 'sent'} onClick={sendMail}>
               {mail.state === 'sending' ? 'Sending…' : mail.state === 'sent' ? 'Sent ✓' : 'Send'}
             </button>
+            {mail.state === 'error' && (
+              <a className="gv-btn" href={mailtoHref({ to: mail.to, subject: mail.subject, body: mail.body })}>Open in my mail app</a>
+            )}
             <button type="button" className="gv-btn" onClick={() => setMail(null)}>Close</button>
             <span className={`gv-small ${mail.state === 'error' ? 'gv-note' : 'gv-gray'}`} role="status">{mail.note}</span>
           </div>
