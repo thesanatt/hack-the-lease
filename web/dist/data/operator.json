@@ -1,0 +1,2079 @@
+{
+ "label": "SYNTHETIC: preference-based rents for a synthetic student population, not market rents",
+ "method": "For each home, groups of synthetic students (one per room) are drawn; each member values rooms by their own theta; fair.solveHouse finds the envy-free maximin split of the whole-house rent; rooms report p10, p50 and p90 across groups.",
+ "assumptions": "Campus, job, late study and gym are drawn independently from the stated shares (no joint table). Room weights come from the model prior. Commute is the same for every room of a house, so it does not move room rents.",
+ "population": {
+  "n": 2000,
+  "seed": 11,
+  "groupsPerHome": 200,
+  "marginals": {
+   "campus": {
+    "Central": 0.5,
+    "North": 0.3,
+    "Medical": 0.2
+   },
+   "job": {
+    "none": 0.6,
+    "downtown": 0.25,
+    "campus": 0.15
+   },
+   "lateStudy": 0.5,
+   "gym": 0.4
+  },
+  "observed": {
+   "campus": {
+    "Central": 0.4985,
+    "North": 0.2955,
+    "Medical": 0.206
+   },
+   "job": {
+    "none": 0.6235,
+    "downtown": 0.2305,
+    "campus": 0.146
+   },
+   "lateStudy": 0.4965,
+   "gym": 0.382,
+   "bike": 0.301
+  },
+  "priorMedians": {
+   "vTime": 15,
+   "vDark": 10,
+   "vStrand": 15,
+   "wBath": 60,
+   "wSize": 8,
+   "wLight": 20
+  }
+ },
+ "homes": [
+  {
+   "homeId": "h1",
+   "name": "Church St house, 5 bed",
+   "area": "South Central",
+   "kind": "house",
+   "rent": 4650,
+   "utilities": 300,
+   "nRooms": 5,
+   "rooms": [
+    {
+     "roomId": "h1r1",
+     "label": "Attic room",
+     "asking": 965,
+     "p10": 958,
+     "p50": 1002,
+     "p90": 1086
+    },
+    {
+     "roomId": "h1r2",
+     "label": "Front room",
+     "asking": 945,
+     "p10": 919,
+     "p50": 945,
+     "p90": 982
+    },
+    {
+     "roomId": "h1r3",
+     "label": "Back room",
+     "asking": 910,
+     "p10": 859,
+     "p50": 883,
+     "p90": 898
+    },
+    {
+     "roomId": "h1r4",
+     "label": "Parlor room",
+     "asking": 945,
+     "p10": 915,
+     "p50": 946,
+     "p90": 992
+    },
+    {
+     "roomId": "h1r5",
+     "label": "Basement room",
+     "asking": 885,
+     "p10": 826,
+     "p50": 861,
+     "p90": 880
+    }
+   ],
+   "askingTotal": 4650,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h1r1",
+    "bath": "private",
+    "text": "Add a private bath to Attic room",
+    "roomP50": 77,
+    "headroom": 94,
+    "after": [
+     {
+      "roomId": "h1r1",
+      "p50": 1079
+     },
+     {
+      "roomId": "h1r2",
+      "p50": 933
+     },
+     {
+      "roomId": "h1r3",
+      "p50": 869
+     },
+     {
+      "roomId": "h1r4",
+      "p50": 917
+     },
+     {
+      "roomId": "h1r5",
+      "p50": 845
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 104
+  },
+  {
+   "homeId": "h2",
+   "name": "Lawrence St house, 5 bed",
+   "area": "Old Fourth Ward",
+   "kind": "house",
+   "rent": 4800,
+   "utilities": 320,
+   "nRooms": 5,
+   "rooms": [
+    {
+     "roomId": "h2r1",
+     "label": "Primary with bath",
+     "asking": 1035,
+     "p10": 1068,
+     "p50": 1111,
+     "p90": 1191
+    },
+    {
+     "roomId": "h2r2",
+     "label": "Front room",
+     "asking": 965,
+     "p10": 925,
+     "p50": 955,
+     "p90": 985
+    },
+    {
+     "roomId": "h2r3",
+     "label": "Side room",
+     "asking": 920,
+     "p10": 866,
+     "p50": 893,
+     "p90": 911
+    },
+    {
+     "roomId": "h2r4",
+     "label": "Porch room",
+     "asking": 940,
+     "p10": 889,
+     "p50": 909,
+     "p90": 924
+    },
+    {
+     "roomId": "h2r5",
+     "label": "Basement room",
+     "asking": 940,
+     "p10": 900,
+     "p50": 925,
+     "p90": 946
+    }
+   ],
+   "askingTotal": 4800,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h2r2",
+    "bath": "private",
+    "text": "Add a private bath to Front room",
+    "roomP50": 71,
+    "headroom": 95,
+    "after": [
+     {
+      "roomId": "h2r1",
+      "p50": 1072
+     },
+     {
+      "roomId": "h2r2",
+      "p50": 1026
+     },
+     {
+      "roomId": "h2r3",
+      "p50": 883
+     },
+     {
+      "roomId": "h2r4",
+      "p50": 902
+     },
+     {
+      "roomId": "h2r5",
+      "p50": 914
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 66
+  },
+  {
+   "homeId": "h3",
+   "name": "Broadway St house, 5 bed",
+   "area": "Lower Town",
+   "kind": "house",
+   "rent": 4150,
+   "utilities": 290,
+   "nRooms": 5,
+   "rooms": [
+    {
+     "roomId": "h3r1",
+     "label": "Attic room",
+     "asking": 845,
+     "p10": 832,
+     "p50": 854,
+     "p90": 897
+    },
+    {
+     "roomId": "h3r2",
+     "label": "Corner room",
+     "asking": 845,
+     "p10": 827,
+     "p50": 843,
+     "p90": 864
+    },
+    {
+     "roomId": "h3r3",
+     "label": "Small room",
+     "asking": 795,
+     "p10": 753,
+     "p50": 775,
+     "p90": 790
+    },
+    {
+     "roomId": "h3r4",
+     "label": "Garden room",
+     "asking": 865,
+     "p10": 863,
+     "p50": 890,
+     "p90": 932
+    },
+    {
+     "roomId": "h3r5",
+     "label": "Basement room",
+     "asking": 800,
+     "p10": 759,
+     "p50": 779,
+     "p90": 795
+    }
+   ],
+   "askingTotal": 4150,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h3r1",
+    "bath": "private",
+    "text": "Add a private bath to Attic room",
+    "roomP50": 85,
+    "headroom": 119,
+    "after": [
+     {
+      "roomId": "h3r1",
+      "p50": 939
+     },
+     {
+      "roomId": "h3r2",
+      "p50": 829
+     },
+     {
+      "roomId": "h3r3",
+      "p50": 757
+     },
+     {
+      "roomId": "h3r4",
+      "p50": 854
+     },
+     {
+      "roomId": "h3r5",
+      "p50": 765
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 73
+  },
+  {
+   "homeId": "h4",
+   "name": "Lincoln Ave house, 5 bed",
+   "area": "Burns Park",
+   "kind": "house",
+   "rent": 4500,
+   "utilities": 310,
+   "nRooms": 5,
+   "rooms": [
+    {
+     "roomId": "h4r1",
+     "label": "Primary with bath",
+     "asking": 940,
+     "p10": 949,
+     "p50": 993,
+     "p90": 1085
+    },
+    {
+     "roomId": "h4r2",
+     "label": "Sunroom",
+     "asking": 880,
+     "p10": 824,
+     "p50": 856,
+     "p90": 878
+    },
+    {
+     "roomId": "h4r3",
+     "label": "Front room",
+     "asking": 900,
+     "p10": 855,
+     "p50": 881,
+     "p90": 899
+    },
+    {
+     "roomId": "h4r4",
+     "label": "Back room",
+     "asking": 870,
+     "p10": 815,
+     "p50": 844,
+     "p90": 862
+    },
+    {
+     "roomId": "h4r5",
+     "label": "Attic room",
+     "asking": 910,
+     "p10": 885,
+     "p50": 918,
+     "p90": 964
+    }
+   ],
+   "askingTotal": 4500,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h4r2",
+    "bath": "private",
+    "text": "Add a private bath to Sunroom",
+    "roomP50": 71,
+    "headroom": 94,
+    "after": [
+     {
+      "roomId": "h4r1",
+      "p50": 944
+     },
+     {
+      "roomId": "h4r2",
+      "p50": 927
+     },
+     {
+      "roomId": "h4r3",
+      "p50": 877
+     },
+     {
+      "roomId": "h4r4",
+      "p50": 838
+     },
+     {
+      "roomId": "h4r5",
+      "p50": 905
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 52
+  },
+  {
+   "homeId": "h5",
+   "name": "Georgetown Blvd house, 5 bed",
+   "area": "North Campus",
+   "kind": "house",
+   "rent": 3950,
+   "utilities": 280,
+   "nRooms": 5,
+   "rooms": [
+    {
+     "roomId": "h5r1",
+     "label": "Primary with bath",
+     "asking": 865,
+     "p10": 885,
+     "p50": 931,
+     "p90": 987
+    },
+    {
+     "roomId": "h5r2",
+     "label": "Front room",
+     "asking": 770,
+     "p10": 727,
+     "p50": 746,
+     "p90": 760
+    },
+    {
+     "roomId": "h5r3",
+     "label": "Back room",
+     "asking": 765,
+     "p10": 717,
+     "p50": 740,
+     "p90": 754
+    },
+    {
+     "roomId": "h5r4",
+     "label": "Den",
+     "asking": 780,
+     "p10": 752,
+     "p50": 770,
+     "p90": 785
+    },
+    {
+     "roomId": "h5r5",
+     "label": "Basement room",
+     "asking": 770,
+     "p10": 739,
+     "p50": 762,
+     "p90": 785
+    }
+   ],
+   "askingTotal": 3950,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h5r2",
+    "bath": "private",
+    "text": "Add a private bath to Front room",
+    "roomP50": 71,
+    "headroom": 99,
+    "after": [
+     {
+      "roomId": "h5r1",
+      "p50": 897
+     },
+     {
+      "roomId": "h5r2",
+      "p50": 817
+     },
+     {
+      "roomId": "h5r3",
+      "p50": 733
+     },
+     {
+      "roomId": "h5r4",
+      "p50": 749
+     },
+     {
+      "roomId": "h5r5",
+      "p50": 752
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 48
+  },
+  {
+   "homeId": "h6",
+   "name": "Hill St house, 5 bed",
+   "area": "East University",
+   "kind": "house",
+   "rent": 4900,
+   "utilities": 300,
+   "nRooms": 5,
+   "rooms": [
+    {
+     "roomId": "h6r1",
+     "label": "Room 1",
+     "asking": 990,
+     "p10": 1001,
+     "p50": 1017,
+     "p90": 1052
+    },
+    {
+     "roomId": "h6r2",
+     "label": "Room 2",
+     "asking": 980,
+     "p10": 964,
+     "p50": 973,
+     "p90": 977
+    },
+    {
+     "roomId": "h6r3",
+     "label": "Room 3",
+     "asking": 975,
+     "p10": 960,
+     "p50": 969,
+     "p90": 973
+    },
+    {
+     "roomId": "h6r4",
+     "label": "Room 4",
+     "asking": 980,
+     "p10": 964,
+     "p50": 973,
+     "p90": 977
+    },
+    {
+     "roomId": "h6r5",
+     "label": "Room 5",
+     "asking": 975,
+     "p10": 960,
+     "p50": 969,
+     "p90": 973
+    }
+   ],
+   "askingTotal": 4900,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h6r1",
+    "bath": "private",
+    "text": "Add a private bath to Room 1",
+    "roomP50": 91,
+    "headroom": 119,
+    "after": [
+     {
+      "roomId": "h6r1",
+      "p50": 1108
+     },
+     {
+      "roomId": "h6r2",
+      "p50": 951
+     },
+     {
+      "roomId": "h6r3",
+      "p50": 946
+     },
+     {
+      "roomId": "h6r4",
+      "p50": 951
+     },
+     {
+      "roomId": "h6r5",
+      "p50": 946
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 125
+  },
+  {
+   "homeId": "h7",
+   "name": "Third St house, 4 bed",
+   "area": "Old West Side",
+   "kind": "house",
+   "rent": 3300,
+   "utilities": 260,
+   "nRooms": 4,
+   "rooms": [
+    {
+     "roomId": "h7r1",
+     "label": "Attic room",
+     "asking": 845,
+     "p10": 827,
+     "p50": 859,
+     "p90": 910
+    },
+    {
+     "roomId": "h7r2",
+     "label": "Front room",
+     "asking": 860,
+     "p10": 853,
+     "p50": 882,
+     "p90": 931
+    },
+    {
+     "roomId": "h7r3",
+     "label": "Back room",
+     "asking": 800,
+     "p10": 755,
+     "p50": 777,
+     "p90": 792
+    },
+    {
+     "roomId": "h7r4",
+     "label": "Basement room",
+     "asking": 795,
+     "p10": 751,
+     "p50": 774,
+     "p90": 789
+    }
+   ],
+   "askingTotal": 3300,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h7r1",
+    "bath": "private",
+    "text": "Add a private bath to Attic room",
+    "roomP50": 66,
+    "headroom": 100,
+    "after": [
+     {
+      "roomId": "h7r1",
+      "p50": 925
+     },
+     {
+      "roomId": "h7r2",
+      "p50": 850
+     },
+     {
+      "roomId": "h7r3",
+      "p50": 759
+     },
+     {
+      "roomId": "h7r4",
+      "p50": 758
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 33
+  },
+  {
+   "homeId": "h8",
+   "name": "East Ann St house, 6 bed",
+   "area": "Old Fourth Ward",
+   "kind": "house",
+   "rent": 5850,
+   "utilities": 360,
+   "nRooms": 6,
+   "rooms": [
+    {
+     "roomId": "h8r1",
+     "label": "Primary with bath",
+     "asking": 1055,
+     "p10": 1089,
+     "p50": 1143,
+     "p90": 1224
+    },
+    {
+     "roomId": "h8r2",
+     "label": "Front room",
+     "asking": 985,
+     "p10": 969,
+     "p50": 990,
+     "p90": 1020
+    },
+    {
+     "roomId": "h8r3",
+     "label": "Middle room",
+     "asking": 935,
+     "p10": 884,
+     "p50": 907,
+     "p90": 925
+    },
+    {
+     "roomId": "h8r4",
+     "label": "Back room",
+     "asking": 950,
+     "p10": 895,
+     "p50": 916,
+     "p90": 933
+    },
+    {
+     "roomId": "h8r5",
+     "label": "Porch room",
+     "asking": 980,
+     "p10": 953,
+     "p50": 970,
+     "p90": 985
+    },
+    {
+     "roomId": "h8r6",
+     "label": "Basement room",
+     "asking": 945,
+     "p10": 900,
+     "p50": 923,
+     "p90": 937
+    }
+   ],
+   "askingTotal": 5850,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h8r2",
+    "bath": "private",
+    "text": "Add a private bath to Front room",
+    "roomP50": 66,
+    "headroom": 71,
+    "after": [
+     {
+      "roomId": "h8r1",
+      "p50": 1110
+     },
+     {
+      "roomId": "h8r2",
+      "p50": 1056
+     },
+     {
+      "roomId": "h8r3",
+      "p50": 900
+     },
+     {
+      "roomId": "h8r4",
+      "p50": 910
+     },
+     {
+      "roomId": "h8r5",
+      "p50": 953
+     },
+     {
+      "roomId": "h8r6",
+      "p50": 915
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 117
+  },
+  {
+   "homeId": "h9",
+   "name": "South Forest Ave house, 6 bed",
+   "area": "South Central",
+   "kind": "house",
+   "rent": 6100,
+   "utilities": 370,
+   "nRooms": 6,
+   "rooms": [
+    {
+     "roomId": "h9r1",
+     "label": "Primary with bath",
+     "asking": 1100,
+     "p10": 1118,
+     "p50": 1161,
+     "p90": 1224
+    },
+    {
+     "roomId": "h9r2",
+     "label": "Attic room",
+     "asking": 1045,
+     "p10": 1040,
+     "p50": 1087,
+     "p90": 1135
+    },
+    {
+     "roomId": "h9r3",
+     "label": "Front room",
+     "asking": 1010,
+     "p10": 968,
+     "p50": 994,
+     "p90": 1025
+    },
+    {
+     "roomId": "h9r4",
+     "label": "Small room",
+     "asking": 960,
+     "p10": 898,
+     "p50": 927,
+     "p90": 948
+    },
+    {
+     "roomId": "h9r5",
+     "label": "Parlor room",
+     "asking": 1020,
+     "p10": 984,
+     "p50": 1002,
+     "p90": 1020
+    },
+    {
+     "roomId": "h9r6",
+     "label": "Basement room",
+     "asking": 965,
+     "p10": 900,
+     "p50": 928,
+     "p90": 948
+    }
+   ],
+   "askingTotal": 6100,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h9r2",
+    "bath": "private",
+    "text": "Add a private bath to Attic room",
+    "roomP50": 54,
+    "headroom": 63,
+    "after": [
+     {
+      "roomId": "h9r1",
+      "p50": 1135
+     },
+     {
+      "roomId": "h9r2",
+      "p50": 1140
+     },
+     {
+      "roomId": "h9r3",
+      "p50": 989
+     },
+     {
+      "roomId": "h9r4",
+      "p50": 922
+     },
+     {
+      "roomId": "h9r5",
+      "p50": 989
+     },
+     {
+      "roomId": "h9r6",
+      "p50": 922
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 103
+  },
+  {
+   "homeId": "h10",
+   "name": "Catherine St house, 4 bed",
+   "area": "Medical Campus",
+   "kind": "house",
+   "rent": 3600,
+   "utilities": 270,
+   "nRooms": 4,
+   "rooms": [
+    {
+     "roomId": "h10r1",
+     "label": "Front room",
+     "asking": 915,
+     "p10": 894,
+     "p50": 918,
+     "p90": 957
+    },
+    {
+     "roomId": "h10r2",
+     "label": "Back room",
+     "asking": 875,
+     "p10": 841,
+     "p50": 858,
+     "p90": 873
+    },
+    {
+     "roomId": "h10r3",
+     "label": "Parlor room",
+     "asking": 915,
+     "p10": 903,
+     "p50": 927,
+     "p90": 964
+    },
+    {
+     "roomId": "h10r4",
+     "label": "Basement room",
+     "asking": 895,
+     "p10": 866,
+     "p50": 890,
+     "p90": 916
+    }
+   ],
+   "askingTotal": 3600,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h10r1",
+    "bath": "private",
+    "text": "Add a private bath to Front room",
+    "roomP50": 73,
+    "headroom": 91,
+    "after": [
+     {
+      "roomId": "h10r1",
+      "p50": 991
+     },
+     {
+      "roomId": "h10r2",
+      "p50": 844
+     },
+     {
+      "roomId": "h10r3",
+      "p50": 890
+     },
+     {
+      "roomId": "h10r4",
+      "p50": 872
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 31
+  },
+  {
+   "homeId": "h11",
+   "name": "Vaughn St house, 4 bed",
+   "area": "South Central",
+   "kind": "house",
+   "rent": 3800,
+   "utilities": 280,
+   "nRooms": 4,
+   "rooms": [
+    {
+     "roomId": "h11r1",
+     "label": "Room 1",
+     "asking": 950,
+     "p10": 951,
+     "p50": 952,
+     "p90": 953
+    },
+    {
+     "roomId": "h11r2",
+     "label": "Room 2",
+     "asking": 950,
+     "p10": 951,
+     "p50": 952,
+     "p90": 953
+    },
+    {
+     "roomId": "h11r3",
+     "label": "Room 3",
+     "asking": 950,
+     "p10": 947,
+     "p50": 948,
+     "p90": 949
+    },
+    {
+     "roomId": "h11r4",
+     "label": "Room 4",
+     "asking": 950,
+     "p10": 947,
+     "p50": 948,
+     "p90": 949
+    }
+   ],
+   "askingTotal": 3800,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h11r1",
+    "bath": "private",
+    "text": "Add a private bath to Room 1",
+    "roomP50": 90,
+    "headroom": 141,
+    "after": [
+     {
+      "roomId": "h11r1",
+      "p50": 1042
+     },
+     {
+      "roomId": "h11r2",
+      "p50": 924
+     },
+     {
+      "roomId": "h11r3",
+      "p50": 917
+     },
+     {
+      "roomId": "h11r4",
+      "p50": 917
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 48
+  },
+  {
+   "homeId": "h12",
+   "name": "Prospect St house, 3 bed",
+   "area": "Burns Park",
+   "kind": "house",
+   "rent": 2850,
+   "utilities": 240,
+   "nRooms": 3,
+   "rooms": [
+    {
+     "roomId": "h12r1",
+     "label": "Room 1",
+     "asking": 950,
+     "p10": 952,
+     "p50": 954,
+     "p90": 958
+    },
+    {
+     "roomId": "h12r2",
+     "label": "Room 2",
+     "asking": 950,
+     "p10": 946,
+     "p50": 948,
+     "p90": 949
+    },
+    {
+     "roomId": "h12r3",
+     "label": "Room 3",
+     "asking": 950,
+     "p10": 946,
+     "p50": 948,
+     "p90": 949
+    }
+   ],
+   "askingTotal": 2850,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h12r1",
+    "bath": "private",
+    "text": "Add a private bath to Room 1",
+    "roomP50": 60,
+    "headroom": 112,
+    "after": [
+     {
+      "roomId": "h12r1",
+      "p50": 1015
+     },
+     {
+      "roomId": "h12r2",
+      "p50": 918
+     },
+     {
+      "roomId": "h12r3",
+      "p50": 918
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 18
+  },
+  {
+   "homeId": "h13",
+   "name": "West Washington St house, 3 bed",
+   "area": "Old West Side",
+   "kind": "house",
+   "rent": 2700,
+   "utilities": 230,
+   "nRooms": 3,
+   "rooms": [
+    {
+     "roomId": "h13r1",
+     "label": "Room 1",
+     "asking": 910,
+     "p10": 917,
+     "p50": 929,
+     "p90": 953
+    },
+    {
+     "roomId": "h13r2",
+     "label": "Room 2",
+     "asking": 895,
+     "p10": 873,
+     "p50": 885,
+     "p90": 891
+    },
+    {
+     "roomId": "h13r3",
+     "label": "Room 3",
+     "asking": 895,
+     "p10": 873,
+     "p50": 885,
+     "p90": 891
+    }
+   ],
+   "askingTotal": 2700,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h13r1",
+    "bath": "private",
+    "text": "Add a private bath to Room 1",
+    "roomP50": 62,
+    "headroom": 111,
+    "after": [
+     {
+      "roomId": "h13r1",
+      "p50": 991
+     },
+     {
+      "roomId": "h13r2",
+      "p50": 855
+     },
+     {
+      "roomId": "h13r3",
+      "p50": 855
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 18
+  },
+  {
+   "homeId": "h14",
+   "name": "Hiscock St house, 4 bed",
+   "area": "Kerrytown",
+   "kind": "house",
+   "rent": 3500,
+   "utilities": 260,
+   "nRooms": 4,
+   "rooms": [
+    {
+     "roomId": "h14r1",
+     "label": "Room 1",
+     "asking": 875,
+     "p10": 875,
+     "p50": 876,
+     "p90": 876
+    },
+    {
+     "roomId": "h14r2",
+     "label": "Room 2",
+     "asking": 875,
+     "p10": 875,
+     "p50": 876,
+     "p90": 876
+    },
+    {
+     "roomId": "h14r3",
+     "label": "Room 3",
+     "asking": 875,
+     "p10": 875,
+     "p50": 876,
+     "p90": 876
+    },
+    {
+     "roomId": "h14r4",
+     "label": "Room 4",
+     "asking": 875,
+     "p10": 872,
+     "p50": 873,
+     "p90": 874
+    }
+   ],
+   "askingTotal": 3500,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h14r1",
+    "bath": "private",
+    "text": "Add a private bath to Room 1",
+    "roomP50": 95,
+    "headroom": 148,
+    "after": [
+     {
+      "roomId": "h14r1",
+      "p50": 970
+     },
+     {
+      "roomId": "h14r2",
+      "p50": 844
+     },
+     {
+      "roomId": "h14r3",
+      "p50": 844
+     },
+     {
+      "roomId": "h14r4",
+      "p50": 841
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 47
+  },
+  {
+   "homeId": "h15",
+   "name": "Kellogg St house, 3 bed",
+   "area": "Lower Town",
+   "kind": "house",
+   "rent": 2600,
+   "utilities": 230,
+   "nRooms": 3,
+   "rooms": [
+    {
+     "roomId": "h15r1",
+     "label": "Room 1",
+     "asking": 870,
+     "p10": 870,
+     "p50": 872,
+     "p90": 877
+    },
+    {
+     "roomId": "h15r2",
+     "label": "Room 2",
+     "asking": 865,
+     "p10": 863,
+     "p50": 865,
+     "p90": 866
+    },
+    {
+     "roomId": "h15r3",
+     "label": "Room 3",
+     "asking": 865,
+     "p10": 859,
+     "p50": 863,
+     "p90": 864
+    }
+   ],
+   "askingTotal": 2600,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h15r1",
+    "bath": "private",
+    "text": "Add a private bath to Room 1",
+    "roomP50": 66,
+    "headroom": 126,
+    "after": [
+     {
+      "roomId": "h15r1",
+      "p50": 938
+     },
+     {
+      "roomId": "h15r2",
+      "p50": 834
+     },
+     {
+      "roomId": "h15r3",
+      "p50": 828
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 16
+  },
+  {
+   "homeId": "h16",
+   "name": "South University Ave apartment, 2 bed",
+   "area": "East University",
+   "kind": "apartment",
+   "rent": 3050,
+   "utilities": 140,
+   "nRooms": 2,
+   "rooms": [
+    {
+     "roomId": "h16r1",
+     "label": "Bedroom 1",
+     "asking": 1535,
+     "p10": 1534,
+     "p50": 1541,
+     "p90": 1554
+    },
+    {
+     "roomId": "h16r2",
+     "label": "Bedroom 2",
+     "asking": 1515,
+     "p10": 1496,
+     "p50": 1509,
+     "p90": 1516
+    }
+   ],
+   "askingTotal": 3050,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h16r2",
+    "light": 2,
+    "text": "Add a window level to Bedroom 2",
+    "roomP50": 12,
+    "headroom": 21,
+    "after": [
+     {
+      "roomId": "h16r1",
+      "p50": 1529
+     },
+     {
+      "roomId": "h16r2",
+      "p50": 1521
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 11
+  },
+  {
+   "homeId": "h18",
+   "name": "Washtenaw Ct apartment, 2 bed",
+   "area": "East University",
+   "kind": "apartment",
+   "rent": 2700,
+   "utilities": 130,
+   "nRooms": 2,
+   "rooms": [
+    {
+     "roomId": "h18r1",
+     "label": "Bedroom 1",
+     "asking": 1350,
+     "p10": 1351,
+     "p50": 1352,
+     "p90": 1354
+    },
+    {
+     "roomId": "h18r2",
+     "label": "Bedroom 2",
+     "asking": 1350,
+     "p10": 1346,
+     "p50": 1348,
+     "p90": 1349
+    }
+   ],
+   "askingTotal": 2700,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h18r1",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 1",
+    "roomP50": 33,
+    "headroom": 91,
+    "after": [
+     {
+      "roomId": "h18r1",
+      "p50": 1385
+     },
+     {
+      "roomId": "h18r2",
+      "p50": 1315
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 10
+  },
+  {
+   "homeId": "h19",
+   "name": "Arch St apartment, 2 bed",
+   "area": "South Central",
+   "kind": "apartment",
+   "rent": 2450,
+   "utilities": 120,
+   "nRooms": 2,
+   "rooms": [
+    {
+     "roomId": "h19r1",
+     "label": "Bedroom 1",
+     "asking": 1240,
+     "p10": 1236,
+     "p50": 1244,
+     "p90": 1257
+    },
+    {
+     "roomId": "h19r2",
+     "label": "Bedroom 2",
+     "asking": 1210,
+     "p10": 1193,
+     "p50": 1206,
+     "p90": 1214
+    }
+   ],
+   "askingTotal": 2450,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h19r1",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 1",
+    "roomP50": 35,
+    "headroom": 92,
+    "after": [
+     {
+      "roomId": "h19r1",
+      "p50": 1279
+     },
+     {
+      "roomId": "h19r2",
+      "p50": 1171
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 9
+  },
+  {
+   "homeId": "h20",
+   "name": "Cambridge Rd apartment, 3 bed",
+   "area": "Burns Park",
+   "kind": "apartment",
+   "rent": 3150,
+   "utilities": 160,
+   "nRooms": 3,
+   "rooms": [
+    {
+     "roomId": "h20r1",
+     "label": "Bedroom 1",
+     "asking": 1095,
+     "p10": 1099,
+     "p50": 1131,
+     "p90": 1171
+    },
+    {
+     "roomId": "h20r2",
+     "label": "Bedroom 2",
+     "asking": 1030,
+     "p10": 992,
+     "p50": 1013,
+     "p90": 1029
+    },
+    {
+     "roomId": "h20r3",
+     "label": "Bedroom 3",
+     "asking": 1025,
+     "p10": 983,
+     "p50": 1006,
+     "p90": 1023
+    }
+   ],
+   "askingTotal": 3150,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h20r2",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 2",
+    "roomP50": 48,
+    "headroom": 73,
+    "after": [
+     {
+      "roomId": "h20r1",
+      "p50": 1084
+     },
+     {
+      "roomId": "h20r2",
+      "p50": 1061
+     },
+     {
+      "roomId": "h20r3",
+      "p50": 1003
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 13
+  },
+  {
+   "homeId": "h22",
+   "name": "Detroit St apartment, 2 bed",
+   "area": "Kerrytown",
+   "kind": "apartment",
+   "rent": 2500,
+   "utilities": 120,
+   "nRooms": 2,
+   "rooms": [
+    {
+     "roomId": "h22r1",
+     "label": "Bedroom 1",
+     "asking": 1265,
+     "p10": 1262,
+     "p50": 1269,
+     "p90": 1283
+    },
+    {
+     "roomId": "h22r2",
+     "label": "Bedroom 2",
+     "asking": 1235,
+     "p10": 1217,
+     "p50": 1231,
+     "p90": 1238
+    }
+   ],
+   "askingTotal": 2500,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h22r1",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 1",
+    "roomP50": 42,
+    "headroom": 110,
+    "after": [
+     {
+      "roomId": "h22r1",
+      "p50": 1311
+     },
+     {
+      "roomId": "h22r2",
+      "p50": 1189
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 8
+  },
+  {
+   "homeId": "h23",
+   "name": "Plymouth Rd apartment, 2 bed",
+   "area": "North Campus",
+   "kind": "apartment",
+   "rent": 2050,
+   "utilities": 120,
+   "nRooms": 2,
+   "rooms": [
+    {
+     "roomId": "h23r1",
+     "label": "Bedroom 1",
+     "asking": 1025,
+     "p10": 1026,
+     "p50": 1027,
+     "p90": 1030
+    },
+    {
+     "roomId": "h23r2",
+     "label": "Bedroom 2",
+     "asking": 1025,
+     "p10": 1020,
+     "p50": 1023,
+     "p90": 1024
+    }
+   ],
+   "askingTotal": 2050,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h23r1",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 1",
+    "roomP50": 35,
+    "headroom": 101,
+    "after": [
+     {
+      "roomId": "h23r1",
+      "p50": 1062
+     },
+     {
+      "roomId": "h23r2",
+      "p50": 988
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 8
+  },
+  {
+   "homeId": "h24",
+   "name": "Commonwealth Blvd apartment, 3 bed",
+   "area": "North Campus",
+   "kind": "apartment",
+   "rent": 2700,
+   "utilities": 150,
+   "nRooms": 3,
+   "rooms": [
+    {
+     "roomId": "h24r1",
+     "label": "Bedroom 1",
+     "asking": 940,
+     "p10": 946,
+     "p50": 975,
+     "p90": 1022
+    },
+    {
+     "roomId": "h24r2",
+     "label": "Bedroom 2",
+     "asking": 880,
+     "p10": 841,
+     "p50": 865,
+     "p90": 879
+    },
+    {
+     "roomId": "h24r3",
+     "label": "Bedroom 3",
+     "asking": 880,
+     "p10": 837,
+     "p50": 861,
+     "p90": 876
+    }
+   ],
+   "askingTotal": 2700,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h24r2",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 2",
+    "roomP50": 48,
+    "headroom": 68,
+    "after": [
+     {
+      "roomId": "h24r1",
+      "p50": 928
+     },
+     {
+      "roomId": "h24r2",
+      "p50": 913
+     },
+     {
+      "roomId": "h24r3",
+      "p50": 859
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 29
+  },
+  {
+   "homeId": "h27",
+   "name": "North Ingalls St apartment, 2 bed",
+   "area": "Medical Campus",
+   "kind": "apartment",
+   "rent": 2400,
+   "utilities": 120,
+   "nRooms": 2,
+   "rooms": [
+    {
+     "roomId": "h27r1",
+     "label": "Bedroom 1",
+     "asking": 1205,
+     "p10": 1202,
+     "p50": 1204,
+     "p90": 1207
+    },
+    {
+     "roomId": "h27r2",
+     "label": "Bedroom 2",
+     "asking": 1195,
+     "p10": 1193,
+     "p50": 1196,
+     "p90": 1198
+    }
+   ],
+   "askingTotal": 2400,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h27r1",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 1",
+    "roomP50": 35,
+    "headroom": 94,
+    "after": [
+     {
+      "roomId": "h27r1",
+      "p50": 1240
+     },
+     {
+      "roomId": "h27r2",
+      "p50": 1160
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 11
+  },
+  {
+   "homeId": "h29",
+   "name": "Wright St apartment, 2 bed",
+   "area": "Lower Town",
+   "kind": "apartment",
+   "rent": 2100,
+   "utilities": 115,
+   "nRooms": 2,
+   "rooms": [
+    {
+     "roomId": "h29r1",
+     "label": "Bedroom 1",
+     "asking": 1055,
+     "p10": 1052,
+     "p50": 1054,
+     "p90": 1058
+    },
+    {
+     "roomId": "h29r2",
+     "label": "Bedroom 2",
+     "asking": 1045,
+     "p10": 1042,
+     "p50": 1046,
+     "p90": 1048
+    }
+   ],
+   "askingTotal": 2100,
+   "feasibleShare": 1,
+   "negativeShare": 0,
+   "groups": 200,
+   "renovation": {
+    "roomId": "h29r1",
+    "bath": "private",
+    "text": "Add a private bath to Bedroom 1",
+    "roomP50": 34,
+    "headroom": 93,
+    "after": [
+     {
+      "roomId": "h29r1",
+      "p50": 1088
+     },
+     {
+      "roomId": "h29r2",
+      "p50": 1012
+     }
+    ]
+   },
+   "priorMedians": {
+    "wBath": 60,
+    "wSize": 8,
+    "wLight": 20
+   },
+   "ms": 7
+  }
+ ],
+ "timings": {
+  "populationMs": 18,
+  "pricingMs": 1005,
+  "homes": 24,
+  "demandLoadMs": 1243,
+  "demandWeeksMs": 3518,
+  "demandMapMs": 39
+ },
+ "demand": {
+  "label": "SYNTHETIC: where each kind of synthetic student week fits; not a demand forecast",
+  "students": 2000,
+  "homes": [
+   {
+    "homeId": "h1",
+    "top3Share": 0.339,
+    "firstShare": 0.1695,
+    "wins": [
+     "Central, no job, late study",
+     "Central, no job, late study, gym",
+     "Central, job downtown, late study",
+     "Central, job downtown, late study, gym",
+     "Central, job campus, late study, gym",
+     "Central, job campus, gym"
+    ],
+    "fitPremium": 34
+   },
+   {
+    "homeId": "h2",
+    "top3Share": 0.1245,
+    "firstShare": 0.005,
+    "wins": [],
+    "fitPremium": 5
+   },
+   {
+    "homeId": "h3",
+    "top3Share": 0.509,
+    "firstShare": 0.236,
+    "wins": [
+     "North, no job, late study",
+     "North, no job, late study, gym",
+     "North, no job, gym",
+     "Medical, no job, late study",
+     "Medical, no job",
+     "North, job downtown, late study",
+     "Medical, job downtown",
+     "North, job downtown",
+     "North, job campus, late study",
+     "Medical, job downtown, late study",
+     "North, job downtown, gym",
+     "North, job downtown, late study, gym",
+     "North, job campus, gym"
+    ],
+    "fitPremium": 46
+   },
+   {
+    "homeId": "h4",
+    "top3Share": 0.166,
+    "firstShare": 0.0305,
+    "wins": [],
+    "fitPremium": 16
+   },
+   {
+    "homeId": "h5",
+    "top3Share": 0.2295,
+    "firstShare": 0.121,
+    "wins": [
+     "North, no job",
+     "North, job campus"
+    ],
+    "fitPremium": 57
+   },
+   {
+    "homeId": "h6",
+    "top3Share": 0.0095,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h7",
+    "top3Share": 0.3025,
+    "firstShare": 0.13,
+    "wins": [
+     "Central, no job, gym",
+     "Central, job downtown",
+     "Central, job campus, late study",
+     "Central, job downtown, gym"
+    ],
+    "fitPremium": 21
+   },
+   {
+    "homeId": "h8",
+    "top3Share": 0.236,
+    "firstShare": 0.0295,
+    "wins": [],
+    "fitPremium": 17
+   },
+   {
+    "homeId": "h9",
+    "top3Share": 0.161,
+    "firstShare": 0.019,
+    "wins": [],
+    "fitPremium": 28
+   },
+   {
+    "homeId": "h10",
+    "top3Share": 0.473,
+    "firstShare": 0.16,
+    "wins": [
+     "Central, no job",
+     "Medical, no job, gym",
+     "Medical, no job, late study, gym",
+     "Central, job campus",
+     "Medical, job campus",
+     "Medical, job downtown, late study, gym",
+     "Medical, job campus, late study",
+     "Medical, job downtown, gym",
+     "Medical, job campus, gym",
+     "Medical, job campus, late study, gym"
+    ],
+    "fitPremium": 39
+   },
+   {
+    "homeId": "h11",
+    "top3Share": 0.189,
+    "firstShare": 0.056,
+    "wins": [],
+    "fitPremium": 35
+   },
+   {
+    "homeId": "h12",
+    "top3Share": 0.001,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h13",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h14",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h15",
+    "top3Share": 0.0005,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h16",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h17",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h18",
+    "top3Share": 0.0085,
+    "firstShare": 0.0045,
+    "wins": [],
+    "fitPremium": 144
+   },
+   {
+    "homeId": "h19",
+    "top3Share": 0.0385,
+    "firstShare": 0.011,
+    "wins": [],
+    "fitPremium": 107
+   },
+   {
+    "homeId": "h20",
+    "top3Share": 0.003,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h21",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h22",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h23",
+    "top3Share": 0.112,
+    "firstShare": 0.0235,
+    "wins": [
+     "North, job campus, late study, gym"
+    ],
+    "fitPremium": 124
+   },
+   {
+    "homeId": "h24",
+    "top3Share": 0.0515,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h25",
+    "top3Share": 0.0295,
+    "firstShare": 0.003,
+    "wins": [],
+    "fitPremium": 271
+   },
+   {
+    "homeId": "h26",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h27",
+    "top3Share": 0.0165,
+    "firstShare": 0.0015,
+    "wins": [],
+    "fitPremium": 24
+   },
+   {
+    "homeId": "h28",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h29",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   },
+   {
+    "homeId": "h30",
+    "top3Share": 0,
+    "firstShare": 0,
+    "wins": [],
+    "fitPremium": null
+   }
+  ]
+ }
+}

@@ -1,0 +1,500 @@
+{
+ "source": "docs/SYSTEM_DESIGN.md section 9, verified entries only (copied Thu Nov 19)",
+ "references": [
+  {
+   "key": "Dibbelt2017CSA",
+   "group": "Routing",
+   "cite": "Dibbelt, Pajor, Strasser, Wagner. Connection Scan Algorithm. arXiv:1703.05997, 2017.",
+   "url": "https://arxiv.org/abs/1703.05997",
+   "urls": [
+    "https://arxiv.org/abs/1703.05997"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Delling2012RAPTOR",
+   "group": "Routing",
+   "cite": "Delling, Pajor, Werneck. Round-Based Public Transit Routing. ALENEX 2012; Transportation Science 2015.",
+   "url": "https://www.microsoft.com/en-us/research/publication/round-based-public-transit-routing/",
+   "urls": [
+    "https://www.microsoft.com/en-us/research/publication/round-based-public-transit-routing/"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Witt2015TB",
+   "group": "Routing",
+   "cite": "Witt. Trip-Based Public Transit Routing. ESA 2015, LNCS 9294.",
+   "url": "https://arxiv.org/abs/1504.07149",
+   "urls": [
+    "https://arxiv.org/abs/1504.07149"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Baum2019ULTRA",
+   "group": "Routing",
+   "cite": "Baum, Buchhold, Sauer, Wagner, Zuendorf. UnLimited TRAnsfers for Multi-Modal Route Planning: An Efficient Solution. ESA 2019, LIPIcs 144.",
+   "url": "https://arxiv.org/abs/1906.04832",
+   "urls": [
+    "https://arxiv.org/abs/1906.04832"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Bast2015Survey",
+   "group": "Routing",
+   "cite": "Bast et al. Route Planning in Transportation Networks. arXiv:1504.05140; LNCS 9220, 2016.",
+   "url": "https://arxiv.org/abs/1504.05140",
+   "urls": [
+    "https://arxiv.org/abs/1504.05140"
+   ],
+   "verified": "verified, abstract level"
+  },
+  {
+   "key": "Conway2017R5",
+   "group": "Routing",
+   "cite": "Conway, Byrd, van der Linden. Evidence-Based Transit and Land Use Sketch Planning Using Interactive Accessibility Methods on Combined Schedule and Headway-Based Networks. TRR 2653, 2017.",
+   "url": "https://d1rbsgppyrdqq4.cloudfront.net/s3fs-public/c160/TRB_17-06602_TRR_manuscript_preprint.pdf",
+   "urls": [
+    "https://d1rbsgppyrdqq4.cloudfront.net/s3fs-public/c160/TRB_17-06602_TRR_manuscript_preprint.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "r5pyDocsTTM",
+   "group": "Routing",
+   "cite": "r5py developers. r5py user manual: Travel-time matrices.",
+   "url": "https://r5py.readthedocs.io/stable/user-guide/user-manual/travel-time-matrices.html",
+   "urls": [
+    "https://r5py.readthedocs.io/stable/user-guide/user-manual/travel-time-matrices.html"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Kwan1998",
+   "group": "Accessibility and time geography",
+   "cite": "Kwan. Space-time and integral measures of individual accessibility: a comparative analysis using a point-based framework. Geographical Analysis 30(3), 1998.",
+   "url": "https://experts.illinois.edu/en/publications/space-time-and-integral-measures-of-individual-accessibility-a-co/",
+   "urls": [
+    "https://experts.illinois.edu/en/publications/space-time-and-integral-measures-of-individual-accessibility-a-co/"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Houlsby2011",
+   "group": "Preferences and values of time",
+   "cite": "Houlsby, Huszar, Ghahramani, Lengyel. Bayesian Active Learning for Classification and Preference Learning. arXiv:1112.5745.",
+   "url": "https://arxiv.org/abs/1112.5745",
+   "urls": [
+    "https://arxiv.org/abs/1112.5745"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "SaureVielma2019",
+   "group": "Preferences and values of time",
+   "cite": "Saure, Vielma. Ellipsoidal Methods for Adaptive Choice-Based Conjoint Analysis. Operations Research 67(2), 2019.",
+   "url": "https://juan-pablo-vielma.github.io/publications/Ellipsoidal-Methods.pdf",
+   "urls": [
+    "https://juan-pablo-vielma.github.io/publications/Ellipsoidal-Methods.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Train2009",
+   "group": "Preferences and values of time",
+   "cite": "Train. Discrete Choice Methods with Simulation, 2nd ed. Cambridge University Press, 2009.",
+   "url": "https://eml.berkeley.edu/books/choice2.html",
+   "urls": [
+    "https://eml.berkeley.edu/books/choice2.html"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Small2012",
+   "group": "Preferences and values of time",
+   "cite": "Small. Valuation of Travel Time. Economics of Transportation 1(1-2), 2012.",
+   "url": "https://sites.socsci.uci.edu/~ksmall/VOT%20review.pdf",
+   "urls": [
+    "https://sites.socsci.uci.edu/~ksmall/VOT%20review.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Wardman2016",
+   "group": "Preferences and values of time",
+   "cite": "Wardman, Chintakayala, de Jong. Values of travel time in Europe: Review and meta-analysis. TR Part A 94, 2016.",
+   "url": "https://eprints.whiterose.ac.uk/id/eprint/104595/1/European%20meta%20paper%20final%20accepted%20for%20publication.pdf",
+   "urls": [
+    "https://eprints.whiterose.ac.uk/id/eprint/104595/1/European%20meta%20paper%20final%20accepted%20for%20publication.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Wardman2026",
+   "group": "Preferences and values of time",
+   "cite": "Wardman, Murphy, Ojeda-Cabral, Mitrani, Neki, Humphreys. Value of time multipliers for walk time, wait time, service headway, displacement time, reliability and congested travel time: review and meta-analysis of worldwide evidence. TR Part A 207, 2026.",
+   "url": "https://eprints.whiterose.ac.uk/id/eprint/239301",
+   "urls": [
+    "https://eprints.whiterose.ac.uk/id/eprint/239301"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "AbrantesWardman2011",
+   "group": "Preferences and values of time",
+   "cite": "Abrantes, Wardman. Meta-analysis of UK values of travel time: An update. TR Part A 45(1), 2011.",
+   "url": "https://www.worldtransitresearch.info/research/3749",
+   "urls": [
+    "https://www.worldtransitresearch.info/research/3749"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Wardman2004",
+   "group": "Preferences and values of time",
+   "cite": "Wardman. Public transport values of time. Transport Policy 11(4), 2004.",
+   "url": "https://eprints.whiterose.ac.uk/3393",
+   "urls": [
+    "https://eprints.whiterose.ac.uk/3393"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Wardman2013TRB",
+   "group": "Preferences and values of time",
+   "cite": "Wardman. Value of Time Multipliers: A Review and Meta-Analysis of European-Wide Evidence. TRB 92nd Annual Meeting, 2013.",
+   "url": "https://eprints.whiterose.ac.uk/id/eprint/225392",
+   "urls": [
+    "https://eprints.whiterose.ac.uk/id/eprint/225392"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Chopin2002",
+   "group": "Preferences and values of time",
+   "cite": "Chopin. A sequential particle filter method for static models. Biometrika 89(3), 2002.",
+   "url": "https://econpapers.repec.org/RePEc:oup:biomet:v:89:y:2002:i:3:p:539-552",
+   "urls": [
+    "https://econpapers.repec.org/RePEc:oup:biomet:v:89:y:2002:i:3:p:539-552"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Gal2017",
+   "group": "Fair division and group choice",
+   "cite": "Gal, Mash, Procaccia, Zick. Which Is the Fairest (Rent Division) of Them All? JACM 64(6), 2017; IJCAI 2017 extended abstract. https://procaccia.info/wp-content/uploads/2020/03/rent.pdf and.",
+   "url": "https://www.ijcai.org/proceedings/2017/678.md",
+   "urls": [
+    "https://www.ijcai.org/proceedings/2017/678.md"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Procaccia2018",
+   "group": "Fair division and group choice",
+   "cite": "Procaccia, Velez, Yu. Fair Rent Division on a Budget. AAAI 2018.",
+   "url": "https://procaccia.info/wp-content/uploads/2020/03/rent-budget.pdf",
+   "urls": [
+    "https://procaccia.info/wp-content/uploads/2020/03/rent-budget.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Peters2022",
+   "group": "Fair division and group choice",
+   "cite": "Peters, Procaccia, Zhu. Robust Rent Division. NeurIPS 2022.",
+   "url": "https://papers.neurips.cc/paper_files/paper/2022/file/5a1a10c2c2c9b9af1514687bc24b8f3d-Paper-Conference.pdf",
+   "urls": [
+    "https://papers.neurips.cc/paper_files/paper/2022/file/5a1a10c2c2c9b9af1514687bc24b8f3d-Paper-Conference.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "ProcacciaSchifferZhang2024",
+   "group": "Fair division and group choice",
+   "cite": "Procaccia, Schiffer, Zhang. Multi-Apartment Rent Division. arXiv:2403.08051.",
+   "url": "https://arxiv.org/abs/2403.08051",
+   "urls": [
+    "https://arxiv.org/abs/2403.08051"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Gangam2025",
+   "group": "Fair division and group choice",
+   "cite": "Gangam, Taherijam, Vazirani. Fair Rent Division: New Budget and Rent Constraints. arXiv:2510.05434.",
+   "url": "https://arxiv.org/abs/2510.05434",
+   "urls": [
+    "https://arxiv.org/abs/2510.05434"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "ShapleyShubik1971",
+   "group": "Fair division and group choice",
+   "cite": "Shapley, Shubik. The Assignment Game I: The Core. RAND R-874; IJGT 1(1).",
+   "url": "https://www.rand.org/pubs/reports/R874.html",
+   "urls": [
+    "https://www.rand.org/pubs/reports/R874.html"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "DGS1986",
+   "group": "Fair division and group choice",
+   "cite": "Demange, Gale, Sotomayor. Multi-Item Auctions. JPE 94(4), 1986.",
+   "url": "https://ideas.repec.org/a/ucp/jpolec/v94y1986i4p863-72.html",
+   "urls": [
+    "https://ideas.repec.org/a/ucp/jpolec/v94y1986i4p863-72.html"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "GoldmanProcaccia2014",
+   "group": "Fair division and group choice",
+   "cite": "Goldman, Procaccia. Spliddit: Unleashing Fair Division Algorithms. SIGecom Exchanges 13(2), 2014.",
+   "url": "https://procaccia.info/wp-content/uploads/2020/03/spliddit.pdf",
+   "urls": [
+    "https://procaccia.info/wp-content/uploads/2020/03/spliddit.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Barile2023",
+   "group": "Fair division and group choice",
+   "cite": "Barile et al. Evaluating explainable social choice-based aggregation strategies for group recommendation. UMUAI 34, 2024.",
+   "url": "https://link.springer.com/content/pdf/10.1007/s11257-023-09363-0.pdf",
+   "urls": [
+    "https://link.springer.com/content/pdf/10.1007/s11257-023-09363-0.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Uttley2017",
+   "group": "Evidence for the model and the problem",
+   "cite": "Uttley, Fotios. Using the daylight savings clock change to show ambient light conditions significantly influence active travel. J. Environmental Psychology 53, 2017.",
+   "url": "https://eprints.whiterose.ac.uk/140125/1/1-s2.0-S0272494417300762-main.pdf",
+   "urls": [
+    "https://eprints.whiterose.ac.uk/140125/1/1-s2.0-S0272494417300762-main.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Fotios2015",
+   "group": "Evidence for the model and the problem",
+   "cite": "Fotios, Unwin, Farrall. Road lighting and pedestrian reassurance after dark: A review. Lighting Research and Technology 47(4), 2015.",
+   "url": "https://eprints.whiterose.ac.uk/id/eprint/87527",
+   "urls": [
+    "https://eprints.whiterose.ac.uk/id/eprint/87527"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Fan2016",
+   "group": "Evidence for the model and the problem",
+   "cite": "Fan, Guthrie, Levinson. Waiting time perceptions at transit stops and stations: Effects of basic amenities, gender, and security. TR Part A 88, 2016.",
+   "url": "https://econpapers.repec.org/RePEc:eee:transa:v:88:y:2016:i:c:p:251-264",
+   "urls": [
+    "https://econpapers.repec.org/RePEc:eee:transa:v:88:y:2016:i:c:p:251-264"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Whalen2013",
+   "group": "Evidence for the model and the problem",
+   "cite": "Whalen, Paez, Carrasco. Mode choice of university students commuting to school and the role of active travel. J. Transport Geography 31, 2013.",
+   "url": "https://ideas.repec.org/a/eee/jotrge/v31y2013icp132-142.html",
+   "urls": [
+    "https://ideas.repec.org/a/eee/jotrge/v31y2013icp132-142.html"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Burzacchi2024",
+   "group": "Evidence for the model and the problem",
+   "cite": "Burzacchi, Rossi, Agasisti, Paganoni, Vantini. Urban mobility and learning: analyzing the influence of commuting time on students' GPA at Politecnico di Milano. arXiv:2407.11893; Studies in Higher Education 2024.",
+   "url": "https://arxiv.org/abs/2407.11893",
+   "urls": [
+    "https://arxiv.org/abs/2407.11893"
+   ],
+   "verified": "verified, abstract; cited qualitatively, no numbers"
+  },
+  {
+   "key": "StudentMoveTO2022",
+   "group": "Evidence for the model and the problem",
+   "cite": "Toronto Metropolitan University news. Research says your commute impacts your academic success. 7 June 2022.",
+   "url": "https://www.torontomu.ca/content/ryerson/news-events/news/2022/06/research-says-commute-impacts-your-academic-success/",
+   "urls": [
+    "https://www.torontomu.ca/content/ryerson/news-events/news/2022/06/research-says-commute-impacts-your-academic-success/"
+   ],
+   "verified": "verified; news release on a self-reported survey"
+  },
+  {
+   "key": "AnnArborORD24-03",
+   "group": "Evidence for the model and the problem",
+   "cite": "City of Ann Arbor. Ordinance ORD-24-03, Sections 8:530 and 8:531. Adopted 4 March 2024.",
+   "url": "https://a2gov.org/media/yp5mecxm/ord-24-03-approval-notice.pdf",
+   "urls": [
+    "https://a2gov.org/media/yp5mecxm/ord-24-03-approval-notice.pdf"
+   ],
+   "verified": "verified; later amendments, if any, not read"
+  },
+  {
+   "key": "AnnArborORD22-15",
+   "group": "Evidence for the model and the problem",
+   "cite": "City of Ann Arbor. Ordinance ORD-22-15, Right to Renew and Relocation Assistance. Adopted 3 October 2022.",
+   "url": "https://a2gov.org/media/lpijxcs2/elo-rtr.pdf",
+   "urls": [
+    "https://a2gov.org/media/lpijxcs2/elo-rtr.pdf"
+   ],
+   "verified": "verified; superseded"
+  },
+  {
+   "key": "TheRideFY25",
+   "group": "Evidence for the model and the problem",
+   "cite": "AAATA. TheRide FY25 Highlights (Citizen Report), March 2026.",
+   "url": "https://www.theride.org/sites/default/files/2026-03/FY25%20Citizen%20Report_3.10.26.pdf",
+   "urls": [
+    "https://www.theride.org/sites/default/files/2026-03/FY25%20Citizen%20Report_3.10.26.pdf"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Kay2016",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Kay, Kola, Hullman, Munson. When(ish) is My Bus? User-centered Visualizations of Uncertainty in Everyday, Mobile Predictive Systems. CHI 2016.",
+   "url": "https://idl.uw.edu/papers/when-ish-is-my-bus",
+   "urls": [
+    "https://idl.uw.edu/papers/when-ish-is-my-bus"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Fernandes2018",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Fernandes, Walls, Munson, Hullman, Kay. Uncertainty Displays Using Quantile Dotplots or CDFs Improve Transit Decision-Making. CHI 2018.",
+   "url": "https://mucollective.northwestern.edu/project/uncertainty-bus",
+   "urls": [
+    "https://mucollective.northwestern.edu/project/uncertainty-bus"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Hullman2015",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Hullman, Resnick, Adar. Hypothetical Outcome Plots Outperform Error Bars and Violin Plots for Inferences about Reliability of Variable-Ordering. PLOS ONE 2015.",
+   "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0142444",
+   "urls": [
+    "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0142444"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Rucker2015",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Rucker, Schwarzer. Ranking treatments in frequentist network meta-analysis works without resampling methods. BMC Med Res Methodol 15:58, 2015.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4521472",
+   "urls": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC4521472"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Lempert2003",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Lempert, Popper, Bankes. Shaping the Next One Hundred Years. RAND MR-1626-RPC, 2003.",
+   "url": "https://www.rand.org/pubs/monograph_reports/MR1626.html",
+   "urls": [
+    "https://www.rand.org/pubs/monograph_reports/MR1626.html"
+   ],
+   "verified": "verified, summary page; regret criterion not read"
+  },
+  {
+   "key": "Rosen1974",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Rosen. Hedonic Prices and Implicit Markets: Product Differentiation in Pure Competition. JPE 82(1), 1974.",
+   "url": "https://econpapers.repec.org/RePEc:ucp:jpolec:v:82:y:1974:i:1:p:34-55",
+   "urls": [
+    "https://econpapers.repec.org/RePEc:ucp:jpolec:v:82:y:1974:i:1:p:34-55"
+   ],
+   "verified": "verified, bibliographic record only"
+  },
+  {
+   "key": "Allenby2014",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Allenby, Brazell, Howell, Rossi. Economic valuation of product features. QME 12(4), 2014.",
+   "url": "https://econpapers.repec.org/RePEc:kap:qmktec:v:12:y:2014:i:4:p:421-456",
+   "urls": [
+    "https://econpapers.repec.org/RePEc:kap:qmktec:v:12:y:2014:i:4:p:421-456"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "Beckman1996",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Beckman, Baggerly, McKay. Creating synthetic baseline populations. TR Part A 30(6), 1996.",
+   "url": "https://ideas.repec.org/a/eee/transa/v30y1996i6p415-429.html",
+   "urls": [
+    "https://ideas.repec.org/a/eee/transa/v30y1996i6p415-429.html"
+   ],
+   "verified": "verified, abstract"
+  },
+  {
+   "key": "ActivitySimCDAP",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "ActivitySim consortium. Coordinated Daily Activity Pattern, v1.3.1 developer guide.",
+   "url": "https://activitysim.github.io/activitysim/v1.3.1/dev-guide/components/cdap.html",
+   "urls": [
+    "https://activitysim.github.io/activitysim/v1.3.1/dev-guide/components/cdap.html"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "Sweeney2002",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Sweeney. k-Anonymity: a model for protecting privacy. IJUFKS 10(5), 2002.",
+   "url": "https://dataprivacylab.org/projects/kanonymity/",
+   "urls": [
+    "https://dataprivacylab.org/projects/kanonymity/"
+   ],
+   "verified": "verified"
+  },
+  {
+   "key": "DworkRoth2014",
+   "group": "Decision support, synthesis and privacy",
+   "cite": "Dwork, Roth. The Algorithmic Foundations of Differential Privacy. FnT TCS, 2014.",
+   "url": "https://www.cis.upenn.edu/~aaroth/privacybook.html",
+   "urls": [
+    "https://www.cis.upenn.edu/~aaroth/privacybook.html"
+   ],
+   "verified": "verified, book page; mechanism details from general knowledge"
+  }
+ ],
+ "data": [
+  {
+   "name": "TheRide (AAATA) GTFS",
+   "detail": "feed version S1000304, service Nov 15 2026 to Jan 23 2027",
+   "license": "Transit scheduling, geographic, and real-time data provided by permission of AAATA/TheRide"
+  },
+  {
+   "name": "U-M Transit GTFS",
+   "detail": "feed version S1000100, service Aug 23 2026 to Jan 2 2027",
+   "license": "U-M bus schedules: U-M Logistics, Transportation and Parking"
+  },
+  {
+   "name": "OpenStreetMap",
+   "detail": "street network through osmnx, cached in data/raw/osm",
+   "license": "Map data (c) OpenStreetMap contributors, ODbL"
+  }
+ ],
+ "unverifiedOmitted": [
+  "Hansen1959",
+  "Hagerstrand1970",
+  "Miller1991",
+  "LiuWest2001",
+  "ToubiaHauserSimester2004",
+  "YuGoosVandebroek2011"
+ ]
+}

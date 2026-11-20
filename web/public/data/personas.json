@@ -1,0 +1,92 @@
+[
+ {
+  "id": "jordan", "name": "Jordan", "program": "Computer Science (Engineering), North Campus", "color": "#1f6f8b",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": true,
+  "cap": 1000,
+  "modes": { "bike": false, "maxWalkMin": 20, "lateHour": "22:00", "maxLateWalkMin": 10 },
+  "theta": { "vTime": 22, "vDark": 25, "vStrand": 40, "wBath": 45, "wSize": 6, "wLight": 15 },
+  "week": [
+   { "id": "j1", "label": "Lectures", "days": ["mon", "wed", "fri"], "place": "beyster", "start": "09:00", "end": "11:30", "p": 1 },
+   { "id": "j2", "label": "Classes", "days": ["mon", "wed", "fri"], "place": "eecs", "start": "12:30", "end": "16:00", "p": 1 },
+   { "id": "j3", "label": "Project team", "days": ["tue", "thu"], "place": "fmcrb", "start": "13:00", "end": "17:00", "p": 0.7 },
+   { "id": "j4", "label": "Late lab", "days": ["tue", "thu"], "place": "dude", "start": "19:00", "end": "23:30", "p": 0.8,
+     "alt": [ { "place": "ugli", "p": 0.3 } ] },
+   { "id": "j5", "label": "Gym", "days": ["sat"], "place": "ncrb", "start": "11:00", "end": "12:30", "p": 0.6 }
+  ]
+ },
+ {
+  "id": "maya", "name": "Maya", "program": "Nursing", "color": "#b5452b",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": true,
+  "cap": 980,
+  "modes": { "bike": false, "maxWalkMin": 25, "lateHour": "21:00", "maxLateWalkMin": 12 },
+  "theta": { "vTime": 14, "vDark": 30, "vStrand": 35, "wBath": 120, "wSize": 5, "wLight": 25 },
+  "week": [
+   { "id": "m1", "label": "Clinical", "days": ["tue", "thu"], "place": "uh", "start": "06:30", "end": "15:00", "p": 1,
+     "alt": [ { "place": "mott", "p": 0.4 } ] },
+   { "id": "m2", "label": "Classes", "days": ["mon", "wed"], "place": "nursing", "start": "09:00", "end": "12:00", "p": 1 },
+   { "id": "m3", "label": "Seminar", "days": ["fri"], "place": "nursing", "start": "10:00", "end": "12:00", "p": 1 },
+   { "id": "m4", "label": "Study", "days": ["mon", "wed"], "place": "thsl", "start": "13:00", "end": "17:00", "p": 0.7 }
+  ]
+ },
+ {
+  "id": "priya", "name": "Priya", "program": "Business (Ross BBA)", "color": "#3d7a3a",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": true,
+  "cap": 875,
+  "modes": { "bike": true, "maxWalkMin": 25, "lateHour": "21:30", "maxLateWalkMin": 15 },
+  "theta": { "vTime": 18, "vDark": 12, "vStrand": 20, "wBath": 40, "wSize": 10, "wLight": 35 },
+  "week": [
+   { "id": "p1", "label": "Classes", "days": ["mon", "wed"], "place": "ross", "start": "10:00", "end": "13:00", "p": 1 },
+   { "id": "p2", "label": "Classes", "days": ["tue", "thu"], "place": "ross", "start": "11:30", "end": "14:30", "p": 1 },
+   { "id": "p3", "label": "Shop job", "days": ["mon", "wed", "thu"], "place": "kerrytown", "start": "17:00", "end": "21:00", "p": 0.9,
+     "alt": [ { "place": "mainst", "p": 0.3 } ] },
+   { "id": "p4", "label": "Shop job", "days": ["sat"], "place": "kerrytown", "start": "10:00", "end": "16:00", "p": 0.9,
+     "alt": [ { "place": "mainst", "p": 0.3 } ] }
+  ]
+ },
+ {
+  "id": "leo", "name": "Leo", "program": "LSA (Biology)", "color": "#8a6d1f",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": true,
+  "cap": 960,
+  "modes": { "bike": true, "maxWalkMin": 30, "lateHour": "22:30", "maxLateWalkMin": 20 },
+  "theta": { "vTime": 9, "vDark": 6, "vStrand": 10, "wBath": 30, "wSize": 14, "wLight": 12 },
+  "week": [
+   { "id": "l1", "label": "Lectures", "days": ["mon", "wed", "fri"], "place": "angell", "start": "10:00", "end": "12:00", "p": 1 },
+   { "id": "l2", "label": "Chem lecture and lab", "days": ["tue", "thu"], "place": "chem", "start": "09:00", "end": "13:00", "p": 1 },
+   { "id": "l3", "label": "Library", "days": ["sun", "mon", "tue", "wed", "thu"], "place": "ugli", "start": "19:00", "end": "23:00", "p": 0.7,
+     "alt": [ { "place": "hatcher", "p": 0.2 } ] },
+   { "id": "l4", "label": "Gym", "days": ["tue", "thu", "sat"], "place": "imsb", "start": "16:30", "end": "18:00", "p": 0.8 }
+  ]
+ },
+ {
+  "id": "sam", "name": "Sam", "program": "Music (SMTD), North Campus", "color": "#6b4f3a",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": true,
+  "cap": 1000,
+  "modes": { "bike": false, "maxWalkMin": 30, "lateHour": "22:00", "maxLateWalkMin": 15 },
+  "theta": { "vTime": 12, "vDark": 18, "vStrand": 30, "wBath": 70, "wSize": 12, "wLight": 30 },
+  "week": [
+   { "id": "s1", "label": "Classes", "days": ["mon", "tue", "wed", "thu", "fri"], "place": "music", "start": "09:00", "end": "14:00", "p": 1 },
+   { "id": "s2", "label": "Rehearsal", "days": ["mon", "wed", "thu"], "place": "music", "start": "18:00", "end": "22:00", "p": 0.9,
+     "alt": [ { "place": "hill", "p": 0.3 } ] },
+   { "id": "s3", "label": "Practice", "days": ["sat"], "place": "music", "start": "13:00", "end": "17:00", "p": 0.6 }
+  ]
+ },
+ {
+  "id": "noor", "name": "Noor", "program": "Law, Central Campus", "color": "#2f5d50",
+  "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
+  "group": false,
+  "cap": 1500,
+  "modes": { "bike": false, "maxWalkMin": 25, "lateHour": "22:00", "maxLateWalkMin": 12 },
+  "theta": { "vTime": 25, "vDark": 8, "vStrand": 15, "wBath": 90, "wSize": 9, "wLight": 20 },
+  "week": [
+   { "id": "n1", "label": "Classes", "days": ["mon", "tue", "wed", "thu", "fri"], "place": "law", "start": "09:00", "end": "12:30", "p": 1 },
+   { "id": "n2", "label": "Library", "days": ["mon", "tue", "wed", "thu"], "place": "hatcher", "start": "14:00", "end": "18:00", "p": 0.8,
+     "alt": [ { "place": "ugli", "p": 0.3 } ] },
+   { "id": "n3", "label": "Gym", "days": ["mon", "wed", "fri"], "place": "ccrb", "start": "07:00", "end": "08:00", "p": 0.6 }
+  ]
+ }
+]

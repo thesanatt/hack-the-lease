@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve": "node serve.mjs",
+    "test": "node --test src/**/*.test.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.1.0",

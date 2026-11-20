@@ -1,0 +1,211 @@
+{
+  "label": "SYNTHETIC random instances (seeded) plus the published examples F4 to F6",
+  "generated": "2026-11-20T02:55:00.470Z",
+  "node": "v22.13.0",
+  "method": "Enumerate every welfare-maximizing assignment, one maximin LP each (dense two-phase simplex, Bland rule). Caps infeasible: phase 1 minimizes the worst overrun, phase 2 maximizes the worst-off member within it.",
+  "tolerance": 0.000001,
+  "F1": {
+    "instances": 2000,
+    "checkerOk": 2000,
+    "envyFree": 2000,
+    "rentSumOk": 2000,
+    "feasible": 1350,
+    "capsRelaxed": 650,
+    "capsRespectedWhenFeasible": 1350,
+    "negativePrice": 0,
+    "worstEnvy": -2.8421709430404007e-13,
+    "worstRentErr": 9.094947017729282e-13,
+    "byN": {
+      "2": {
+        "instances": 400,
+        "feasible": 317,
+        "capsRelaxed": 83,
+        "p50ms": 0.063,
+        "maxms": 3.548
+      },
+      "3": {
+        "instances": 400,
+        "feasible": 297,
+        "capsRelaxed": 103,
+        "p50ms": 0.09,
+        "maxms": 2.558
+      },
+      "4": {
+        "instances": 400,
+        "feasible": 271,
+        "capsRelaxed": 129,
+        "p50ms": 0.147,
+        "maxms": 1.828
+      },
+      "5": {
+        "instances": 400,
+        "feasible": 245,
+        "capsRelaxed": 155,
+        "p50ms": 0.256,
+        "maxms": 2.058
+      },
+      "6": {
+        "instances": 400,
+        "feasible": 220,
+        "capsRelaxed": 180,
+        "p50ms": 0.492,
+        "maxms": 5.803
+      }
+    }
+  },
+  "F2": {
+    "closedForm": {
+      "instances": 500,
+      "match": 500,
+      "worstErr": 0
+    },
+    "grid": {
+      "instances": 18,
+      "compared": 17,
+      "lpNotBeaten": 17,
+      "withinStep": 17
+    }
+  },
+  "F3": {
+    "instances": 500,
+    "oldPricesStillEF": 500,
+    "pricesUnchanged": 500
+  },
+  "F4": {
+    "feasible": false,
+    "zStar": 200,
+    "prices": [
+      800,
+      200
+    ],
+    "privateGap": [
+      200,
+      200
+    ],
+    "pass": true
+  },
+  "F5": {
+    "feasible": true,
+    "efficientAssignments": 2,
+    "assignment": [
+      1,
+      0
+    ],
+    "prices": [
+      600,
+      400
+    ],
+    "pass": true
+  },
+  "F6": {
+    "negativePrice": true,
+    "prices": [
+      200,
+      -100
+    ],
+    "pass": true
+  },
+  "F7": {
+    "trials": 670,
+    "stayedEF": 670
+  },
+  "F8": {
+    "house": {
+      "instances": 200,
+      "oneCommonRoom": 200,
+      "commonPricedZero": 200,
+      "rentCovered": 200,
+      "checkerOk": 200
+    },
+    "room": {
+      "instances": 100,
+      "solved": 100,
+      "openRoomAtAsking": 100,
+      "noEnvyOfOpenRoom": 100,
+      "checkerOk": 100
+    }
+  },
+  "F9": {
+    "byN": {
+      "2": {
+        "instances": 500,
+        "p50ms": 0.043,
+        "p90ms": 0.083,
+        "maxms": 0.766,
+        "p50LPs": 2,
+        "maxLPs": 5
+      },
+      "3": {
+        "instances": 500,
+        "p50ms": 0.065,
+        "p90ms": 0.132,
+        "maxms": 0.628,
+        "p50LPs": 2,
+        "maxLPs": 5
+      },
+      "4": {
+        "instances": 500,
+        "p50ms": 0.102,
+        "p90ms": 0.214,
+        "maxms": 3.906,
+        "p50LPs": 2,
+        "maxLPs": 8
+      },
+      "5": {
+        "instances": 500,
+        "p50ms": 0.188,
+        "p90ms": 0.379,
+        "maxms": 1.052,
+        "p50LPs": 2,
+        "maxLPs": 8
+      },
+      "6": {
+        "instances": 500,
+        "p50ms": 0.314,
+        "p90ms": 0.535,
+        "maxms": 1.434,
+        "p50LPs": 2,
+        "maxLPs": 8
+      }
+    },
+    "worstCaseAllTie": {
+      "5": {
+        "efficientAssignments": 120,
+        "lpCount": 362,
+        "ms": 15.433,
+        "checkerOk": true
+      },
+      "6": {
+        "efficientAssignments": 720,
+        "lpCount": 2162,
+        "ms": 124.838,
+        "checkerOk": true
+      }
+    }
+  },
+  "commute": {
+    "commutes": [
+      10,
+      120,
+      40
+    ],
+    "pricesOff": [
+      841.111,
+      747.778,
+      811.111
+    ],
+    "pricesOn": [
+      836.667,
+      716.667,
+      846.667
+    ],
+    "assignment": [
+      0,
+      1,
+      2
+    ],
+    "envyFreeBoth": true
+  },
+  "totalSeconds": 6.181,
+  "pass": true
+}

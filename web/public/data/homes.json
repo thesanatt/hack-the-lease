@@ -1,0 +1,1263 @@
+{
+ "label": "SYNTHETIC: homes, rooms and rents are made up for the demo. Locations are real residential streets from OpenStreetMap (no house numbers). Not listings.",
+ "source": "pipeline/build_homes.py; street points from OSM via web/public/data/streets/streets.geojson",
+ "homes": [
+  {
+   "id": "h1",
+   "name": "Church St house, 5 bed",
+   "area": "South Central",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.26963,
+   "lon": -83.73443,
+   "street": "Church Street",
+   "rent": 4650,
+   "utilities": 300,
+   "rooms": [
+    {
+     "id": "h1r1",
+     "label": "Attic room",
+     "sqft": 215,
+     "bath": "shared",
+     "light": 1,
+     "floor": "attic",
+     "asking": 965
+    },
+    {
+     "id": "h1r2",
+     "label": "Front room",
+     "sqft": 160,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 945
+    },
+    {
+     "id": "h1r3",
+     "label": "Back room",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 910
+    },
+    {
+     "id": "h1r4",
+     "label": "Parlor room",
+     "sqft": 145,
+     "bath": "half",
+     "light": 1,
+     "floor": "1",
+     "asking": 945
+    },
+    {
+     "id": "h1r5",
+     "label": "Basement room",
+     "sqft": 115,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 885
+    }
+   ]
+  },
+  {
+   "id": "h2",
+   "name": "Lawrence St house, 5 bed",
+   "area": "Old Fourth Ward",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.28388,
+   "lon": -83.7429,
+   "street": "Lawrence Street",
+   "rent": 4800,
+   "utilities": 320,
+   "rooms": [
+    {
+     "id": "h2r1",
+     "label": "Primary with bath",
+     "sqft": 190,
+     "bath": "private",
+     "light": 2,
+     "floor": "2",
+     "asking": 1035
+    },
+    {
+     "id": "h2r2",
+     "label": "Front room",
+     "sqft": 150,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 965
+    },
+    {
+     "id": "h2r3",
+     "label": "Side room",
+     "sqft": 105,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 920
+    },
+    {
+     "id": "h2r4",
+     "label": "Porch room",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 940
+    },
+    {
+     "id": "h2r5",
+     "label": "Basement room",
+     "sqft": 165,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 940
+    }
+   ]
+  },
+  {
+   "id": "h3",
+   "name": "Broadway St house, 5 bed",
+   "area": "Lower Town",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.29026,
+   "lon": -83.73721,
+   "street": "Broadway Street",
+   "rent": 4150,
+   "utilities": 290,
+   "rooms": [
+    {
+     "id": "h3r1",
+     "label": "Attic room",
+     "sqft": 180,
+     "bath": "shared",
+     "light": 1,
+     "floor": "attic",
+     "asking": 845
+    },
+    {
+     "id": "h3r2",
+     "label": "Corner room",
+     "sqft": 155,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 845
+    },
+    {
+     "id": "h3r3",
+     "label": "Small room",
+     "sqft": 100,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 795
+    },
+    {
+     "id": "h3r4",
+     "label": "Garden room",
+     "sqft": 150,
+     "bath": "half",
+     "light": 2,
+     "floor": "1",
+     "asking": 865
+    },
+    {
+     "id": "h3r5",
+     "label": "Basement room",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 800
+    }
+   ]
+  },
+  {
+   "id": "h4",
+   "name": "Lincoln Ave house, 5 bed",
+   "area": "Burns Park",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.2689,
+   "lon": -83.72981,
+   "street": "Lincoln Avenue",
+   "rent": 4500,
+   "utilities": 310,
+   "rooms": [
+    {
+     "id": "h4r1",
+     "label": "Primary with bath",
+     "sqft": 175,
+     "bath": "private",
+     "light": 1,
+     "floor": "2",
+     "asking": 940
+    },
+    {
+     "id": "h4r2",
+     "label": "Sunroom",
+     "sqft": 125,
+     "bath": "shared",
+     "light": 2,
+     "floor": "1",
+     "asking": 880
+    },
+    {
+     "id": "h4r3",
+     "label": "Front room",
+     "sqft": 160,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 900
+    },
+    {
+     "id": "h4r4",
+     "label": "Back room",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 870
+    },
+    {
+     "id": "h4r5",
+     "label": "Attic room",
+     "sqft": 200,
+     "bath": "shared",
+     "light": 1,
+     "floor": "attic",
+     "asking": 910
+    }
+   ]
+  },
+  {
+   "id": "h5",
+   "name": "Georgetown Blvd house, 5 bed",
+   "area": "North Campus",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.30362,
+   "lon": -83.69927,
+   "street": "Georgetown Boulevard",
+   "rent": 3950,
+   "utilities": 280,
+   "rooms": [
+    {
+     "id": "h5r1",
+     "label": "Primary with bath",
+     "sqft": 185,
+     "bath": "private",
+     "light": 2,
+     "floor": "2",
+     "asking": 865
+    },
+    {
+     "id": "h5r2",
+     "label": "Front room",
+     "sqft": 145,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 770
+    },
+    {
+     "id": "h5r3",
+     "label": "Back room",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 765
+    },
+    {
+     "id": "h5r4",
+     "label": "Den",
+     "sqft": 120,
+     "bath": "half",
+     "light": 1,
+     "floor": "1",
+     "asking": 780
+    },
+    {
+     "id": "h5r5",
+     "label": "Basement room",
+     "sqft": 170,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 770
+    }
+   ]
+  },
+  {
+   "id": "h6",
+   "name": "Hill St house, 5 bed",
+   "area": "East University",
+   "kind": "house",
+   "irregular": false,
+   "lat": 42.27266,
+   "lon": -83.72863,
+   "street": "Hill Street",
+   "rent": 4900,
+   "utilities": 300,
+   "rooms": [
+    {
+     "id": "h6r1",
+     "label": "Room 1",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 990
+    },
+    {
+     "id": "h6r2",
+     "label": "Room 2",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 980
+    },
+    {
+     "id": "h6r3",
+     "label": "Room 3",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 975
+    },
+    {
+     "id": "h6r4",
+     "label": "Room 4",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 980
+    },
+    {
+     "id": "h6r5",
+     "label": "Room 5",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 975
+    }
+   ]
+  },
+  {
+   "id": "h7",
+   "name": "Third St house, 4 bed",
+   "area": "Old West Side",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.27609,
+   "lon": -83.75355,
+   "street": "Third Street",
+   "rent": 3300,
+   "utilities": 260,
+   "rooms": [
+    {
+     "id": "h7r1",
+     "label": "Attic room",
+     "sqft": 190,
+     "bath": "shared",
+     "light": 1,
+     "floor": "attic",
+     "asking": 845
+    },
+    {
+     "id": "h7r2",
+     "label": "Front room",
+     "sqft": 150,
+     "bath": "half",
+     "light": 2,
+     "floor": "1",
+     "asking": 860
+    },
+    {
+     "id": "h7r3",
+     "label": "Back room",
+     "sqft": 120,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 800
+    },
+    {
+     "id": "h7r4",
+     "label": "Basement room",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 795
+    }
+   ]
+  },
+  {
+   "id": "h8",
+   "name": "East Ann St house, 6 bed",
+   "area": "Old Fourth Ward",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.28227,
+   "lon": -83.74216,
+   "street": "East Ann Street",
+   "rent": 5850,
+   "utilities": 360,
+   "rooms": [
+    {
+     "id": "h8r1",
+     "label": "Primary with bath",
+     "sqft": 200,
+     "bath": "private",
+     "light": 2,
+     "floor": "2",
+     "asking": 1055
+    },
+    {
+     "id": "h8r2",
+     "label": "Front room",
+     "sqft": 165,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 985
+    },
+    {
+     "id": "h8r3",
+     "label": "Middle room",
+     "sqft": 110,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 935
+    },
+    {
+     "id": "h8r4",
+     "label": "Back room",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 950
+    },
+    {
+     "id": "h8r5",
+     "label": "Porch room",
+     "sqft": 145,
+     "bath": "half",
+     "light": 1,
+     "floor": "1",
+     "asking": 980
+    },
+    {
+     "id": "h8r6",
+     "label": "Basement room",
+     "sqft": 150,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 945
+    }
+   ]
+  },
+  {
+   "id": "h9",
+   "name": "South Forest Ave house, 6 bed",
+   "area": "South Central",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.27026,
+   "lon": -83.73318,
+   "street": "South Forest Avenue",
+   "rent": 6100,
+   "utilities": 370,
+   "rooms": [
+    {
+     "id": "h9r1",
+     "label": "Primary with bath",
+     "sqft": 210,
+     "bath": "private",
+     "light": 2,
+     "floor": "2",
+     "asking": 1100
+    },
+    {
+     "id": "h9r2",
+     "label": "Attic room",
+     "sqft": 230,
+     "bath": "shared",
+     "light": 1,
+     "floor": "attic",
+     "asking": 1045
+    },
+    {
+     "id": "h9r3",
+     "label": "Front room",
+     "sqft": 150,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 1010
+    },
+    {
+     "id": "h9r4",
+     "label": "Small room",
+     "sqft": 95,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 960
+    },
+    {
+     "id": "h9r5",
+     "label": "Parlor room",
+     "sqft": 155,
+     "bath": "half",
+     "light": 1,
+     "floor": "1",
+     "asking": 1020
+    },
+    {
+     "id": "h9r6",
+     "label": "Basement room",
+     "sqft": 125,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 965
+    }
+   ]
+  },
+  {
+   "id": "h10",
+   "name": "Catherine St house, 4 bed",
+   "area": "Medical Campus",
+   "kind": "house",
+   "irregular": true,
+   "lat": 42.28296,
+   "lon": -83.74108,
+   "street": "Catherine Street",
+   "rent": 3600,
+   "utilities": 270,
+   "rooms": [
+    {
+     "id": "h10r1",
+     "label": "Front room",
+     "sqft": 155,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 915
+    },
+    {
+     "id": "h10r2",
+     "label": "Back room",
+     "sqft": 125,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 875
+    },
+    {
+     "id": "h10r3",
+     "label": "Parlor room",
+     "sqft": 150,
+     "bath": "half",
+     "light": 1,
+     "floor": "1",
+     "asking": 915
+    },
+    {
+     "id": "h10r4",
+     "label": "Basement room",
+     "sqft": 175,
+     "bath": "shared",
+     "light": 0,
+     "floor": "basement",
+     "asking": 895
+    }
+   ]
+  },
+  {
+   "id": "h11",
+   "name": "Vaughn St house, 4 bed",
+   "area": "South Central",
+   "kind": "house",
+   "irregular": false,
+   "lat": 42.26897,
+   "lon": -83.73735,
+   "street": "Vaughn Street",
+   "rent": 3800,
+   "utilities": 280,
+   "rooms": [
+    {
+     "id": "h11r1",
+     "label": "Room 1",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 950
+    },
+    {
+     "id": "h11r2",
+     "label": "Room 2",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 950
+    },
+    {
+     "id": "h11r3",
+     "label": "Room 3",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 950
+    },
+    {
+     "id": "h11r4",
+     "label": "Room 4",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 950
+    }
+   ]
+  },
+  {
+   "id": "h12",
+   "name": "Prospect St house, 3 bed",
+   "area": "Burns Park",
+   "kind": "house",
+   "irregular": false,
+   "lat": 42.26803,
+   "lon": -83.73439,
+   "street": "Prospect Street",
+   "rent": 2850,
+   "utilities": 240,
+   "rooms": [
+    {
+     "id": "h12r1",
+     "label": "Room 1",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 950
+    },
+    {
+     "id": "h12r2",
+     "label": "Room 2",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 950
+    },
+    {
+     "id": "h12r3",
+     "label": "Room 3",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 950
+    }
+   ]
+  },
+  {
+   "id": "h13",
+   "name": "West Washington St house, 3 bed",
+   "area": "Old West Side",
+   "kind": "house",
+   "irregular": false,
+   "lat": 42.28087,
+   "lon": -83.76058,
+   "street": "West Washington Street",
+   "rent": 2700,
+   "utilities": 230,
+   "rooms": [
+    {
+     "id": "h13r1",
+     "label": "Room 1",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 910
+    },
+    {
+     "id": "h13r2",
+     "label": "Room 2",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 895
+    },
+    {
+     "id": "h13r3",
+     "label": "Room 3",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 895
+    }
+   ]
+  },
+  {
+   "id": "h14",
+   "name": "Hiscock St house, 4 bed",
+   "area": "Kerrytown",
+   "kind": "house",
+   "irregular": false,
+   "lat": 42.28857,
+   "lon": -83.74927,
+   "street": "Hiscock Street",
+   "rent": 3500,
+   "utilities": 260,
+   "rooms": [
+    {
+     "id": "h14r1",
+     "label": "Room 1",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 875
+    },
+    {
+     "id": "h14r2",
+     "label": "Room 2",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 875
+    },
+    {
+     "id": "h14r3",
+     "label": "Room 3",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 875
+    },
+    {
+     "id": "h14r4",
+     "label": "Room 4",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 875
+    }
+   ]
+  },
+  {
+   "id": "h15",
+   "name": "Kellogg St house, 3 bed",
+   "area": "Lower Town",
+   "kind": "house",
+   "irregular": false,
+   "lat": 42.29332,
+   "lon": -83.74204,
+   "street": "Kellogg Street",
+   "rent": 2600,
+   "utilities": 230,
+   "rooms": [
+    {
+     "id": "h15r1",
+     "label": "Room 1",
+     "sqft": 140,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 870
+    },
+    {
+     "id": "h15r2",
+     "label": "Room 2",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 865
+    },
+    {
+     "id": "h15r3",
+     "label": "Room 3",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 865
+    }
+   ]
+  },
+  {
+   "id": "h16",
+   "name": "South University Ave apartment, 2 bed",
+   "area": "East University",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.27508,
+   "lon": -83.72986,
+   "street": "South University Avenue",
+   "rent": 3050,
+   "utilities": 140,
+   "rooms": [
+    {
+     "id": "h16r1",
+     "label": "Bedroom 1",
+     "sqft": 130,
+     "bath": "private",
+     "light": 2,
+     "floor": "2",
+     "asking": 1535
+    },
+    {
+     "id": "h16r2",
+     "label": "Bedroom 2",
+     "sqft": 120,
+     "bath": "private",
+     "light": 1,
+     "floor": "2",
+     "asking": 1515
+    }
+   ]
+  },
+  {
+   "id": "h17",
+   "name": "Elm St apartment, 1 bed",
+   "area": "East University",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.27572,
+   "lon": -83.73066,
+   "street": "Elm Street",
+   "rent": 1650,
+   "utilities": 100,
+   "rooms": [
+    {
+     "id": "h17r1",
+     "label": "Bedroom",
+     "sqft": 140,
+     "bath": "private",
+     "light": 1,
+     "floor": "2",
+     "asking": 1650
+    }
+   ]
+  },
+  {
+   "id": "h18",
+   "name": "Washtenaw Ct apartment, 2 bed",
+   "area": "East University",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.27709,
+   "lon": -83.73396,
+   "street": "Washtenaw Court",
+   "rent": 2700,
+   "utilities": 130,
+   "rooms": [
+    {
+     "id": "h18r1",
+     "label": "Bedroom 1",
+     "sqft": 125,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1350
+    },
+    {
+     "id": "h18r2",
+     "label": "Bedroom 2",
+     "sqft": 120,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1350
+    }
+   ]
+  },
+  {
+   "id": "h19",
+   "name": "Arch St apartment, 2 bed",
+   "area": "South Central",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.26907,
+   "lon": -83.74047,
+   "street": "Arch Street",
+   "rent": 2450,
+   "utilities": 120,
+   "rooms": [
+    {
+     "id": "h19r1",
+     "label": "Bedroom 1",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 1240
+    },
+    {
+     "id": "h19r2",
+     "label": "Bedroom 2",
+     "sqft": 115,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1210
+    }
+   ]
+  },
+  {
+   "id": "h20",
+   "name": "Cambridge Rd apartment, 3 bed",
+   "area": "Burns Park",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.27001,
+   "lon": -83.73093,
+   "street": "Cambridge Road",
+   "rent": 3150,
+   "utilities": 160,
+   "rooms": [
+    {
+     "id": "h20r1",
+     "label": "Bedroom 1",
+     "sqft": 140,
+     "bath": "private",
+     "light": 1,
+     "floor": "1",
+     "asking": 1095
+    },
+    {
+     "id": "h20r2",
+     "label": "Bedroom 2",
+     "sqft": 120,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 1030
+    },
+    {
+     "id": "h20r3",
+     "label": "Bedroom 3",
+     "sqft": 110,
+     "bath": "shared",
+     "light": 1,
+     "floor": "1",
+     "asking": 1025
+    }
+   ]
+  },
+  {
+   "id": "h21",
+   "name": "North Fifth Ave apartment, 1 bed",
+   "area": "Kerrytown",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.28644,
+   "lon": -83.74569,
+   "street": "North Fifth Avenue",
+   "rent": 1550,
+   "utilities": 95,
+   "rooms": [
+    {
+     "id": "h21r1",
+     "label": "Bedroom",
+     "sqft": 135,
+     "bath": "private",
+     "light": 2,
+     "floor": "2",
+     "asking": 1550
+    }
+   ]
+  },
+  {
+   "id": "h22",
+   "name": "Detroit St apartment, 2 bed",
+   "area": "Kerrytown",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.28705,
+   "lon": -83.74369,
+   "street": "Detroit Street",
+   "rent": 2500,
+   "utilities": 120,
+   "rooms": [
+    {
+     "id": "h22r1",
+     "label": "Bedroom 1",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 2,
+     "floor": "2",
+     "asking": 1265
+    },
+    {
+     "id": "h22r2",
+     "label": "Bedroom 2",
+     "sqft": 115,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1235
+    }
+   ]
+  },
+  {
+   "id": "h23",
+   "name": "Plymouth Rd apartment, 2 bed",
+   "area": "North Campus",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.30047,
+   "lon": -83.71615,
+   "street": "Plymouth Road",
+   "rent": 2050,
+   "utilities": 120,
+   "rooms": [
+    {
+     "id": "h23r1",
+     "label": "Bedroom 1",
+     "sqft": 135,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1025
+    },
+    {
+     "id": "h23r2",
+     "label": "Bedroom 2",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1025
+    }
+   ]
+  },
+  {
+   "id": "h24",
+   "name": "Commonwealth Blvd apartment, 3 bed",
+   "area": "North Campus",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.30477,
+   "lon": -83.6966,
+   "street": "Commonwealth Boulevard",
+   "rent": 2700,
+   "utilities": 150,
+   "rooms": [
+    {
+     "id": "h24r1",
+     "label": "Bedroom 1",
+     "sqft": 140,
+     "bath": "private",
+     "light": 1,
+     "floor": "2",
+     "asking": 940
+    },
+    {
+     "id": "h24r2",
+     "label": "Bedroom 2",
+     "sqft": 125,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 880
+    },
+    {
+     "id": "h24r3",
+     "label": "Bedroom 3",
+     "sqft": 120,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 880
+    }
+   ]
+  },
+  {
+   "id": "h25",
+   "name": "Broadview Ln apartment, 1 bed",
+   "area": "North Campus",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.29762,
+   "lon": -83.723,
+   "street": "Broadview Lane",
+   "rent": 1300,
+   "utilities": 90,
+   "rooms": [
+    {
+     "id": "h25r1",
+     "label": "Bedroom",
+     "sqft": 140,
+     "bath": "private",
+     "light": 1,
+     "floor": "1",
+     "asking": 1300
+    }
+   ]
+  },
+  {
+   "id": "h26",
+   "name": "Glen Ct apartment, 1 bed",
+   "area": "Medical Campus",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.28496,
+   "lon": -83.73576,
+   "street": "Glen Court",
+   "rent": 1500,
+   "utilities": 95,
+   "rooms": [
+    {
+     "id": "h26r1",
+     "label": "Bedroom",
+     "sqft": 125,
+     "bath": "private",
+     "light": 1,
+     "floor": "2",
+     "asking": 1500
+    }
+   ]
+  },
+  {
+   "id": "h27",
+   "name": "North Ingalls St apartment, 2 bed",
+   "area": "Medical Campus",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.28134,
+   "lon": -83.73845,
+   "street": "North Ingalls Street",
+   "rent": 2400,
+   "utilities": 120,
+   "rooms": [
+    {
+     "id": "h27r1",
+     "label": "Bedroom 1",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1205
+    },
+    {
+     "id": "h27r2",
+     "label": "Bedroom 2",
+     "sqft": 120,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1195
+    }
+   ]
+  },
+  {
+   "id": "h28",
+   "name": "Second St apartment, 1 bed",
+   "area": "Old West Side",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.27603,
+   "lon": -83.75232,
+   "street": "Second Street",
+   "rent": 1400,
+   "utilities": 90,
+   "rooms": [
+    {
+     "id": "h28r1",
+     "label": "Bedroom",
+     "sqft": 130,
+     "bath": "private",
+     "light": 2,
+     "floor": "1",
+     "asking": 1400
+    }
+   ]
+  },
+  {
+   "id": "h29",
+   "name": "Wright St apartment, 2 bed",
+   "area": "Lower Town",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.29039,
+   "lon": -83.74095,
+   "street": "Wright Street",
+   "rent": 2100,
+   "utilities": 115,
+   "rooms": [
+    {
+     "id": "h29r1",
+     "label": "Bedroom 1",
+     "sqft": 130,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1055
+    },
+    {
+     "id": "h29r2",
+     "label": "Bedroom 2",
+     "sqft": 120,
+     "bath": "shared",
+     "light": 1,
+     "floor": "2",
+     "asking": 1045
+    }
+   ]
+  },
+  {
+   "id": "h30",
+   "name": "Canal St apartment, 1 bed",
+   "area": "Lower Town",
+   "kind": "apartment",
+   "irregular": false,
+   "lat": 42.28847,
+   "lon": -83.73868,
+   "street": "Canal Street",
+   "rent": 1350,
+   "utilities": 90,
+   "rooms": [
+    {
+     "id": "h30r1",
+     "label": "Bedroom",
+     "sqft": 135,
+     "bath": "private",
+     "light": 1,
+     "floor": "2",
+     "asking": 1350
+    }
+   ]
+  }
+ ]
+}

@@ -8,17 +8,23 @@ Outputs in web/public/data/streets/:
   walk_csr.bin     Int32 offsets (n+1), then Int32 targets, then Float32 lengths (m)
   bike_csr.bin     same layout over the same node ids, directed (one-ways respected)
   streets.geojson  simplified street lines for the offline basemap
-Also rewrites transit/meta.json footpaths with network distances.
+Also rewrites transit/meta.json footpaths with network distances (footpaths_street), then applies the
+transfers.txt rules (max(walk, min_transfer_time) for named pairs) to give footpaths.
+Every output is written to a temporary name and renamed, so concurrent readers never see half a file.
 
 Data: OpenStreetMap contributors, ODbL. Downloaded through osmnx (Overpass API).
 """
 import json
 import math
+import sys
 from pathlib import Path
 
 import networkx as nx
 import numpy as np
 import osmnx as ox
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_transit import apply_transfers, atomic_write  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = ROOT / "data" / "raw" / "osm"
@@ -57,7 +63,7 @@ def main():
     idx = {n: i for i, n in enumerate(ids)}
     lat = np.array([walk.nodes[n]["y"] if n in walk.nodes else bike.nodes[n]["y"] for n in ids], dtype="<f4")
     lon = np.array([walk.nodes[n]["x"] if n in walk.nodes else bike.nodes[n]["x"] for n in ids], dtype="<f4")
-    np.stack([lat, lon], axis=1).astype("<f4").tofile(OUT / "walk_nodes.bin")
+    atomic_write(OUT / "walk_nodes.bin", np.stack([lat, lon], axis=1).astype("<f4").tobytes())
 
     def csr(g, undirected):
         adj = [dict() for _ in ids]
@@ -77,8 +83,7 @@ def main():
 
     for name, g, und in (("walk_csr.bin", walk, True), ("bike_csr.bin", bike, False)):
         off, tgt, ln = csr(g, und)
-        with open(OUT / name, "wb") as f:
-            f.write(off.tobytes()); f.write(tgt.tobytes()); f.write(ln.tobytes())
+        atomic_write(OUT / name, off.tobytes() + tgt.tobytes() + ln.tobytes())
         print(f"{name}: {len(tgt)} arcs")
 
     # Street-network transfer footpaths between stops.
@@ -100,11 +105,14 @@ def main():
                 if j != i and snap_d[j] <= MAX_SNAP_M:
                     total = snap_d[i] + d + snap_d[j]
                     foot.append([i, j, int(round(total / WALK_MS))])
-    meta["footpaths"] = foot
-    meta["footpath_source"] = f"OpenStreetMap walk network, <= {FOOTPATH_MAX_M} m, {WALK_MS} m/s"
+    meta["footpaths_street"] = foot
+    meta["footpaths"], added = apply_transfers(foot, meta.get("transfers", []), stops)
+    meta["footpath_source"] = (f"OpenStreetMap walk network, <= {FOOTPATH_MAX_M} m, {WALK_MS} m/s; "
+                               "max(walk, min_transfer_time) for pairs named in transfers.txt")
     meta["stop_snap"] = [[idx[n], round(float(d), 1)] for n, d in zip(snap_nodes, snap_d)]
-    TRANSIT.write_text(json.dumps(meta, separators=(",", ":")), encoding="utf-8")
-    print(f"footpaths: {len(foot)}; max stop snap {max(snap_d):.0f} m")
+    atomic_write(TRANSIT, json.dumps(meta, separators=(",", ":")))
+    print(f"footpaths: {len(foot)} street, {len(meta['footpaths'])} after transfers.txt rules "
+          f"({added} named pairs added); max stop snap {max(snap_d):.0f} m")
 
     # Basemap: simplified named streets only, rounded coordinates.
     simple = ox.simplify_graph(walk.copy()) if not walk.graph.get("simplified") else walk
@@ -128,8 +136,8 @@ def main():
         name = name[0] if isinstance(name, list) else name
         feats.append({"type": "Feature", "properties": {"k": hw, **({"n": name} if name else {})},
                       "geometry": {"type": "LineString", "coordinates": coords}})
-    (OUT / "streets.geojson").write_text(json.dumps({"type": "FeatureCollection", "features": feats},
-                                                    separators=(",", ":")), encoding="utf-8")
+    atomic_write(OUT / "streets.geojson", json.dumps({"type": "FeatureCollection", "features": feats},
+                                                     separators=(",", ":")))
     for f in sorted(OUT.iterdir()):
         print(f"  {f.name}: {f.stat().st_size / 1e6:.2f} MB")
 

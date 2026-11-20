@@ -1,0 +1,34 @@
+/* Quorum design tokens. ui-views uses only the names listed in engine/CONTRACTS.md.
+   Look: a printed transit timetable and a newspaper table. Warm paper, ink, route colors from GTFS. */
+:root {
+  --paper: #f5f0e4;        /* page */
+  --paper-2: #ece5d3;      /* panels set on the page, table stripes */
+  --ink: #1c1a16;          /* text, rules */
+  --ink-2: #3d3830;        /* secondary text */
+  --muted: #736b5d;        /* captions, units */
+  --line: #cdc3ad;         /* hairlines */
+  --accent: #b23a1c;       /* timetable red: selection, primary action */
+  --accent-ink: #fff9ef;   /* text on accent */
+  --good: #2d6a3e;
+  --bad: #9a1f1f;
+  --warn: #a8700d;
+  --dark-walk: #27305a;    /* minutes walked or biked after civil dusk */
+
+  /* mode colors (shell only; ui-views should not rely on these) */
+  --walk: #1c1a16;
+  --bike: #2d6a3e;
+  --ride: #2a5c8f;
+  --wait: #a8700d;
+
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-body: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+
+  --r: 3px;
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 40px;
+}

@@ -1,0 +1,104 @@
+# Data in Quorum
+
+What each file in `web/public/data/` is, where it came from, when, under what license, and exactly what is
+synthetic. Real: timetables, streets, places. Synthetic or fictional: homes, rents, rooms, personas, the
+operator population.
+
+## Real data
+
+| Data | Source | Date or version | License or terms | Built by |
+|---|---|---|---|---|
+| TheRide bus timetable | AAATA (TheRide) GTFS, `data/raw/aaata/google_transit.zip`, publisher http://www.theride.org | feed version S1000304, service Nov 15 2026 to Jan 23 2027, downloaded Nov 19 2026 | "Transit scheduling, geographic, and real-time data provided by permission of AAATA/TheRide" (attribution shown in the app footer) | `pipeline/build_transit.py` |
+| U-M bus timetable | U-M Logistics, Transportation and Parking GTFS, `data/raw/umich/google_transit.zip`, publisher https://ltp.umich.edu | feed version S1000100, service Aug 23 2026 to Jan 2 2027, downloaded Nov 19 2026 | "U-M bus schedules: University of Michigan Logistics, Transportation and Parking" (attribution shown in the app footer) | `pipeline/build_transit.py` |
+| Street graphs (walk, bike) and `streets.geojson` | OpenStreetMap through osmnx (Overpass API), cached in `data/raw/osm/` | downloaded Nov 19 2026 | (c) OpenStreetMap contributors, ODbL 1.0 | `pipeline/build_walk.py` |
+| `places.json` (31 places) | OpenStreetMap, Geofabrik Michigan extract `data/raw/osm/michigan-latest.osm.pbf` | extract timestamp 2026-11-19T21:22:20Z | (c) OpenStreetMap contributors, ODbL 1.0 | `pipeline/build_places.py` |
+
+Modeled week: Mon Nov 30 to Sun Dec 6 2026, inside both feeds' service windows. The December timetable stands in
+for the whole fall and winter term (stated on screen; see SYSTEM_DESIGN.md section 10 item 3).
+
+### How places were located
+
+Each place is a fixed OSM element id (way, relation or node) looked up in the local extract. The point is the
+mean of the element's outline vertices, which lies inside or next to the building. `Main St at Liberty` is the
+mean of the OSM nodes shared by the two streets. Each record's `source` field names the element.
+
+Why ids and not a geocoder: on Nov 19 2026 Nominatim returned nothing for the Law Quad, the recreation building
+and Mott, and the earlier build had matched "Main Street, Ann Arbor" to a point on the north side
+(42.30098, -83.69780) and "Kroger, Ann Arbor" to the Maple Rd store. Public Overpass mirrors timed out or failed
+TLS from the build machine. Fixed ids in a dated extract are exact and reproducible.
+
+Every point is checked against a bounding box for its stated area (Central, North, Medical, Downtown, South,
+East, Southwest); the build fails if one falls outside. Fixes over the earlier file:
+
+- Added: Law Quad (Hutchins Hall, way 154203693), Hill Auditorium, Kerrytown Market (way 193502051), C.S. Mott
+  Children's Hospital (way 300848288), Downtown Library (AADL), and the Central Campus recreation building.
+- The old Central Campus Recreation Building site holds the Hadley Family Recreation and Well-Being Center in OSM
+  (way 1357847242, 401 Washtenaw Ave). The place keeps the id `ccrb` and is labeled "Central Campus Rec (Hadley
+  Center)".
+- `mainst` moved from the north side to the Main and Liberty intersection downtown (42.27959, -83.74860).
+- There is no Kroger on Packard in OSM. `kroger` is now the Plymouth Rd store (node 2352859060, North), the one
+  closest to student housing on North Campus.
+- G.G. Brown, EECS, Duderstadt, Moore and the Chemistry Building now come from their OSM elements. Their names
+  in OSM contain non-breaking spaces, which is why text search missed them.
+
+## Synthetic and fictional data
+
+### homes.json: SYNTHETIC
+
+30 homes made up for the demo: 15 houses and 15 apartments.
+
+- Real: only the location. Each home sits on a vertex of a named OSM street with `highway=residential` (features
+  with `k == "residential"` in `streets.geojson`), inside a box for its neighborhood: South Central, East
+  University, Kerrytown, Old Fourth Ward, Medical Campus, North Campus, Burns Park, Old West Side, Lower Town.
+  No two homes are closer than 90 m. Names give the street and the type, never a house number, for example
+  "Broadway St house, 5 bed".
+- Made up: the existence of each home, its rooms, sizes, bathrooms, daylight levels, floors, whole-house rent
+  and utilities. Rents were set by hand to look plausible for Ann Arbor student housing near campus. They are
+  not drawn from listings and are not market estimates.
+- Per-room `asking` rents are not data either. They split the house rent by a simple rule at the prior medians
+  in `engine/model.js` (private bath $60, half bath $30, $8 per 10 sq ft over 120, $20 per daylight level),
+  scaled by 0.8 and rounded to $5, so the rooms sum to the house rent.
+- Mix: 6 houses with exactly 5 rooms (h1 to h6) for the group of five; 9 irregular houses (`irregular: true`:
+  attic and basement rooms, unequal sizes, five with a private-bath room); 6 regular houses; apartments with
+  1 to 3 bedrooms.
+- Extra fields beyond the contract: `irregular` (bool) and `street` (the OSM street name).
+
+### personas.json: FICTIONAL
+
+Six made-up students. Each carries `label: "FICTIONAL persona..."`, a private cap, mode limits, a `theta` used only
+to auto-answer demo picks (labeled "demo values" in the UI), and a week with `p` and `alt` per entry. Places
+are real (ids in `places.json`); the people, schedules and values are invented.
+
+| id | Week | Group | Cap |
+|---|---|---|---|
+| jordan | North Campus engineer: Beyster and EECS Mon Wed Fri, project team Tue Thu, late lab at the Duderstadt Center Tue Thu 19:00 to 23:30 (p 0.8; alt: Shapiro Library on Central, p 0.3), no bike. Golden path. | yes | $1000 |
+| maya | Nursing: University Hospital clinical Tue Thu from 06:30 (alt: Mott, p 0.4), classes at the School of Nursing, study at Taubman Library | yes | $980 |
+| priya | Ross classes, shop job at Kerrytown Market Mon Wed Thu evenings and Saturday (alt: Main St at Liberty, p 0.3), bikes | yes | $875 (tight) |
+| leo | LSA: Angell Hall and the Chemistry Building, Shapiro Library until 23:00 (alt: Hatcher), Intramural Sports Building gym, bikes | yes | $960 |
+| sam | Music: Moore Building classes, rehearsals until 22:00 (alt: Hill Auditorium, p 0.3), Saturday practice, no bike | yes | $1000 |
+| noor | Law, Central only: Law Quad classes, Hatcher Library (alt: Shapiro), early gym at the Central Campus rec center | no (Me mode) | $1500 |
+
+`group: true` marks the five members of the demo group.
+
+Priya's cap is the tight one. With the current engine (fair.js, Spliddit normalization, commute compensation off)
+the group's top house is h3 (Broadway St house, 5 bed, Lower Town). Priya's envy-free share there is $859. The
+lowest cap that keeps h3 feasible is $855. Her stated cap of $875 is feasible; a cut of $25 or more makes h3
+infeasible. `scripts/check_data.mjs` re-checks this on every run (it cuts each cap by $50).
+
+### Operator population: SYNTHETIC
+
+Built by `engine/operator.js` and `scripts/build_operator.mjs` (decide builder) from the shares in
+`engine/config.js` (`marginals`), drawn independently. Not described here beyond that.
+
+## What we do not have
+
+No real listings, rents, room sizes or occupancy. No student data of any kind. No street lighting data and no
+crime data. No live or real-time bus data: the timetables are scheduled service only.
+
+## Rebuild and check
+
+```
+python pipeline/build_places.py     # about 60 s, reads the local Michigan extract, no network
+python pipeline/build_homes.py      # under 1 s, reads streets.geojson
+node scripts/check_data.mjs         # about 2 s: schema, labels, ASCII, every persona week from every home, group caps
+```
