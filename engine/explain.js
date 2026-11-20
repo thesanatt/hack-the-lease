@@ -11,7 +11,7 @@
 // home (the median of each piece over every home); its dollar impact is that difference. Reasons are ranked by
 // dollar impact. The best room per home is the one decide.homeOption picks under theta.
 //
-// explainAll({ homes, weekMap, theta, cfg, places, modes }) -> Map homeId -> Note
+// explainAll({ homes, weekMap, theta, cfg, places, modes, roomIds? }) -> Map homeId -> Note
 // explainHome({ home, ...same }) -> Note
 // compareHomes(ctx, aId, bId) -> { gap, drivers, rentToFlip, flip }   (ctx = explainContext(...))
 // Note = { homeId, roomId, roomLabel, rent, total, vsMiddle, rankUnder, headline, fits: [Reason], watch: [Reason],
@@ -23,7 +23,7 @@
 
 import { CONFIG } from './config.js';
 import { PARAMS, phi, roomFeatures, utility } from './model.js';
-import { homeOption } from './decide.js';
+import { homeOption, roomPrice } from './decide.js';
 
 export const PIECES = ['rent', 'time', 'dark', 'strand', 'bath', 'size', 'light'];
 
@@ -161,13 +161,23 @@ function strandNote(trip, homeId, places, capMin) {
 
 // ---------------------------------------------------------------- context
 
+// The option for one home. By default the best room under theta (decide.homeOption). roomIds (Map or object,
+// homeId -> roomId) pins the room, for example to the room the ranking picked, so every panel names one room.
+function optionFor(home, week, theta, cfg, roomIds) {
+  const o = homeOption(home, week, theta, cfg);
+  const want = roomIds ? (typeof roomIds.get === 'function' ? roomIds.get(home.id) : roomIds[home.id]) : null;
+  if (want == null || o.roomId === want) return o;
+  const room = (home.rooms || []).find((r) => r.id === want);
+  return room ? { ...o, roomId: room.id, room, rent: roomPrice(home, room) } : o;
+}
+
 // Everything needed to explain any home: options, pieces and the middle home, computed once.
-export function explainContext({ homes, weekMap, theta, cfg = CONFIG, places = null, modes = null }) {
+export function explainContext({ homes, weekMap, theta, cfg = CONFIG, places = null, modes = null, roomIds = null }) {
   const rows = new Map();
   for (const home of homes) {
     const week = weekMap?.get(home.id);
     if (!week) continue;
-    const option = homeOption(home, week, theta, cfg);
+    const option = optionFor(home, week, theta, cfg, roomIds);
     const p = pieces(theta, option);
     rows.set(home.id, { home, week, option, p, u: sumPieces(p) });
   }

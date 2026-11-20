@@ -14,12 +14,14 @@ const FAR = Math.log(4); // a flip that needs a value 4x away from the median is
 export function useNotes({ api, homes, weekMap, ranked, summary, cfg, persona }) {
   const ex = api.mod('explain');
   const theta = useMemo(() => ranked?.mean || (summary ? medians(summary) : null), [ranked, summary]);
+  // Pin each home to the room the ranking picked, so the cards, the Why panel and the ranking name one room.
+  const roomIds = useMemo(() => (ranked?.rank ? new Map(ranked.rank.map((r) => [r.homeId, r.roomId])) : null), [ranked]);
   const notes = useMemo(() => {
     if (!ex?.explainAll || !weekMap || !theta) return null;
     try {
-      return ex.explainAll({ homes, weekMap, theta, cfg, places: api.data.placeById, modes: persona?.modes });
+      return ex.explainAll({ homes, weekMap, theta, cfg, places: api.data.placeById, modes: persona?.modes, roomIds });
     } catch (e) { console.error(e); return null; }
-  }, [ex, weekMap, theta, cfg, homes, persona]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ex, weekMap, theta, cfg, homes, persona, roomIds]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { publishNotes(notes); }, [notes]);
   useEffect(() => () => publishNotes(null), []);
   return notes;

@@ -21,7 +21,7 @@
 .you-hero { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: start; }
 .you-map { position: relative; border: 1px solid var(--y-line); border-radius: 8px; overflow: hidden; background: var(--y-card); }
 .you-map .map { border: 0; }
-.you-map-cap { position: absolute; left: 10px; bottom: 10px; margin: 0; font-size: 13px; background: var(--y-card);
+.you-map-cap { position: absolute; left: 10px; bottom: 50px; margin: 0; font-size: 13px; background: var(--y-card);
   border: 1px solid var(--y-line); border-radius: 8px; padding: 4px 10px; max-width: calc(100% - 20px); }
 .you-top h2 { margin-bottom: 10px; }
 
@@ -51,7 +51,7 @@
 .t3-num .u { font-size: 13px; font-weight: 400; color: var(--y-gray); margin-left: 2px; }
 .t3-num .l { font-size: 13px; color: var(--y-gray); white-space: nowrap; }
 .t3-ribbon svg { display: block; width: 100%; height: auto; }
-.t3-ribbon .weekstrip text { font-size: 8px; fill: var(--y-gray); }
+.t3-ribbon .weekstrip text { font-size: 9px; fill: var(--y-gray); }
 .t3-why { margin: 0; font-size: 13px; color: var(--y-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t3-why b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .t3-why b.good { color: var(--y-fit); }

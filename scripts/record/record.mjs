@@ -85,8 +85,8 @@ async function main() {
 
   log('you: cheapest rent on the chart');
   await key('End');
-  await scrollTo('The cheapest rent saves');
-  await caption('Trade-offs: the square is the cheapest rent, Georgetown Blvd. It saves $2 a month but costs Jordan $187 more once time and late nights count.');
+  await scrollTo('The cheapest rent, rooms from');
+  await caption('Trade-offs: the square is the cheapest rent, Georgetown Blvd, rooms from $821. It costs Jordan $187 a month more once time and late nights count.');
   await wait(6);
   try {
     const r = page.locator('.to-chart svg rect').first();
@@ -160,10 +160,10 @@ async function main() {
   log('owners');
   await tab('Owners');
   await wait(2);
-  await caption('Owners: each room\'s fair rent range from 200 sample groups, against the asking rent. At Church St the back room asks $12 too much.');
+  await caption('Owners: each room\'s fair rent range from 200 sample groups, against the asking rent. At Church St the back room asks $12 too much, the basement $5.');
   await wait(8);
   await scrollTo('Add a half bath');
-  await caption('A half bath in the basement moves $32 a month to that room from the others, at the same house rent. The bath value is an assumption.');
+  await caption('A half bath in the basement raises that room\'s fair rent $32 a month and lowers the others, at the same house rent. The bath value is an assumption.');
   await wait(8);
 
   log('pitch slides 4 and 5');

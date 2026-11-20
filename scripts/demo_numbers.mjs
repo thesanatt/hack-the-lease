@@ -324,7 +324,7 @@ home.rooms.forEach((rm, j) => { const r = op.rooms[j]; say(`   ${rm.label.padEnd
   const gaps = home.rooms.map((rm, j) => ({ label: rm.label, asking: rm.asking, fair: op.rooms[j].p50, gap: rm.asking - op.rooms[j].p50 }));
   say(`asking minus fair (p50): ${gaps.map((g) => `${g.label} ${g.gap >= 0 ? '+' : ''}${usd(g.gap)}`).join('; ')}`);
   // Same rule as the Owners house chart (web/src/views/operator/viz.js): a room is priced off when its asking rent
-  // sits at least NEAR dollars past either end of its fair range; the label is the distance to that end.
+  // sits outside its fair range; the label is the distance to that end.
   const st = home.rooms.map((rm, j) => ({ label: rm.label, s: roomState(rm.asking, op.rooms[j]), d: outside(rm.asking, op.rooms[j]) }));
   const offR = st.filter((x) => x.s === 'over' || x.s === 'under');
   say(`headline "${offR.length} of ${home.rooms.length} rooms priced off"${offR.length ? `: ${offR.map((x) => `${x.label} "${usd(x.d)} ${x.s}"`).join('; ')}` : ''}`);
@@ -349,7 +349,8 @@ if (reno) {
 // Same call as the card: the most likely week, every value at its posterior median (rankNow's mean).
 for (const [lbl, r] of [['before any pick', r0], ['after Auto-answer until done', r1]]) {
   H(`7. Me verdict card, Jordan, ${lbl}`);
-  const notes = explain.explainAll({ homes, weekMap, theta: r.mean, cfg, places: placeById, modes: jordan.modes });
+  // Rooms pinned to the ranking's picks, as the app does (Verdict.jsx useNotes).
+  const notes = explain.explainAll({ homes, weekMap, theta: r.mean, cfg, places: placeById, modes: jordan.modes, roomIds: new Map(r.rank.map((x) => [x.homeId, x.roomId])) });
   const bestId = r.rank[0].homeId, row = r.rank[0], note = notes.get(bestId);
   say(`title: "Best for Jordan's week: ${nm(bestId)}"`);
   say(`facts: ${usd(note.roomLabel && Number.isFinite(note.rent) ? note.rent : row.price)}/mo rent and utilities, ${note.roomLabel || row.roomLabel}; ${usd(-row.meanU)}/mo cost to you; ${Math.floor(weekMap.get(bestId).weeklyMin / 60)}h ${Math.round(weekMap.get(bestId).weeklyMin % 60)}m door to door a week; best in ${Math.round(100 * row.pBest)}% of possible weeks`);
@@ -384,7 +385,7 @@ for (const [lbl, r] of [['before any pick', r0], ['after Auto-answer until done'
       if (!r) return '(no reason line)';
       used.add(r.key);
       const good = r.dollars >= 0;
-      return `${SHORT[r.key] ? SHORT[r.key](good) : r.label} ${good ? '+' : '-'}${usd(Math.abs(r.dollars))}/mo vs a typical home`;
+      return `${SHORT[r.key] ? SHORT[r.key](good) : r.label}: ${usd(Math.abs(r.dollars))}/mo ${good ? 'better' : 'worse'} than a typical home`;
     });
   };
   const nights = (w) => new Set(w.trips.filter((t) => t.stranded || t.darkMin > 0).map((t) => t.day)).size;
@@ -393,23 +394,24 @@ for (const [lbl, r] of [['before any pick', r0], ['after Auto-answer until done'
   for (const [lbl, r, ents] of cases) {
     H(`10. You view, Your top 3, ${lbl}`);
     const wm = weekFor(modalRoutine(ents, jordan.modes), homeIds);
-    const notes = explain.explainAll({ homes, weekMap: wm, theta: r.mean, cfg, places: placeById, modes: jordan.modes });
+    const notes = explain.explainAll({ homes, weekMap: wm, theta: r.mean, cfg, places: placeById, modes: jordan.modes, roomIds: new Map(r.rank.map((x) => [x.homeId, x.roomId])) });
     const top = r.rank.slice(0, 3);
     const why = reasons(notes, top.map((x) => x.homeId));
     top.forEach((row, i) => {
       const w = wm.get(row.homeId);
-      say(`#${i + 1} ${nm(row.homeId)}, ${row.roomLabel || notes.get(row.homeId)?.roomLabel}: ${usd(-row.meanU)}/mo cost to you, ${usd(row.price)} rent; ${hrs(w.weeklyMin)} h/wk getting around; ${nights(w)}/wk late nights; "${why[i]}"`);
+      say(`#${i + 1} ${nm(row.homeId)}, ${row.roomLabel || notes.get(row.homeId)?.roomLabel}, ${usd(row.price)}/mo with utilities: ${usd(-row.meanU)}/mo cost to you; ${hrs(w.weeklyMin)} h/wk getting around; ${nights(w)}/wk late nights; "${why[i]}"`);
     });
-    const pts = r.rank.map((x) => ({ id: x.homeId, price: x.price, x: -x.meanU, y: wm.get(x.homeId).weeklyMin / 60 }));
-    const tp = pts[0], ch = pts.reduce((a, b) => (b.price < a.price ? b : a), pts[0]);
-    if (ch.id === tp.id) say(`Trade-offs sentence: "Your top pick also has the cheapest rent, at ${hrs(ch.y * 60)} hours a week."`);
+    // Same rule as web/src/views/me/Tradeoff.jsx: the cheapest rent is the home with the cheapest room ("From").
+    const fromOf = (id) => { const h = homeById.get(id); return Math.min(...h.rooms.map((rm) => (rm.asking ?? h.rent / h.rooms.length) + (h.utilities || 0) / h.rooms.length)); };
+    const pts = r.rank.map((x) => ({ id: x.homeId, price: x.price, from: fromOf(x.homeId), x: -x.meanU, y: wm.get(x.homeId).weeklyMin / 60 }));
+    const tp = pts[0], ch = pts.reduce((a, b) => (b.from < a.from ? b : a), pts[0]);
+    if (ch.id === tp.id) say(`Trade-offs sentence: "Your top pick also has the cheapest rent, rooms from ${usd(ch.from)} a month."`);
     else {
-      // Same rule as web/src/views/me/Tradeoff.jsx: lead with money when the cheapest rent costs more.
-      const dCost = ch.x - tp.x, dRent = tp.price - ch.price, d = ch.y - tp.y;
-      const line = dCost >= 1 && dRent >= 0
-        ? `The cheapest rent saves ${usd(dRent)} a month but costs you ${usd(dCost)} more, once time and late nights count.`
+      const dCost = ch.x - tp.x, d = ch.y - tp.y;
+      const line = dCost >= 1
+        ? `The cheapest rent, rooms from ${usd(ch.from)}, costs you ${usd(dCost)} a month more than your top pick, once time and late nights count.`
         : `The cheapest rent costs you ${hrs(ch.y * 60)} hours a week, ${hrs(Math.abs(d) * 60)} ${d >= 0 ? 'more' : 'fewer'} than your top pick.`;
-      say(`Trade-offs sentence: "${line}" Key: "Cheapest rent, ${usd(ch.price)}, ${nm(ch.id)}"`);
+      say(`Trade-offs sentence: "${line}" Key: "Cheapest rent, from ${usd(ch.from)}, ${nm(ch.id)}"`);
     }
   }
 }

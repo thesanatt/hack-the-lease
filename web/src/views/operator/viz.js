@@ -20,13 +20,14 @@ export function floorsOf(rooms) {
     .map(([floor, list]) => ({ floor, name: floorName(floor), below: floor === 'basement', rooms: list }));
 }
 
-// Where the asking rent sits against the fair range (p10 to p90 across sample groups). A room counts as priced
-// off only when it is at least `near` dollars a month outside the range (same $10 rule as fit.js).
-export const NEAR = 10;
+// Where the asking rent sits against the fair range (p10 to p90 across sample groups). By default any asking rent
+// outside the drawn range counts as priced off, so the header count matches the chart; pass `near` (dollars a
+// month) to require a margin outside the range instead.
+export const NEAR = 0;
 export function roomState(asking, fair, near = NEAR) {
   if (!Number.isFinite(asking) || !fair || !Number.isFinite(fair.p10) || !Number.isFinite(fair.p90)) return 'none';
-  if (asking >= fair.p90 + near) return 'over';
-  if (asking <= fair.p10 - near) return 'under';
+  if (near > 0 ? asking >= fair.p90 + near : asking > fair.p90) return 'over';
+  if (near > 0 ? asking <= fair.p10 - near : asking < fair.p10) return 'under';
   return 'fair';
 }
 

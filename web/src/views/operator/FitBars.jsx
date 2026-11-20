@@ -21,7 +21,7 @@ export default function FitBars({ fit, all, homes, students, kindCounts, assumpt
   const shortLabel = (b, i) => {
     if (b.other) return b.label;
     const rest = parts[i].filter((t) => !shared.includes(t)).join(' + ');
-    return rest || 'nothing else';
+    return rest || 'no other plans';
   };
 
   return (
@@ -32,7 +32,7 @@ export default function FitBars({ fit, all, homes, students, kindCounts, assumpt
       </div>
       {bars.length ? (
         <>
-          <div className="ow-sub">The kinds of week it wins{shared.length ? `, all ${shared.join(', ')}` : ''}. Each bar: students with that week.</div>
+          <div className="ow-sub">Students whose week it wins{shared.length ? `: all ${shared.join(', ')}, plus` : ''}</div>
           <div className="ow-bars" ref={wrap} role="list">
             {bars.map((b, i) => {
               const lines = b.other

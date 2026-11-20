@@ -46,7 +46,7 @@ function Problem({ api }) {
     <Slide
       title={'"10 minutes from campus." Which campus, which way, what hour?'}
       aside={picker}
-      foot={`Sample listing on real streets. Live on the TheRide and U-M timetables for ${DATE_LABEL}.${ex?.duskS ? ` Dark after ${clock(ex.duskS)}.` : ''}`}
+      foot={`Sample listing on real streets. Live on TheRide and U-M timetables for ${DATE_LABEL}.${ex?.duskS ? ` Dark after ${clock(ex.duskS)}.` : ''}`}
     >
       {ex ? <TripChart ex={ex} /> : <Wait what="The router did not return a result for this home." />}
     </Slide>
@@ -136,7 +136,7 @@ function Legs({ legs, t0, X, y }) {
             <g key={i}>
               <rect x={a} y={y - 5} width={b - a} height={10} rx="3" fill={hex(l.color)}
                 stroke={isLight(hex(l.color)) ? C.ink : 'none'} strokeOpacity="0.7" strokeWidth="1" />
-              {b - a > 26 && <text x={(a + b) / 2} y={y - 10} textAnchor="middle" className="pd-route-t">{l.route}</text>}
+              {b - a > 10 && <text x={(a + b) / 2} y={y - 10} textAnchor="middle" className="pd-route-t">{l.route}</text>}
             </g>
           );
         }
@@ -163,7 +163,7 @@ function Student({ api }) {
   return (
     <Slide
       title="The cheapest rent is not the cheapest home."
-      foot={r ? `${r.persona.name}'s week, a sample student, run through all ${r.n} sample listings on the real timetables.` : null}
+      foot={r ? `${r.persona.name}'s week, a sample student, through all ${r.n} sample listings on the real timetables, at starting values before any picks: the You tab's first screen. Rents include utilities.` : null}
     >
       {st.status === 'running' && <Wait what="Running the week through every home now." />}
       {(st.status === 'missing' || st.status === 'error') && <Wait what="The week or ranking module is not in this build." />}
@@ -172,8 +172,8 @@ function Student({ api }) {
           <div>
             <RentScatter r={r} />
             <div className="pd-pair">
-              <PairKey x={r.cheapest} ring={C.ink} tag="Lowest rent" />
-              {!same && <PairKey x={r.best} ring={C.green} tag={`Best for ${r.persona.name}`} />}
+              <PairKey x={r.cheapest} ring={C.ink} tag="Lowest rent" price={`from ${usd(r.cheapest.from)}`} />
+              {!same && <PairKey x={r.best} ring={C.green} tag={`Best for ${r.persona.name}`} price={usd(r.best.rent)} room={r.best.roomLabel} />}
             </div>
           </div>
           <div className="pd-hero">
@@ -182,7 +182,7 @@ function Student({ api }) {
             ) : (
               <>
                 <div className="pd-hero-v">{usd(r.gap)}<span> a month</span></div>
-                <div className="pd-hero-l">better for {r.persona.name} than the lowest rent, once time, dark walks and trips with no ride count</div>
+                <div className="pd-hero-l">more for {r.persona.name} at the lowest rent than at the best home, once time, dark walks and trips with no ride count</div>
               </>
             )}
           </div>
@@ -192,13 +192,13 @@ function Student({ api }) {
   );
 }
 
-function PairKey({ x, ring, tag }) {
+function PairKey({ x, ring, tag, price, room }) {
   return (
     <div className="pd-pairkey">
       <svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke={ring} strokeWidth="2.5" /></svg>
       <div>
         <b>{tag}</b> <span className="pd-gray">{x.home.name}</span>
-        <div className="pd-pair-n"><span>{usd(x.rent)}<small>/mo rent{x.roomLabel ? `, ${x.roomLabel}` : ''}</small></span><span>{x.weekHours.toFixed(1)}<small> h/wk</small></span><span>{int(x.stranded)}<small> trips a week with no ride</small></span></div>
+        <div className="pd-pair-n"><span>{price}<small>/mo{room ? `, ${room}` : ''}</small></span><span>{x.weekHours.toFixed(1)}<small> h/wk</small></span><span>{int(x.stranded)}<small> trips a week with no ride</small></span></div>
       </div>
     </div>
   );
@@ -360,12 +360,12 @@ function HowItWorks({ api, ev }) {
   const c = api.config || {};
   const stops = [
     { k: 'Timetables, streets', m: 'TheRide, U-M, OpenStreetMap', real: true },
-    { k: 'Router', m: `Connection Scan${f.msPerScan ? `, ${f.msPerScan} ms` : ''}` },
+    { k: 'Router', m: `Connection Scan${f.msPerScan ? `, ${Number(f.msPerScan).toFixed(2)} ms` : ''}` },
     { k: 'Your week', m: 'Every trip, from every home' },
-    { k: 'Picks', m: `About ${c.picksMax ?? 6} questions` },
+    { k: 'Picks', m: `${c.picksMin ?? 3} to ${c.picksMax ?? 6} questions` },
   ];
   const ends = [
-    { k: 'Your best home', m: 'Lowest regret, $ a month' },
+    { k: 'Your best home', m: 'Ranked in dollars a month' },
     { k: 'Fair split', m: 'Envy-free, private caps' },
   ];
   const W = 1200, H = 360, y = 150, xs = [60, 360, 620, 860], fx = 1000, ey = [70, 250];
@@ -495,11 +495,11 @@ export const SLIDES = [
     id: 'student', title: 'What a student sees', Comp: Student,
     notes: [
       'One fictional student, Jordan, a North Campus engineer with a late lab.',
-      'Each dot is a home: cost to Jordan a month across (rent plus time, dark walks and trips with no ride, at Jordan\'s demo values), hours a week getting around up. Darker green fits Jordan\'s week better.',
-      'These are Jordan\'s own demo values, so the numbers differ from the You tab before the picks, which starts from typical values.',
-      'Black ring: the listing with the lowest rent. Green ring: the home worth the most to Jordan once the whole week is counted.',
+      'Each dot is a home: cost to Jordan a month across (rent plus time, dark walks and trips with no ride), hours a week getting around up. Darker green fits Jordan\'s week better.',
+      'Same numbers as the You tab before any pick: starting values over 24 possible weeks. The picks then learn Jordan\'s own values.',
+      'Black ring: the home with the cheapest room. Green ring: Quorum\'s top pick for Jordan\'s week.',
       'Read the dollar gap on the right. It is computed now from the real timetables, not typed in.',
-      'Say this out loud: most of the gap is the cheap home\'s trips with no ride home, priced at Jordan\'s demo value per stranded trip. A real student sets that value with the picks.',
+      'Say this out loud: the cheap home loses on the trips with no ride home and the time getting around. A real student sets what those are worth with the picks.',
       'Then switch to the You tab and show the picks and the ranking.',
     ],
   },

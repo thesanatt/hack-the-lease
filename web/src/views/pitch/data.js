@@ -1,7 +1,8 @@
 // Numbers for the pitch slides. Nothing here is typed in by hand: every figure is computed by the engine in
 // this browser (campusExample, groupExample) or read from web/public/data/evidence/*.json (loadEvidence).
 // Plain JS, no React, so `node` can run the same functions (see the check at the bottom of PitchView notes).
-import { pickGroup, modalRoutine, candidateHouses, solveAllHouses } from '../group/logic.js';
+import { pickGroup, modalRoutine, candidateHouses, solveAllHouses, capThreshold } from '../group/logic.js';
+import { editableWeek, modalRoutine as meModal, uncertainRoutine } from '../me/routine.js';
 
 export const DAY = 'tue';
 export const DATE = '2026-12-01';
@@ -42,45 +43,47 @@ export function campusExample(api, homeId = DEFAULT_HOME) {
   return { homeId, home: api.data.homeById?.get(homeId) || api.data.homes.find((h) => h.id === homeId), rows, duskS };
 }
 
-// What one student sees: Jordan's most likely week run through every home, each home valued with Jordan's
-// demo values (FICTIONAL persona; the same values the Me tab uses to auto-answer picks). Compares the home with
-// the lowest rent against the home worth the most to Jordan once the week is counted.
-// Hours are real clock minutes in motion (walk, wait, ride, bike) from week.js, times 52/12 weeks a month.
+// What one student sees, computed exactly as the You tab does before any pick: Jordan's week (FICTIONAL persona)
+// through every home on 24 possible weeks (seed 11), valued over draws from the starting values (posterior seed 7),
+// ranked by decide.meRank. So the homes, rooms and dollar figures here match the You tab's first screen.
+// cost = -meanU, the You tab's "cost to you" a month. Hours are the most likely week, door to door.
+// The cheapest rent is the home with the cheapest room (asking rent plus an equal share of utilities).
 export const STUDENT = 'jordan';
+const SCENARIO_SEED = 11, POSTERIOR_SEED = 7;
+const priceFrom = (h) => Math.min(...h.rooms.map((r) => (r.asking ?? h.rent / h.rooms.length) + (h.utilities || 0) / h.rooms.length));
 export async function studentExample(api, personaId = STUDENT) {
-  const decide = api.mod('decide'), model = api.mod('model');
-  if (!decide?.homeOption || !model?.utility || typeof api.weekFor !== 'function') return null;
+  const decide = api.mod('decide'), prefs = api.mod('prefs'), week = api.mod('week');
+  if (!decide?.meRank || !prefs?.createPosterior || !prefs?.draws || !week?.sampleWeeks || typeof api.weekFor !== 'function') return null;
   const persona = api.data.personas.find((p) => p.id === personaId) || api.data.personas[0];
-  if (!persona?.theta) return null;
-  const homes = api.data.homes;
+  if (!persona?.week) return null;
+  const homes = api.data.homes, homeIds = homes.map((h) => h.id);
   const cfg = api.config;
-  const res = await Promise.resolve(api.weekFor(modalRoutine(persona), homes.map((h) => h.id), { cfg }));
+  const opts = { dates: cfg.termDates };
+  const entries = editableWeek(persona);
+  const res = await Promise.resolve(api.weekFor(meModal(entries, persona.modes), homeIds, opts));
   if (!res) return null;
   const weeks = res instanceof Map ? res : new Map(Object.entries(res));
-  const perMonth = model.WEEKS_PER_MONTH ?? 52 / 12;
-  const rows = [];
-  for (const home of homes) {
-    const w = weeks.get(home.id);
-    if (!w) continue;
-    const opt = decide.homeOption(home, w, persona.theta, cfg);
-    const u = model.utility(persona.theta, opt);
-    rows.push({
-      home, u, rent: opt.rent, room: opt.room, roomLabel: opt.room?.label ?? '',
-      // Cost to this student a month, the same sign and units as the You tab's "cost to you" (-utility).
-      cost: -u,
-      weekHours: (w.weeklyMin ?? 0) / 60,
-      hours: ((w.weeklyMin ?? 0) / 60) * perMonth,
-      darkHours: ((w.darkWalkMin ?? 0) / 60) * perMonth,
-      stranded: w.stranded?.length ?? 0,
-      timeCost: model.travelCost(persona.theta, opt.travel),
-    });
+  const scen = week.sampleWeeks(uncertainRoutine(entries, persona.modes), cfg.scenarios, SCENARIO_SEED);
+  const weeksByScenario = [];
+  for (const sc of scen) {
+    const m = await Promise.resolve(api.weekFor(sc, homeIds, opts));
+    weeksByScenario.push(m instanceof Map ? m : new Map(Object.entries(m)));
   }
+  const post = prefs.createPosterior({ seed: POSTERIOR_SEED, cfg });
+  const thetas = prefs.draws(post, cfg.posteriorDraws, 3);
+  const rank = decide.meRank({ homes, weeksByScenario, thetas, cfg });
+  const homeById = new Map(homes.map((h) => [h.id, h]));
+  const rows = rank.map((r, k) => {
+    const home = homeById.get(r.homeId), w = weeks.get(r.homeId);
+    return {
+      home, rank: k + 1, cost: -r.meanU, rent: r.price, roomLabel: r.roomLabel ?? '', from: priceFrom(home),
+      weekHours: (w?.weeklyMin ?? 0) / 60, stranded: w?.stranded?.length ?? 0,
+    };
+  }).filter((r) => r.home);
   if (rows.length < 2) return null;
-  const byU = [...rows].sort((a, b) => b.u - a.u);
-  byU.forEach((r, k) => { r.rank = k + 1; });
-  const best = byU[0];
-  const cheapest = rows.reduce((a, b) => (b.rent < a.rent ? b : a));
-  return { persona, n: rows.length, best, cheapest, gap: best.u - cheapest.u, rows };
+  const best = rows[0];
+  const cheapest = rows.reduce((a, b) => (b.from < a.from ? b : a));
+  return { persona, n: rows.length, best, cheapest, gap: cheapest.cost - best.cost, rows };
 }
 
 // The demo group of five, as the Group tab solves it: each member's most likely week through every
@@ -102,13 +105,20 @@ export async function groupExample(api) {
   const solved = solveAllHouses({ fair, houses, members, weekByMember, model, cfg, caps: {} });
   const top = solved.rows[0];
   if (!top?.res) return null;
-  // Sensitivity: lower one member's private cap by $50 (Priya in the demo group) and solve again.
+  // Sensitivity: lower Priya's private cap the way the Your group tab's "Lower a cap" button does (just below the
+  // cap where the top house still has a fitting split, rounded down to $10, minus $20) and solve again.
   let capMove = null;
   const who = members.find((m) => m.id === 'priya') || null;
+  const wi = who ? members.indexOf(who) : -1;
   if (who && Number.isFinite(who.cap)) {
-    const after = solveAllHouses({ fair, houses, members, weekByMember, model, cfg, caps: { [who.id]: who.cap - 50 } });
+    let delta = 50;
+    try {
+      const need = capThreshold(fair, (solved.rows.find((r) => r.feasible) || top).problem, wi, cfg);
+      if (need > 1) delta = who.cap - Math.max(0, Math.floor((need - 1) / 10) * 10 - 20);
+    } catch (e) { console.warn(e); }
+    const after = solveAllHouses({ fair, houses, members, weekByMember, model, cfg, caps: { [who.id]: who.cap - delta } });
     const wasFeasibleThere = after.rows.find((r) => r.home.id === top.home.id)?.feasible;
-    capMove = { name: who.name, delta: 50, topBefore: top.home, topAfter: after.rows[0]?.home, oldTopFeasible: !!wasFeasibleThere };
+    capMove = { name: who.name, delta, topBefore: top.home, topAfter: after.rows[0]?.home, oldTopFeasible: !!wasFeasibleThere };
   }
   return {
     capMove,
@@ -146,7 +156,8 @@ export function evidenceFigures(ev) {
   if (rt) {
     f.trips = { equal: rt.equal, total: rt.queries, date: rt.service_date, pass: rt.pass };
     if (rt.all_targets) f.arrivals = { equal: rt.all_targets.equal, total: rt.all_targets.stop_comparisons, pass: rt.all_targets.pass };
-    f.msPerScan = rt.all_targets?.timing?.engine?.ms_per_scan ?? rt.timing?.engine?.ms_per_scan ?? null;
+    // Same field as How we know ("Our router, per trip"), so the two screens show one speed.
+    f.msPerScan = rt.timing?.engine?.ms_per_scan ?? rt.all_targets?.timing?.engine?.ms_per_scan ?? null;
   }
   const r5 = ev.r5?.result;
   if (r5) {

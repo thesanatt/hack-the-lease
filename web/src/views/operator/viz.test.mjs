@@ -21,11 +21,15 @@ test('viz: floors run top of the house first and keep every room once', () => {
   }
 });
 
-test('viz: room state uses the fair range with a $10 tolerance', () => {
+test('viz: room state counts any asking rent outside the fair range; near adds a margin', () => {
   const f = { p10: 900, p50: 950, p90: 1000 };
-  assert.equal(roomState(1005, f), 'fair');
-  assert.equal(roomState(1010, f), 'over');
-  assert.equal(roomState(885, f), 'under');
+  assert.equal(roomState(1000, f), 'fair');
+  assert.equal(roomState(1005, f), 'over');
+  assert.equal(roomState(900, f), 'fair');
+  assert.equal(roomState(895, f), 'under');
+  assert.equal(roomState(1005, f, 10), 'fair');
+  assert.equal(roomState(1010, f, 10), 'over');
+  assert.equal(roomState(885, f, 10), 'under');
   assert.equal(roomState(NaN, f), 'none');
   assert.equal(outside(1012, f), 12);
   assert.equal(outside(880, f), 20);

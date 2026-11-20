@@ -276,9 +276,8 @@ function GroupBody({ api }) {
                 <div className="line">
                   <span className="rent">{usd(r.home.rent)}<span className="gv-small gv-gray" style={{ fontWeight: 400 }}>/mo</span></span>
                   <span className={`gv-status${r.feasible && !strandedAt(r.home.id) ? '' : ' bad'}`}>
-                    {late && strandedAt(r.home.id) ? `No way home for ${lateName}` : r.feasible
-                      ? <><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4l2.6 2.6L10 3.6" fill="none" stroke="#1f6f4a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>Works for everyone</>
-                      : "Over someone's cap"}
+                    {!r.feasible ? "Over someone's cap" : late && strandedAt(r.home.id) ? `No way home for ${lateName}`
+                      : <><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4l2.6 2.6L10 3.6" fill="none" stroke="#1f6f4a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>Works for everyone</>}
                   </span>
                 </div>
               </button>
@@ -347,7 +346,7 @@ function MoveResult({ move, members, rows, baseline, weeks, chosen, late, placeN
       const from = homeName(move.fromId);
       if (move.noneHome) {
         text = move.toId !== move.fromId
-          ? `${shift} has no way home from any house under every cap, so the best of them, ${homeName(move.toId)}, is now the pick.`
+          ? `${shift} has no way home from any house under every cap, so ${homeName(move.toId)}, best for the worst-off member, is now the pick.`
           : `${shift} has no way home from ${from} or any other house under every cap.`;
       } else if (move.toId !== move.fromId) text = `${shift} has no way home from ${from}, so ${homeName(move.toId)} is now the pick.`;
       else text = `${m?.name} still gets home from ${from} after the ${late ? `${clock(late.end)} ` : ''}shift.`;
@@ -389,7 +388,7 @@ function Certificate({ row, members, model, cfg }) {
   return (
     <div className="gv-stats">
       <div><div className="v">{usd(minMargin, 2)}</div><div className="l">smallest margin</div></div>
-      <div><div className="v">{pct(ef.rate)}</div><div className="l">still swap-free over {ef.k} value draws</div></div>
+      <div><div className="v">{pct(ef.rate)}</div><div className="l">stay swap-free if everyone's values are about {Math.round(EF_SPREAD * 100)}% off ({ef.k} draws)</div></div>
       <div><div className="v">{favs}</div><div className="l">different favorite rooms</div></div>
     </div>
   );

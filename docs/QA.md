@@ -66,8 +66,8 @@ p10, p50 and p90 across those groups is its fair share. A renovation re-solves t
 | Router vs r5py (Conveyal R5) | 720 place-to-home trips; median difference 1.0 min; 87.5% within 2 min (604 of the 690 trips both reach) | `evidence/r5.json`, `docs/VALIDATION.md` |
 | Fair-division LP | 2,000 of 2,000 random instances envy-free and checker-ok; published counterexamples F4 to F6 pass | `evidence/lp.json`, `scripts/lp_props.mjs` |
 | Preference learning | 300 synthetic trials: smart questions beat random questions on regret in all 6 settings tested (latest run: $19.4 a month lower on the off-prior set) | `evidence/recovery.json`, `scripts/recovery.mjs` |
-| Speed | Jordan's week over 30 homes about 23 to 35 ms; 24 weeks x 30 homes x 200 draws ranked in about 30 to 40 ms | panel headers in the app; script sections 1 and 2 |
-| Jordan's late trip | Georgetown Blvd 19 min with 13.5 min walking (over the 10 min cap); Broadway St 18 min with 6.3 min walking | script section 1 |
+| Speed | Jordan's week over 30 homes about 21 to 35 ms; 24 weeks x 30 homes x 200 draws ranked in about 30 to 65 ms; a full recompute stays under 0.2 s | script sections 1 and 2 (the You tab does not show timings) |
+| Jordan's late trip | Georgetown Blvd 19 min; its last walk is 10.8 min, over the 10 min cap on a single walk (13.5 min walking in all); Broadway St 18 min with 6.3 min walking | script section 1 |
 | Pitch slide 1 | Plymouth Rd apartment (North Campus): from Beyster 11 min at 2 PM, 24 at 11:30 PM; from the UgLi 31 and 39; range 11 to 53 min | script section 0 |
 | Jordan before any pick | Broadway St $38 regret, P(best) 71%; value of knowing $18/mo; break-even $75/h vs median $14.9/h | script section 2a |
 | Your top 3, before any pick | Broadway St $1,351/mo cost to you, $923 rent, 4.4 h/wk, 2 late nights, "Lower rent +$178/mo vs a typical home"; Catherine St $1,414; East Ann St $1,470 | script section 10 |
@@ -100,8 +100,9 @@ There is no LLM, on purpose: it has to run offline and every output must trace b
 schedule or a listing into the same inputs the engine already takes. It would not produce any of the numbers.
 We have not built it.
 
-**"Six clicks cannot learn six weights."** Agreed. It mostly learns the travel weights. The rest are tagged "mostly
-prior" on screen. The recovery test shows how much it learns.
+**"Six clicks cannot learn six weights."** Agreed. It mostly learns the travel weights. The screen shows only the
+three values the picks narrowed most, and the gray one is still mostly the starting guess. The recovery test shows
+how much it learns.
 
 **"What did the picks change? Broadway was first before them."** The leader stayed, and we say so. The room
 changed from the Garden room to the Attic room. The 80% range for Jordan's value of time went from $5.3 to $40.5
@@ -123,6 +124,12 @@ next test. It also shows one weak spot: when the true cost of a dark walk sits f
 interval covers it only 8 to 9% of the time after 6 picks (81% when truths come from the prior). That is why the
 picks section shows at most three learned values, the ones the picks narrowed most, and leaves the rest out.
 
+**"On How we know and slide 5, your line goes up after the first question. Why?"** That chart shows the hardest
+setting: students whose values sit far from our starting guess. One answer moves the estimate a long way, and for
+these students it can overshoot, so after one question ours loses more than random pairs ($82 vs $62). From the
+second question on it is ahead, and after six it loses $20 against $57. With typical students (one click away)
+the line falls from the first question. We show the hard case on purpose.
+
 **"How does a student enter their own week?"** In **Your week** on You: click **Edit**, then toggle an entry, change its days, times and
 place, or add a job. Or import a calendar file or paste schedule lines (see below). Places are a fixed list of 31
 real Ann Arbor places, not a free address box. We have not timed it.
@@ -134,7 +141,7 @@ There is no upload button.
 app now uses the median everywhere, so say about $15 an hour.
 
 **"After the lab move, is Lawrence Street really first?"** Not in a way that matters. The top three are within $6
-a month and the leader is best in only 28% of draws. The honest reading: for Jordan the lab location now matters
+a month in expected regret and $7 in cost to you, and the leader is best in only 28% of draws. The honest reading: for Jordan the lab location now matters
 more than which house.
 
 **"Why does value of knowing go up after the picks?"** The picks raised the cost of a trip with no ride from a
@@ -143,19 +150,27 @@ We have not isolated it.
 
 **"Does this tell students to wait before signing?"** No. The ranking is computed over 24 possible fall weeks so
 a student can sign early with a home that holds up across them. The $31 a month is the cost of not knowing, which
-is why we rank this way. The screen says "if finding out costs less than that, find out before you sign". That
-means ask the department about the lab time, not hold off on the lease.
+is why we rank this way. Details shows it as "$31/mo value of knowing your schedule first". If finding out costs
+less than that, find out first: ask the department about the lab time, do not hold off on the lease.
 
 **"How is this better than a rent and distance filter?"** The filter "cheapest home on North Campus" picks
 Georgetown Blvd. For Jordan's real week Quorum ranks it 8th, $233 a month worse in expected regret than
 Broadway. The 11 minute dark walk home twice a week is on screen. It is still best in 9% of draws, which is why
 we sort by regret and not by chance of being best.
 
-**"Slide 2 says $413 a month, the You tab says $187. Which is it?"** Both are computed live by the same engine,
-with different values. The You tab before any pick starts from typical values across 24 possible weeks: there
-the cheapest rent, Georgetown, saves $2 a month and costs $187 more. Slide 2 uses Jordan's own demo values on
-Jordan's most likely week, where a trip with no ride home costs Jordan more, so the gap is $413. Slide 2 also
-picks the room Jordan would take at those values, so its rents name a different room.
+**"Which number is the cheapest rent gap, $187 or $233?"** Both are on screen, at different moments. Before
+any pick, starting values over 24 possible weeks: Georgetown, rooms from $821, costs Jordan $187 a month more
+than Broadway. Pitch slide 2 shows this same computation. After the picks the model knows Jordan's values,
+and the gap grows to $233. "Cheapest rent" means the home with the cheapest room. Cost to you uses the room
+Quorum picks for you in each home, so the real gap at the $821 room is at least this big.
+
+**"Your rents are higher than the asking rents."** Every rent on the You tab and the slides includes the room's
+equal share of utilities, and the cards say "with utilities". The Your group tab shows each person's share of
+the house rent from the fair split, which is a different number.
+
+**"Details says Georgetown comes first if its rent drops $X. Why not $233?"** Different questions. The
+comes-first line holds the values at their medians on the most likely week. The $233 averages 24 possible weeks
+and 200 value draws. Both use the same room for each home as the ranking.
 
 **"Is the router right?"** It matched an independent reference router exactly on 3,000 trips. Against R5 it is
 within 1 minute at the median. R5 differs by design: it waits at least 60 s before every boarding and allows
@@ -177,13 +192,15 @@ December timetable for both terms. Snow and ice are not modeled.
 **"Envy-free by whose values?"** By each member's own values: demo values for the fictional group, learned values
 for a real user.
 
-**"The envy-free rate is 2%."** True, and the app shows it. In this house two room assignments give the group the
+**"Details says 2% stay swap-free. Does the split fail 98% of the time?"** No. The split shown is swap-free for
+the values entered. The 2% is a stress test: if everyone's values were about 25% off, 2 of 100 random draws stay
+swap-free. In this house two room assignments give the group the
 same total value, so some margins must be exactly $0 (4 of 20 here). A small error in anyone's values breaks a
 tie by a few dollars. We report it instead of hiding it.
 
 **"Why does the group land on Broadway, then Georgetown?"** The rule makes the worst-off member as well off as
-possible among houses with a split under every cap. Broadway's worst-off net cost is $1,871 a month. Church St is
-lower at $1,726, but no split there fits every cap. After Priya's cut, Georgetown is the only house that fits
+possible among houses with a split under every cap. Broadway's worst-off net cost is $1,871 a month. Church St
+($1,726) and Lawrence St ($1,658) are lower, but no split there fits every cap. After Priya's cut, Georgetown is the only house that fits
 every cap. Caps are hard limits. Georgetown is worse for Jordan: Jordan's net cost goes from $1,410 to $1,829 a
 month.
 
@@ -207,19 +224,24 @@ rooms differ, and a real transit engine under both.
 
 **"What would a pilot look like? What do you need from us?"** A hypothesis: five irregular houses for one leasing
 season. You give the room features (size, bath, floor, light), the asking rents and the house rent, plus a few
-picks from current residents. Groups use Group mode. Then we compare the fair shares with which rooms sat empty.
+picks from current residents. Groups use the Your group tab. Then we compare the fair shares with which rooms sat empty.
 Ask them what tool they use today; do not guess.
 
 **"Isn't the half bath number just your $60 bath assumption?"** Yes, today. A half bath counts as half of a
-private bath, and the bath value is our assumption, shown on the slider. At $30 the half bath gives +$15, at $120
-it gives +$57. With picks from a house's own residents it would be measured instead. What the engine adds is
+private bath, and the bath value is our assumption, shown on the slider. At $30 the half bath gives +$17, at $120
+it gives +$65. With picks from a house's own residents it would be measured instead. What the engine adds is
 turning those values into room rents a whole group accepts with nobody envying.
 
-**"Is +$30 new revenue? What is the payback?"** No new revenue. At the same house rent the $30 moves to the
-basement room from the other rooms. Groups value the house $32 a month more, about $387 a year. We have no build
-cost data, so we make no payback claim.
+**"Why does Church St count 2 of 5 rooms priced off when the basement is only $5 over?"** Any asking rent outside
+the room's fair range counts, so the count matches the chart. The back room is $12 over and the basement $5 over.
+At $5 we would call it close, and the chart shows how close.
 
-**"Should this house rent for $6,100 at all?"** The view splits a fixed house rent. It does not set it. The +$32
+**"Is +$32 new revenue? What is the payback?"** No new revenue. At the same house rent the basement room's
+typical fair rent rises $32 and the other rooms drop $30 in all. Typical (median) shares need not add up to the
+rent exactly, which is why the bars net +$2. Groups value the house $40 a month more, about $475 a year. We have
+no build cost data, so we make no payback claim.
+
+**"Should this house rent for $4,650 at all?"** The view splits a fixed house rent. It does not set it. The +$40
 group value is the only signal about the total.
 
 **"Is the 210 day rule right?"** Ann Arbor ORD-24-03, Sections 8:530 and 8:531, adopted 4 March 2024: no showing

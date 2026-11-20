@@ -4,7 +4,7 @@
 //        canAuto (persona has demo theta), onAnswer(choice 'A'|'B'|'skip'), onAuto(), onAutoAll(), last (last pick summary),
 //        busy, personaName (optional, names the demo auto-answer button), dusk (optional, seconds; evening band on the ribbons)
 import { useEffect, useState } from 'react';
-import { WeekStrip } from '../../components/index.js';
+import { AutoStrip } from '../../components/index.js';
 import { money } from './format.js';
 import { darkOf } from './HomeList.jsx';
 import './calendar/parts.css';
@@ -43,7 +43,7 @@ function Option({ api, opt, other, week, otherWeek, routineWeek, onPick, busy, t
           <h3 className="mp-name">{home?.name}</h3>
           <div className="room">{r.label}, {r.sqft} sq ft, {bath}</div>
         </div>
-        {week && <WeekStrip compact width={460} trips={week.trips} entries={routineWeek} dusk={dusk ?? undefined} />}
+        {week && <AutoStrip compact trips={week.trips} entries={routineWeek} dusk={dusk ?? undefined} />}
         <div className="mp-nums">
           <Num worse={opt.rent > other.rent + 0.5} text={money(opt.rent)} unit="a month, rent + utilities"
             title="Asking rent plus an equal share of utilities" />

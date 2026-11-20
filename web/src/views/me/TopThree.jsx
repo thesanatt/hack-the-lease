@@ -1,6 +1,6 @@
 // "Your top 3": one card per home with three big numbers, a mini week ribbon and one why sentence.
 // Props: api, rank (decide.meRank), notes (Map homeId -> explain Note), weekMap, routineWeek, dusk, selected, onSelect(id)
-import { WeekStrip } from '../../components/index.js';
+import { AutoStrip } from '../../components/index.js';
 import { money } from './format.js';
 
 // Short labels for the one-line reason on each card.
@@ -24,7 +24,7 @@ export function cardReasons(notes, ids) {
     used.add(r.key);
     const good = r.dollars >= 0;
     const label = SHORT[r.key] ? SHORT[r.key](good) : r.label;
-    return { good, label, amt: `${good ? '+' : '-'}${money(Math.abs(r.dollars))}/mo`, title: r.text };
+    return { good, label, amt: `${money(Math.abs(r.dollars))}/mo`, side: good ? 'better' : 'worse', title: r.text };
   });
 }
 
@@ -59,27 +59,25 @@ function Card({ api, i, row, note, reason, week, routineWeek, dusk, sel, onSelec
         </h3>
       </div>
       <div className="t3-sub">
-        <span className="t3-room">{row.roomLabel || note?.roomLabel || ''}</span>
+        <span className="t3-room">{row.roomLabel || note?.roomLabel || ''}{rent != null ? `, ${money(rent)}/mo with utilities` : ''}</span>
         <span className="t3-sample">Sample listing</span>
       </div>
       <div className="t3-body">
         <div className="t3-nums">
-          <Num value={money(-row.meanU)} unit="/mo" label={rent != null ? `cost to you, ${money(rent)} rent` : 'cost to you'}
+          <Num value={money(-row.meanU)} unit="/mo" label="cost to you"
             title="Cost to you: rent and utilities plus what travel time, darkness and trips with no ride cost you, less what the room is worth to you. Averaged over the weeks you might have." />
           <Num value={hours(week?.weeklyMin)} unit="h/wk" label="getting around" title="Door to door, your most likely week" />
           <Num value={n ?? '--'} unit="/wk" label="late nights"
             title="Nights a week with a trip that has no ride, or walking or biking after dusk" />
         </div>
-        {week && (
-          <div className="t3-ribbon">
-            <WeekStrip compact width={i === 0 ? 520 : 780} trips={week.trips} entries={routineWeek} dusk={dusk} />
-          </div>
-        )}
+        <div className="t3-ribbon">
+          {week && <AutoStrip compact trips={week.trips} entries={routineWeek} dusk={dusk} />}
+        </div>
       </div>
       {reason && (
         <p className="t3-why" title={reason.title}>
-          <span>{reason.label}</span> <b className={reason.good ? 'good' : 'bad'}>{reason.amt}</b>
-          <span className="t3-vs"> vs a typical home</span>
+          <span>{reason.label}:</span> <b className={reason.good ? 'good' : 'bad'}>{reason.amt}</b>
+          <span className="t3-vs"> {reason.side} than a typical home</span>
         </p>
       )}
     </article>

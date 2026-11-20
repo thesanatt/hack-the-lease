@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import { money } from './format.js';
 import { hours } from './TopThree.jsx';
+import { priceFrom } from './HomeList.jsx';
 import { FIT_STOPS, fitColor } from '../../components/MapView.jsx';
 
 // One fit scale for the map and this chart: the stops and color function come from MapView.
@@ -21,7 +22,9 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
   const [hover, setHover] = useState(null);
   const pts = useMemo(() => (rank || []).map((r, i) => {
     const w = weekMap?.get(r.homeId);
-    return { id: r.homeId, i, x: -r.meanU, y: w ? w.weeklyMin / 60 : null, price: r.price, name: api.data.homeById.get(r.homeId)?.name || r.homeId };
+    const h = api.data.homeById.get(r.homeId);
+    // from = the home's cheapest room with utilities (the "From" column): what "cheapest rent" means on screen.
+    return { id: r.homeId, i, x: -r.meanU, y: w ? w.weeklyMin / 60 : null, price: r.price, from: h ? priceFrom(h) : r.price, name: h?.name || r.homeId };
   }).filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y)), [rank, weekMap, api]);
   if (!pts.length) return <div className="to-chart ghost" aria-busy="true" />;
 
@@ -39,16 +42,16 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
   for (let v = y0; v <= y1 + 1e-9; v += yStep) yt.push(Math.round(v * 100) / 100);
 
   const top = pts.find((p) => p.i === 0);
-  const cheap = pts.filter((p) => Number.isFinite(p.price)).reduce((a, b) => (b.price < a.price ? b : a), pts[0]);
+  const cheap = pts.filter((p) => Number.isFinite(p.from)).reduce((a, b) => (b.from < a.from ? b : a), pts[0]);
   const hov = pts.find((p) => p.id === hover);
   let sentence;
   if (top && cheap) {
-    if (cheap.id === top.id) sentence = `Your top pick also has the cheapest rent, at ${hours(cheap.y * 60)} hours a week.`;
+    if (cheap.id === top.id) sentence = `Your top pick also has the cheapest rent, rooms from ${money(cheap.from)} a month.`;
     else {
       // Lead with money: the point of the chart is that the lowest rent is not the lowest cost to you.
-      const dCost = cheap.x - top.x, dRent = top.price - cheap.price;
-      if (dCost >= 1 && dRent >= 0) {
-        sentence = `The cheapest rent saves ${money(dRent)} a month but costs you ${money(dCost)} more, once time and late nights count.`;
+      const dCost = cheap.x - top.x;
+      if (dCost >= 1) {
+        sentence = `The cheapest rent, rooms from ${money(cheap.from)}, costs you ${money(dCost)} a month more than your top pick, once time and late nights count.`;
       } else {
         const d = cheap.y - top.y;
         sentence = `The cheapest rent costs you ${hours(cheap.y * 60)} hours a week, ${hours(Math.abs(d) * 60)} ${d >= 0 ? 'more' : 'fewer'} than your top pick.`;
@@ -88,7 +91,7 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
           {pts.map((p) => (
             <circle key={`h${p.id}`} cx={X(p.x)} cy={Y(p.y)} r="11" fill="transparent" style={{ cursor: 'pointer' }}
               onMouseEnter={() => setHover(p.id)} onClick={() => onSelect?.(p.id)}>
-              <title>{`${p.name}: ${money(p.x)} a month cost to you, ${money(p.price)} rent, ${hours(p.y * 60)} h a week`}</title>
+              <title>{`${p.name}: ${money(p.x)} a month cost to you, ${money(p.price)} with utilities for the room picked for you, rooms from ${money(p.from)}, ${hours(p.y * 60)} h a week`}</title>
             </circle>
           ))}
         </svg>
@@ -96,7 +99,7 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
           <div className="to-tip" style={{ left: `${(X(hov.x) / W) * 100}%`, top: `${(Y(hov.y) / H) * 100}%` }}>
             <b>{hov.name}</b>
             <span>{money(hov.x)}/mo cost to you</span>
-            <span>{money(hov.price)}/mo rent</span>
+            <span>{money(hov.price)}/mo with utilities</span>
             <span>{hours(hov.y * 60)} h/wk</span>
           </div>
         )}
@@ -106,7 +109,7 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
         {FIT_RAMP.map((c) => <i key={c} style={{ background: c, boxShadow: 'inset 0 0 0 1px rgba(26,26,26,0.35)' }} />)}
         <span>Best fit</span>
         <span className="to-key"><svg width="16" height="16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1A1A1A" strokeWidth="2" /></svg>Top pick{top ? `, ${top.name}` : ''}</span>
-        <span className="to-key"><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="#1A1A1A" strokeWidth="1.5" /></svg>Cheapest rent{cheap && cheap.id !== top?.id ? `, ${money(cheap.price)}, ${cheap.name}` : ''}</span>
+        <span className="to-key"><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="#1A1A1A" strokeWidth="1.5" /></svg>Cheapest rent{cheap && cheap.id !== top?.id ? `, from ${money(cheap.from)}, ${cheap.name}` : ''}</span>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import WeekStrip from '../../components/WeekStrip.jsx';
+import AutoStrip from '../../components/AutoStrip.jsx';
 import { usd } from './kit.jsx';
 
 // One row per member: color chip, a mini week ribbon from the chosen house, and the cap shown as "private".
@@ -14,7 +14,7 @@ export function MemberRow({ m, color, revealed, onToggle, privateInfo, onCap, tr
           <span className="gv-dot" style={{ background: color }} />{m.name}
         </button>
         <div aria-label={`${m.name}'s week from this house`} role="group">
-          <WeekStrip compact trips={trips || []} entries={entries || []} fromHour={7} toHour={25} width={440} dusk={dusk ?? undefined} />
+          <AutoStrip compact trips={trips || []} entries={entries || []} fromHour={7} toHour={25} dusk={dusk ?? undefined} />
         </div>
         {revealed && <PrivatePanel m={m} info={privateInfo} onCap={onCap} />}
       </div>
