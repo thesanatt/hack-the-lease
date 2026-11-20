@@ -100,8 +100,9 @@ Owners and How we know are for judges' questions: per-room fair rent for owners,
 ## Permissions
 
 - GitHub: both of you are invited to thesanatt/hack-the-lease with write access. Accept the email invite.
-- Vercel: quorum-a2.vercel.app is on Sanat's personal (Hobby) Vercel account, which cannot add members. It stays as
-  the frozen demo build; the student-card QR codes point to it. If you change the app and want it hosted, deploy
-  your own copy from your own free Vercel account: npx vercel login, then from the repo folder
-  npx vercel deploy web/dist --prod. That gives you a new URL; the cards keep pointing to the frozen one.
+- Vercel: quorum-a2.vercel.app is on Sanat's Vercel account and is connected to this GitHub repo. Every push to
+  main redeploys it within about 10 seconds (vercel.json serves the committed web/dist; there is no build step on
+  Vercel, so run npm run build and commit web/dist yourself). Pushes to other branches get a preview URL. You need
+  no Vercel access: GitHub write access is enough. That also means a broken push to main breaks the demo site, so
+  run the checks first. To roll back, push a revert of the bad commit.
 - No API keys, accounts or paid services are needed: the app runs fully offline in the browser.

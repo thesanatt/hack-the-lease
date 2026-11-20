@@ -4,7 +4,8 @@ Read docs/HANDOFF.md first (what the product is, flagship features, why, open wo
 docs/DEMO.md and docs/QA.md. The team presents at the Hack the Lease judging, Fri Nov 20 2026 from 5 PM.
 
 ## Ground rules
-- main is the presentable build, also deployed at https://quorum-a2.vercel.app. Do all new work on a branch.
+- main is the presentable build. Every push to main redeploys https://quorum-a2.vercel.app (vercel.json serves the
+  committed web/dist, so rebuild and commit web/dist with your change). Do all new work on a branch.
   Merge to main only when the checks below pass, and never in the hour before the presentation.
 - Checks before any merge: node --test "test/*.test.mjs"; cd web && npm test; cd web && npm run build (web/dist is
   committed and is what gets served); then follow docs/DEMO.md click by click on the built app
