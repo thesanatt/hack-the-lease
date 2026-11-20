@@ -39,12 +39,12 @@ export default function WeekEditor({ entries, setEntries, places, placeById, lat
                 <td className="keep" style={{ whiteSpace: 'nowrap' }}>
                   {DAYS.map((d) => (
                     <button key={d} type="button" className="btn small" aria-pressed={e.days.includes(d)}
-                      style={{ padding: '0 3px', marginRight: 1, fontSize: 11, minWidth: 22 }} title={DAY_LABEL[d]}
+                      style={{ padding: '1px 3px', marginRight: 1, fontSize: 12, minWidth: 25 }} title={DAY_LABEL[d]}
                       onClick={() => toggleDay(e, d)}>{DAY_LABEL[d].slice(0, 2)}</button>
                   ))}
                 </td>
                 <td className="keep">
-                  <select value={e.place} aria-label="Place" onChange={(ev) => set(e.id, { place: ev.target.value })} style={{ maxWidth: 150 }}>
+                  <select value={e.place} aria-label="Place" onChange={(ev) => set(e.id, { place: ev.target.value })} style={{ maxWidth: 190 }}>
                     {byArea.map(([a, ps]) => (
                       <optgroup key={a} label={a}>
                         {ps.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -57,8 +57,8 @@ export default function WeekEditor({ entries, setEntries, places, placeById, lat
                     </div>
                   )}
                 </td>
-                <td className="keep"><input type="time" style={{ width: 96 }} value={e.start} aria-label="Start" onChange={(ev) => ev.target.value && set(e.id, { start: ev.target.value })} /></td>
-                <td className="keep"><input type="time" style={{ width: 96 }} value={e.end} aria-label="End" onChange={(ev) => ev.target.value && set(e.id, { end: ev.target.value })} /></td>
+                <td className="keep"><input type="time" style={{ width: 118 }} value={e.start} aria-label="Start" onChange={(ev) => ev.target.value && set(e.id, { start: ev.target.value })} /></td>
+                <td className="keep"><input type="time" style={{ width: 118 }} value={e.end} aria-label="End" onChange={(ev) => ev.target.value && set(e.id, { end: ev.target.value })} /></td>
                 <td className="num keep">
                   <input type="number" min={0} max={1} step={0.1} value={e.p ?? 1} style={{ width: 58 }} aria-label="Chance"
                     onChange={(ev) => { const v = Number(ev.target.value); if (v >= 0 && v <= 1) set(e.id, { p: v }); }} />

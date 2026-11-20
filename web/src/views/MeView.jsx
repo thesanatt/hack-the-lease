@@ -203,11 +203,11 @@ export default function MeView({ api }) {
           <Stat label="Private rent cap" value={persona.cap ? money(persona.cap) : '--'} unit="/mo" />
           <Stat label="Bike" value={persona.modes?.bike ? 'yes' : 'no'} />
           <Stat label="Longest walk" value={persona.modes?.maxWalkMin ?? '--'} unit="min" note={`${persona.modes?.maxLateWalkMin ?? '--'} min after ${persona.modes?.lateHour ?? '--'}`} />
-          <Stat label="Homes" value={homes.length} />
+          <Stat label="Homes" value={homes.length} note="SYNTHETIC listings" />
         </div>
       </Panel>
 
-      <div className="grid-me">
+      <div className="grid-week">
         <Panel title="Your week" kicker="Toggle an entry, change its place, add a job">
           <WeekEditor entries={effEntries} setEntries={setEntries} places={places} placeById={placeById}
             lateId={lab?.id} movedId={labCentral ? lab?.id : null} />
@@ -222,7 +222,7 @@ export default function MeView({ api }) {
 
       {!week ? <NotBuilt module="week" what="running the week through each home" /> : (
         <div className="grid-me">
-          <Panel title="Homes" kicker={weekMap ? `${homes.length} homes, most likely week, ${Math.round(weekMs)} ms` : ''}>
+          <Panel title="Homes" kicker={weekMap ? `${homes.length} SYNTHETIC homes, most likely week, computed in ${Math.round(weekMs)} ms` : 'Running the week through every home'}>
             {weekMap ? (
               <HomeList homes={homes} weekMap={weekMap} routineWeek={modal.week} selected={shownHome}
                 onSelect={(id) => { setSelHome(id); setSelTrip(null); }} sortKey={sortKey} setSortKey={setSortKey} cfg={cfg} />
@@ -236,7 +236,7 @@ export default function MeView({ api }) {
                     <Stat label="Door to door" value={hm(shownWeek.weeklyMin)} unit="/wk" />
                     <Stat label="Walking" value={Math.round(shownWeek.walkMin)} unit="min" />
                     <Stat label="Waiting" value={Math.round(shownWeek.waitMin)} unit="min" />
-                    <Stat label="No ride" value={shownWeek.stranded.length} tone={shownWeek.stranded.length ? 'bad' : ''} />
+                    <Stat label="No ride" value={shownWeek.stranded.length} unit="trips" tone={shownWeek.stranded.length ? 'bad' : ''} />
                   </div>
                   <TripExplainer api={api} home={homeById.get(shownHome)} week={shownWeek} routineWeek={modal.week}
                     selectedIdx={tripIdx} onSelect={setSelTrip} dusk={duskS} legs={legs} />
@@ -264,7 +264,7 @@ export default function MeView({ api }) {
       )}
 
       {!decide ? <NotBuilt module="decide" what="the ranking across possible fall weeks" /> : week && prefs && (
-        <Panel title="Ranking" kicker={ranked?.rank ? `${homes.length} homes x ${ranked.nScen} possible fall weeks x ${ranked.nDraws} preference draws: weeks ${Math.round(ranked.scenMs)} ms, ranking ${Math.round(ranked.rankMs)} ms` : 'Computing'}
+        <Panel title="Ranking" kicker={ranked?.rank ? `${homes.length} homes x ${ranked.nScen} possible fall weeks x ${ranked.nDraws} preference draws: weeks ${Math.round(ranked.scenMs)} ms, ranking ${Math.round(ranked.rankMs)} ms` : 'Computing the ranking'}
           aside={baseline && <Button small variant="quiet" onClick={() => setBaseline(null)}>Clear comparison</Button>}>
           <div className="row-flex" style={{ marginBottom: 10 }}>
             <span className="caps">What if</span>
@@ -301,12 +301,12 @@ export default function MeView({ api }) {
                     const nm = (k) => homeById.get(k === 'A' ? b.A : b.B)?.name;
                     const what = b.param === 'vTime' ? 'your time is worth' : 'an hour walking after dark costs you';
                     if (b.value != null && b.value > 300) {
-                      return <p key={b.param} className="small muted">{nm(b.belowWins)} stays ahead unless {what} more than $300 per hour, far above your estimate of {money(b.current, 1)}.</p>;
+                      return <p key={b.param} className="small muted">{nm(b.belowWins)} stays ahead unless {what} more than $300 per hour, far above your estimate of {money(b.current, 1)} per hour.</p>;
                     }
                     return b.value != null ? (
                       <p key={b.param}>
                         {nm(b.aboveWins)} wins if {what} more than <strong className="mono">{money(b.value)}</strong> per hour; below
-                        that, {nm(b.belowWins)}. Current estimate {money(b.current, 1)}.
+                        that, {nm(b.belowWins)}. Current estimate {money(b.current, 1)} per hour.
                       </p>
                     ) : (
                       <p key={b.param} className="small muted">{b.param === 'vTime' ? 'Value of time' : 'Darkness'}: no break-even between the top two ({b.reason}).</p>

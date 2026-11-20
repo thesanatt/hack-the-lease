@@ -28,17 +28,17 @@ export default function HomeList({ homes, weekMap, routineWeek, selected, onSele
         ]} />
         <span className="small muted">Most likely week. Click a home for its trips.</span>
       </div>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="scrolly">
         <table className="tt">
           <thead>
             <tr>
               <th>Home</th>
-              <th className="num" title="Cheapest room: asking rent plus an equal share of utilities">From</th>
-              <th className="num" title="Door to door minutes per week">Door to door</th>
-              <th className="num" title="Generalized minutes: walking x1.45, waiting x1.5">Weighted</th>
-              <th className="num" title="Walking or biking minutes outside civil daylight, averaged over the lease dates">After dark</th>
-              <th className="num" title="Trips with no allowed way home or there">No ride</th>
-              <th style={{ width: '34%' }}>Week (Mon to Sun, 6 AM to 1 AM)</th>
+              <th className="num" title="Cheapest room: asking rent plus an equal share of utilities">From /mo</th>
+              <th className="num" title="Door to door time per week">Door to door /wk</th>
+              <th className="num" title="Generalized minutes: walking x1.45, waiting x1.5">Weighted /wk</th>
+              <th className="num" title="Walking or biking minutes outside civil daylight, averaged over the lease dates">After dark /wk</th>
+              <th className="num" title="Trips per week with no allowed way home or there">No ride /wk</th>
+              <th style={{ width: '30%' }}>Week, Mon to Sun, 6 AM to 1 AM</th>
             </tr>
           </thead>
           <tbody>
@@ -51,7 +51,7 @@ export default function HomeList({ homes, weekMap, routineWeek, selected, onSele
                 <td className="num">{money(priceFrom(h))}</td>
                 <td className="num">{w ? hm(w.weeklyMin) : '--'}</td>
                 <td className="num">{w ? hm(w.genMin) : '--'}</td>
-                <td className="num">{w ? `${Math.round(darkOf(w, cfg))}m` : '--'}</td>
+                <td className="num">{w ? `${Math.round(darkOf(w, cfg))} min` : '--'}</td>
                 <td className="num" style={{ color: w?.stranded?.length ? 'var(--bad)' : undefined, fontWeight: w?.stranded?.length ? 600 : 400 }}>
                   {w ? w.stranded.length : '--'}
                 </td>
@@ -61,6 +61,7 @@ export default function HomeList({ homes, weekMap, routineWeek, selected, onSele
           </tbody>
         </table>
       </div>
+      <p className="scroll-hint">{rows.length} homes. Scroll the list for the rest. Homes and rents are SYNTHETIC.</p>
     </div>
   );
 }

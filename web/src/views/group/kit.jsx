@@ -32,7 +32,7 @@ export function Stat({ label, value, note }) {
   return (
     <div className="qv-stat">
       <div className="v">{value}</div>
-      <div className="l">{label}{note ? <span> . {note}</span> : null}</div>
+      <div className="l">{label}{note ? <span>, {note}</span> : null}</div>
     </div>
   );
 }

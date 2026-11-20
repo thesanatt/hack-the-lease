@@ -22,7 +22,7 @@ export default function EnvyMatrix({ names, envy, colors }) {
                 {colors?.[i] && <span className="qv-swatch" style={{ background: colors[i] }} />}{nm}
               </th>
               {Array.from({ length: n }, (_, j) => {
-                if (i === j) return <td key={j} className="diag">.</td>;
+                if (i === j) return <td key={j} className="diag" title="Own room">own</td>;
                 const e = envy[i][j];
                 const cls = !Number.isFinite(e) ? '' : e < -1e-6 ? 'fail' : e < 5 ? 'tight' : '';
                 return <td key={j} className={`cell ${cls}`}>{Number.isFinite(e) ? usd(e) : 'n/a'}</td>;

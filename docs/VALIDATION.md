@@ -123,13 +123,15 @@ python pipeline/r5_validate.py
 | pairs | 720 |
 | reachable in both | 690 |
 | median absolute error | 1.0 min |
-| share within 2 min | 86.5% |
-| 90th percentile absolute error | 3.0 min |
-| mean signed error, Quorum minus R5 | -0.89 min |
+| share within 2 min | 87.5% (604 of the 690 trips both reach) |
+| mean absolute error | 1.14 min |
+| mean signed error, Quorum minus R5 | -0.84 min |
 | agreement on reachable or not | 95.8% (30 pairs reachable only in Quorum, 0 only in R5) |
 
-Variants in r5.json: without flooring Quorum's minutes, median absolute error 0.69 min; transit
-only (no walking-only option), 1.0 min and 79.4% within 2 min.
+These are the numbers in `evidence/r5.json` from the run at 2026-11-19 22:15 ET, after the pickup-type fix in
+`build_transit.py`. An earlier run, before that fix, gave 86.5% within 2 min and -0.89 min mean signed error.
+Variants in r5.json: without flooring Quorum's minutes, median absolute error 0.68 min and 86.1% within
+2 min; walking-only trips uncapped, median 1.0 min and 85.8% within 2 min.
 
 ### Why the differences happen
 

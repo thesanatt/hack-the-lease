@@ -1,8 +1,8 @@
 // Evidence view: every validation file as written by the test scripts (missing ones say so), the
 // preference recovery curves, the assumptions table from api.config and the verified sources.
 import React, { useEffect, useMemo, useState } from 'react';
-import { Panel, Pill, Label, Pending, Note, Guard, configOf } from './group/kit.jsx';
-import { FILES, passOf, metaOf, partition, columnsOf, fmtVal, findSeries, metricsOf, defaultMetric, flattenConfig, isObj } from './evidence/report.js';
+import { Panel, Pill, Label, Pending, Note, Guard, Button, configOf } from './group/kit.jsx';
+import { FILES, passOf, metaOf, partition, columnsOf, fmtVal, findSeries, metricsOf, defaultMetric, flattenConfig, isObj, summaryOf, recoveryCurves, RECOVERY_METRICS } from './evidence/report.js';
 import { useConfigVersion } from '../engine/useConfig.js';
 import { ASSUMPTIONS } from './evidence/assumptions.js';
 import SOURCES from './evidence/sources.json';
@@ -16,15 +16,19 @@ export default function EvidenceView({ api }) {
       <div className="qv-head">
         <h1>Evidence</h1>
         <p>What was tested, what it found, what is assumed, and where each method comes from. A test that did not run is shown as not run.</p>
-        <Label>SAMPLE DATA . SYNTHETIC homes and population</Label>
+        <Label>SAMPLE DATA: SYNTHETIC homes and population</Label>
       </div>
       <Guard name="Evidence view"><EvidenceBody api={api} /></Guard>
     </div>
   );
 }
 
+// Reads every evidence file fresh each time the view opens (and on Reload), so a test re-run during the
+// event shows up without restarting the app. The copy loaded at startup is only a fallback.
 function useEvidence(api) {
   const [state, setState] = useState({});
+  const [readAt, setReadAt] = useState(null);
+  const [nonce, setNonce] = useState(0);
   useEffect(() => {
     let live = true;
     const fromApi = api?.data?.evidence || {};
@@ -32,27 +36,26 @@ function useEvidence(api) {
       const out = {};
       await Promise.all(FILES.map(async (f) => {
         const camel = f.key.replace(/_(\w)/g, (_, c) => c.toUpperCase());
-        const have = fromApi[f.key] ?? fromApi[camel];
-        if (have) { out[f.key] = { status: 'ok', data: have }; return; }
+        const startup = fromApi[f.key] ?? fromApi[camel];
         try {
-          const r = await fetch(`./data/evidence/${f.file}`, { cache: 'no-store' });
+          const r = await fetch(`./data/evidence/${f.file}?t=${Date.now()}`, { cache: 'no-store' });
           const type = r.headers.get('content-type') || '';
-          if (!r.ok || type.includes('text/html')) { out[f.key] = { status: 'missing' }; return; }
-          out[f.key] = { status: 'ok', data: await r.json() };
+          if (!r.ok || type.includes('text/html')) throw new Error('missing');
+          out[f.key] = { status: 'ok', data: await r.json(), fresh: true };
         } catch {
-          out[f.key] = { status: 'missing' };
+          out[f.key] = startup ? { status: 'ok', data: startup, fresh: false } : { status: 'missing' };
         }
       }));
-      if (live) setState(out);
+      if (live) { setState(out); setReadAt(new Date()); }
     })();
     return () => { live = false; };
-  }, [api]);
-  return state;
+  }, [api, nonce]);
+  return { ev: state, readAt, reload: () => { setState({}); setNonce((n) => n + 1); } };
 }
 
 function EvidenceBody({ api }) {
   useConfigVersion(api);
-  const ev = useEvidence(api);
+  const { ev, readAt, reload } = useEvidence(api);
   const cfg = configOf(api);
   const loading = !Object.keys(ev).length;
   const fileByKey = Object.fromEntries(FILES.map((f) => [f.key, f]));
@@ -60,7 +63,12 @@ function EvidenceBody({ api }) {
   return (
     <div className="qv-grid">
       <div className="qv-span-12">
-        <Panel kicker="Index" title="Validation files">
+        <Panel kicker="Index" title="Validation files" right={(
+          <span className="qv-row">
+            <span className="qv-small qv-muted">{loading ? 'Reading the files' : readAt ? `Read from disk at ${readAt.toLocaleTimeString('en-US')}` : ''}</span>
+            <Button tone="quiet" onClick={reload} disabled={loading}>Reload</Button>
+          </span>
+        )}>
           <table className="qv-table">
             <thead><tr><th>Check</th><th>File</th><th>What it shows</th><th>Status</th></tr></thead>
             <tbody>
@@ -70,10 +78,10 @@ function EvidenceBody({ api }) {
                 return (
                   <tr key={f.key}>
                     <td>{f.title}</td>
-                    <td className="qv-mono qv-small">evidence/{f.file}</td>
+                    <td className="qv-mono qv-small">{f.file}</td>
                     <td className="qv-small">{f.what}</td>
                     <td>{loading ? <Pill>loading</Pill> : e?.status === 'ok'
-                      ? <Pill tone={pass === false ? 'bad' : pass === true ? 'good' : ''}>{pass === false ? 'failed' : pass === true ? 'passed' : 'present'}</Pill>
+                      ? <Pill tone={pass === false ? 'bad' : pass === true ? 'good' : ''}>{pass === false ? 'failed' : pass === true ? 'passed' : 'measured'}</Pill>
                       : <Pill>not run yet</Pill>}</td>
                   </tr>
                 );
@@ -93,8 +101,15 @@ function EvidenceBody({ api }) {
       {['router', 'router_labels', 'r5', 'lp'].map((k) => (
         <div className="qv-span-6" key={k}>
           <Panel kicker={k === 'lp' ? 'Fair division' : 'Routing'} title={fileByKey[k].title}>
-            {ev[k]?.status === 'ok' ? <Guard name={fileByKey[k].title}><Report data={ev[k].data} /></Guard>
-              : <Pending what={`evidence/${fileByKey[k].file}`} detail={loading ? 'Loading...' : 'The check has not written its result yet.'} />}
+            {ev[k]?.status === 'ok' ? (
+              <Guard name={fileByKey[k].title}>
+                <Summary data={ev[k].data} fileKey={k} />
+                <details className="qv-raw qv-wrap" style={{ marginTop: 10 }}>
+                  <summary>Every field in {fileByKey[k].file}</summary>
+                  <Report data={ev[k].data} />
+                </details>
+              </Guard>
+            ) : <Pending what={`evidence/${fileByKey[k].file}`} detail={loading ? 'Reading the file.' : 'The check has not written its result yet.'} />}
           </Panel>
         </div>
       ))}
@@ -110,6 +125,32 @@ function EvidenceBody({ api }) {
           <SourcesTable />
         </Panel>
       </div>
+    </div>
+  );
+}
+
+// ---------- curated summary: the few numbers a judge asks about, each with its plain meaning ----------
+function Summary({ data, fileKey }) {
+  const sum = summaryOf(fileKey, data);
+  if (!sum) return <Report data={data} />;
+  const pass = passOf(data);
+  return (
+    <div className="qv-stack">
+      <div className="qv-row qv-small qv-muted">
+        {pass != null && <Pill tone={pass ? 'good' : 'bad'}>{pass ? 'passed' : 'failed'}</Pill>}
+        {sum.when && <span>Run {sum.when}</span>}
+      </div>
+      {sum.lead && <p style={{ margin: 0 }}>{sum.lead}</p>}
+      <dl className="qv-facts">
+        {sum.facts.map(([label, value]) => (
+          <React.Fragment key={label}><dt>{label}</dt><dd>{value}</dd></React.Fragment>
+        ))}
+      </dl>
+      {sum.notes?.length > 0 && (
+        <ul className="qv-small qv-muted" style={{ margin: 0, paddingLeft: 18 }}>
+          {sum.notes.map((n) => <li key={n}>{n}</li>)}
+        </ul>
+      )}
     </div>
   );
 }
@@ -137,10 +178,10 @@ function Report({ data, depth = 0 }) {
             {scalars.map(([k, v]) => (
               <tr key={k}>
                 <td className="qv-small">{k}</td>
-                <td className="num">{typeof v === 'boolean' && PASSY.test(k) ? <Pill tone={v ? 'good' : 'bad'}>{v ? 'yes' : 'no'}</Pill> : fmtVal(v)}</td>
+                <td className={typeof v === 'number' ? 'num' : 'qv-small'}>{typeof v === 'boolean' && PASSY.test(k) ? <Pill tone={v ? 'good' : 'bad'}>{v ? 'yes' : 'no'}</Pill> : fmtVal(v)}</td>
               </tr>
             ))}
-            {lists.map(([k, v]) => <tr key={k}><td className="qv-small">{k}</td><td className="num">{fmtVal(v)}</td></tr>)}
+            {lists.map(([k, v]) => <tr key={k}><td className="qv-small">{k}</td><td className="qv-small">{fmtVal(v)}</td></tr>)}
           </tbody>
         </table>
       )}
@@ -195,6 +236,74 @@ const PASS_COL = /^(pass|passed|ok|success)$/i;
 
 // ---------- recovery curves ----------
 function Recovery({ data }) {
+  const curated = useMemo(() => recoveryCurves(data), [data]);
+  if (curated) return <RecoveryCurated data={data} curated={curated} />;
+  return <RecoveryGeneric data={data} />;
+}
+
+const POLICY_NAME = { bald: 'most informative question (BALD)', random: 'random pair', fixed: 'fixed list of 6' };
+const SET_NAME = { 'off-prior': 'Off-prior students (stress set)', prior: 'Students drawn from the prior (correctness check)' };
+
+function RecoveryCurated({ data, curated }) {
+  const [set, setSet] = useState(curated.sets[0]);
+  const [tau, setTau] = useState(curated.taus.includes(1) ? 1 : curated.taus[0]);
+  const [metric, setMetric] = useState('regretMean');
+  const info = RECOVERY_METRICS[metric];
+  const series = curated.series
+    .filter((x) => x.set === set && x.tauScale === tau)
+    .map((x) => ({ name: POLICY_NAME[x.policy] || x.policy, pts: x.pts }));
+  const comps = (data.comparisons || []).filter((c) => c.set === set && c.tauScale === tau);
+  const ci = (d) => (d && Number.isFinite(d.mean) ? `${d.mean.toFixed(1)} (${d.lo.toFixed(1)} to ${d.hi.toFixed(1)})` : 'n/a');
+  return (
+    <div className="qv-stack">
+      {data.headline?.text && <Note tone={data.headline.baldBeatsRandom ? 'good' : ''}>{data.headline.text}</Note>}
+      <div className="qv-row">
+        <label htmlFor="rec-set">Students</label>
+        <select id="rec-set" value={set} onChange={(e) => setSet(e.target.value)}>
+          {curated.sets.map((k) => <option key={k} value={k}>{SET_NAME[k] || k}</option>)}
+        </select>
+        <label htmlFor="rec-tau">Answer noise</label>
+        <select id="rec-tau" value={tau} onChange={(e) => setTau(Number(e.target.value))}>
+          {curated.taus.map((t) => <option key={t} value={t}>{t === 1 ? 'as assumed (x1)' : `x${t}`}</option>)}
+        </select>
+        <label htmlFor="rec-metric">Measure</label>
+        <select id="rec-metric" value={metric} onChange={(e) => setMetric(e.target.value)}>
+          {Object.entries(RECOVERY_METRICS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+      </div>
+      <LineChart series={series} metric={metric} yLabel={info.unit} />
+      <div className="qv-legend">
+        {series.map((x, i) => (
+          <span key={x.name}>
+            <svg width="26" height="10" aria-hidden="true"><line x1="0" y1="5" x2="26" y2="5" stroke={SERIES_COLORS[i]} strokeWidth="2" strokeDasharray={DASH[i]} /></svg>{' '}
+            {x.name}
+          </span>
+        ))}
+      </div>
+      {comps.length > 0 && (
+        <table className="qv-table">
+          <thead><tr><th>BALD against</th><th className="num">Regret difference, mean over picks 1 to 6, $/mo (95% interval)</th><th>Verdict</th></tr></thead>
+          <tbody>
+            {comps.map((c) => (
+              <tr key={c.vs}>
+                <td>{POLICY_NAME[c.vs] || c.vs}</td>
+                <td className="num">{ci(c.regretDiffMeanOverPicks)}</td>
+                <td><Pill tone={/bald lower/.test(c.verdict) ? 'good' : /bald higher/.test(c.verdict) ? 'bad' : ''}>{c.verdict}</Pill></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <p className="qv-small qv-muted" style={{ margin: 0 }}>
+        {info.help} SYNTHETIC students with known values answer picks through the logit model; {data.trials ?? 'n/a'} trials per
+        line, seed {data.seed ?? 'n/a'}. A negative regret difference favors BALD. Values are as written by scripts/recovery.mjs
+        ({data.date || 'date not recorded'}); nothing is smoothed or tuned here.
+      </p>
+    </div>
+  );
+}
+
+function RecoveryGeneric({ data }) {
   const series = useMemo(() => findSeries(data), [data]);
   const metrics = useMemo(() => metricsOf(series), [series]);
   const [metric, setMetric] = useState(null);
@@ -208,7 +317,7 @@ function Recovery({ data }) {
       </div>
     );
   }
-  const shown = series.filter((s) => s.pts.some((p) => typeof p.rec[m] === 'number')).slice(0, 6);
+  const shown = series.filter((x) => x.pts.some((p) => typeof p.rec[m] === 'number')).slice(0, 6);
   return (
     <div className="qv-stack">
       <div className="qv-row">
@@ -220,10 +329,10 @@ function Recovery({ data }) {
       </div>
       <LineChart series={shown} metric={m} />
       <div className="qv-legend">
-        {shown.map((s, i) => (
-          <span key={s.name}>
+        {shown.map((x, i) => (
+          <span key={x.name}>
             <svg width="26" height="10" aria-hidden="true"><line x1="0" y1="5" x2="26" y2="5" stroke={SERIES_COLORS[i]} strokeWidth="2" strokeDasharray={DASH[i]} /></svg>{' '}
-            {s.name}
+            {x.name}
           </span>
         ))}
       </div>
@@ -236,8 +345,8 @@ function Recovery({ data }) {
   );
 }
 
-function LineChart({ series, metric }) {
-  const W = 720, H = 260, L = 56, R = 16, T = 12, B = 34;
+function LineChart({ series, metric, yLabel }) {
+  const W = 720, H = 270, L = 64, R = 16, T = 22, B = 36;
   const pts = series.flatMap((s) => s.pts.filter((p) => typeof p.rec[metric] === 'number' && Number.isFinite(p.rec[metric])));
   if (!pts.length) return <Note>No finite values for {metric}.</Note>;
   const xs = pts.map((p) => p.pick), ys = pts.map((p) => p.rec[metric]);
@@ -258,7 +367,8 @@ function LineChart({ series, metric }) {
         </g>
       ))}
       {xt.map((t) => <text key={t} x={X(t)} y={H - B + 16} textAnchor="middle">{t}</text>)}
-      <text x={(L + W - R) / 2} y={H - 4} textAnchor="middle">picks answered</text>
+      <text x={(L + W - R) / 2} y={H - 2} textAnchor="middle">picks answered</text>
+      {yLabel && <text x={L} y={T - 8} textAnchor="start">{yLabel}</text>}
       {series.map((s, i) => {
         const p = s.pts.filter((q) => typeof q.rec[metric] === 'number' && Number.isFinite(q.rec[metric]));
         const d = p.map((q, k) => `${k ? 'L' : 'M'}${X(q.pick).toFixed(1)},${Y(q.rec[metric]).toFixed(1)}`).join(' ');

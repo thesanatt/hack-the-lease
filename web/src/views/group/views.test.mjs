@@ -160,3 +160,23 @@ test('evidence readers handle the shapes we expect and odd ones', () => {
   const rows = flattenConfig(CONFIG);
   assert.ok(rows.some(([k]) => k === 'marginals.campus.North'));
 });
+
+// Evidence view readers against the real evidence files (written by the validation scripts).
+test('evidence summaries read the real files', async () => {
+  const { readFileSync, existsSync } = await import('node:fs');
+  const { summaryOf, recoveryCurves } = await import('../evidence/report.js');
+  const dir = new URL('../../../public/data/evidence/', import.meta.url);
+  for (const key of ['router', 'router_labels', 'r5', 'lp']) {
+    const f = new URL(`${key}.json`, dir);
+    if (!existsSync(f)) continue;
+    const s = summaryOf(key, JSON.parse(readFileSync(f, 'utf8')));
+    assert.ok(s && s.facts.length >= 3, `${key} summary has facts`);
+    for (const [label, value] of s.facts) assert.ok(label && value != null && value !== '', `${key}: ${label}`);
+  }
+  const rf = new URL('recovery.json', dir);
+  if (existsSync(rf)) {
+    const c = recoveryCurves(JSON.parse(readFileSync(rf, 'utf8')));
+    assert.ok(c && c.series.length > 0 && c.series.every((x) => x.pts.length >= 2));
+    assert.equal(c.sets[0], 'off-prior');
+  }
+});

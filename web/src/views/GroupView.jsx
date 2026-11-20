@@ -24,7 +24,7 @@ export default function GroupView({ api }) {
       <div className="qv-head">
         <h1>Group</h1>
         <p>One house, one room each, one rent split that nobody would swap out of, under every private cap.</p>
-        <Label>SAMPLE DATA . fictional members . SYNTHETIC homes</Label>
+        <Label>SAMPLE DATA: FICTIONAL members, SYNTHETIC homes and rents</Label>
       </div>
       <Guard name="Group view"><GroupBody api={api} /></Guard>
     </div>
@@ -281,29 +281,27 @@ function HouseTable({ rows, chosenId, onPick }) {
       <table className="qv-table">
         <thead>
           <tr>
-            <th>#</th><th>House</th><th className="num">Rent</th><th>Caps</th>
-            <th className="num" title="The worst-off member's net monthly cost: rent share, utilities share and commute time in dollars, minus what the room is worth to them">Worst-off net cost</th>
-            <th className="num" title="The same net monthly cost, summed over the group">Group net cost</th>
-            <th className="num">Solve</th>
+            <th>#</th><th>House</th><th className="num">Rent /mo</th><th title="Whether a split exists that keeps every member under their private cap">Under caps</th>
+            <th className="num" title="The worst-off member's net monthly cost: rent share, utilities share and commute time in dollars, minus what the room is worth to them">Worst-off /mo</th>
+            <th className="num" title="The same net monthly cost, summed over the group">Group /mo</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r, k) => (
             <tr key={r.home.id} className={r.home.id === chosenId ? 'sel' : r.feasible ? '' : 'dim'}
-              onClick={() => onPick(r.home.id)} style={{ cursor: 'pointer' }}>
+              onClick={() => onPick(r.home.id)} style={{ cursor: 'pointer' }} title={`Solved in ${ms(r.solveMs)}`}>
               <td className="qv-mono">{k + 1}</td>
               <td>
-                <button type="button" className="qv-btn quiet" style={{ padding: '0 6px', border: 'none', background: 'transparent', textAlign: 'left' }}
+                <button type="button" className="qv-btn quiet" style={{ padding: 0, border: 'none', background: 'transparent', textAlign: 'left', fontWeight: 600 }}
                   onClick={(e) => { e.stopPropagation(); onPick(r.home.id); }}>
                   {r.home.name}
                 </button>
-                <span className="qv-small qv-muted"> {r.home.area} . {r.home.rooms.length} rooms</span>
+                <div className="qv-small qv-muted">{r.home.area}, {r.home.rooms.length} rooms</div>
               </td>
               <td className="num">{usd(r.home.rent)}</td>
-              <td>{r.error ? <Pill tone="bad">error</Pill> : <Pill tone={r.feasible ? 'good' : 'bad'}>{r.feasible ? 'feasible' : 'infeasible'}</Pill>}</td>
-              <td className="num">{usd(-r.E)}/mo</td>
-              <td className="num">{usd(-r.W)}/mo</td>
-              <td className="num qv-muted">{ms(r.solveMs)}</td>
+              <td>{r.error ? <Pill tone="bad">solver error</Pill> : <Pill tone={r.feasible ? 'good' : 'bad'}>{r.feasible ? 'fits' : 'no split fits'}</Pill>}</td>
+              <td className="num">{usd(-r.E)}</td>
+              <td className="num">{usd(-r.W)}</td>
             </tr>
           ))}
         </tbody>
@@ -314,6 +312,7 @@ function HouseTable({ rows, chosenId, onPick }) {
 
 const BATH = { private: 'private bath', half: 'half bath', shared: 'shared bath' };
 const FLOOR = { basement: 'basement', 1: '1st floor', 2: '2nd floor', attic: 'attic' };
+const LIGHT = ['little daylight', 'some daylight', 'bright'];
 
 function SplitTable({ row, members, colors }) {
   const { res, problem, home } = row;
@@ -333,7 +332,7 @@ function SplitTable({ row, members, colors }) {
               return (
                 <tr key={m.id}>
                   <td><span className="qv-swatch" style={{ background: colors[i] }} />{m.name}</td>
-                  <td>{room?.label}<div className="qv-small qv-muted">{room ? `${room.sqft} sq ft . ${BATH[room.bath] || room.bath} . ${FLOOR[room.floor] || room.floor} . light ${room.light}` : ''}</div></td>
+                  <td>{room?.label}<div className="qv-small qv-muted">{room ? `${room.sqft} sq ft, ${BATH[room.bath] || room.bath}, ${FLOOR[room.floor] || room.floor}, ${LIGHT[room.light] ?? `light ${room.light}`}` : ''}</div></td>
                   <td className="num">{usd(res.prices[j], 2)}</td>
                 </tr>
               );

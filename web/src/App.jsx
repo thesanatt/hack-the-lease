@@ -17,6 +17,7 @@ const VIEWS = [
   { id: 'group', label: 'Group', blurb: 'A house, rooms and a fair split', Comp: lazyView('Group') },
   { id: 'operator', label: 'Operator', blurb: 'Per-room fair rents (SYNTHETIC)', Comp: lazyView('Operator') },
   { id: 'evidence', label: 'Evidence', blurb: 'How we checked the models', Comp: lazyView('Evidence') },
+  { id: 'pitch', label: 'Pitch', blurb: 'Slides for the 5-minute presentation (arrows move, F full screen, N notes)', Comp: lazyView('Pitch') },
 ];
 
 let enginePromise = null;

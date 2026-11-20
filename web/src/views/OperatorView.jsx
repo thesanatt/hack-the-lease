@@ -7,6 +7,7 @@ import { pickIrregular, drawGroups, renovate, canAddHalfBath, roomPricingLocal, 
 
 const BATH = { private: 'private bath', half: 'half bath', shared: 'shared bath' };
 const FLOOR = { basement: 'basement', 1: '1st floor', 2: '2nd floor', attic: 'attic' };
+const LIGHT = ['little daylight', 'some daylight', 'bright'];
 const SEED = 2026;      // local fallback draws
 const POP_SEED = 11;    // same seed as scripts/build_operator.mjs
 
@@ -16,7 +17,7 @@ export default function OperatorView({ api }) {
       <div className="qv-head">
         <h1>Operator</h1>
         <p>What each room of an irregular house would rent for, if typical groups split the house rent so nobody would swap rooms.</p>
-        <Label>SYNTHETIC population . SYNTHETIC homes</Label>
+        <Label>SYNTHETIC population and homes, not market rents</Label>
       </div>
       <Guard name="Operator view"><OperatorBody api={api} /></Guard>
     </div>
@@ -127,7 +128,7 @@ function OperatorBody({ api }) {
             </select>
           ) : null}>
           <div className="qv-stats">
-            <Stat label="house rent per month" value={usd(home.rent)} />
+            <Stat label="house rent per month" value={`${usd(home.rent)}/mo`} />
             <Stat label="rooms" value={home.rooms.length} />
             <Stat label="synthetic groups" value={G} note={res?.source === 'engine' ? `from a population of ${population?.n ?? ''}, seed ${POP_SEED}` : `drawn from the prior, seed ${SEED}`} />
             {res?.totalMs != null && res.base && <Stat label="live compute" value={ms(res.totalMs)} note={`${res.solves} house solves`} />}
@@ -142,8 +143,8 @@ function OperatorBody({ api }) {
                   <thead>
                     <tr>
                       <th>Room</th><th>Features</th>
-                      <th className="num">p10</th><th className="num">p50</th><th className="num">p90</th>
-                      <th className="num">Asking</th><th style={{ minWidth: 180 }}>Range across groups</th>
+                      <th className="num" title="10th percentile across synthetic groups">p10 /mo</th><th className="num" title="Median across synthetic groups">p50 /mo</th><th className="num" title="90th percentile across synthetic groups">p90 /mo</th>
+                      <th className="num">Asking /mo</th><th style={{ minWidth: 180 }}>Range across groups</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -152,7 +153,7 @@ function OperatorBody({ api }) {
                       return (
                         <tr key={room.id} className={j === res.renoIdx ? 'sel' : ''}>
                           <td>{room.label}</td>
-                          <td className="qv-small">{room.sqft} sq ft . {BATH[room.bath] || room.bath} . {FLOOR[room.floor] || room.floor} . light {room.light}</td>
+                          <td className="qv-small">{room.sqft} sq ft, {BATH[room.bath] || room.bath}, {FLOOR[room.floor] || room.floor}, {LIGHT[room.light] ?? `light ${room.light}`}</td>
                           <td className="num">{usd(r.p10)}</td>
                           <td className="num"><b>{usd(r.p50)}</b></td>
                           <td className="num">{usd(r.p90)}</td>
@@ -224,8 +225,8 @@ function OperatorBody({ api }) {
               {res?.delta ? (
                 <>
                   <div className="qv-stats">
-                    <Stat label={`${home.rooms[res.renoIdx].label}: change in p50 fair share`} value={signedUsd(res.delta.roomP50)} note="per month, same house rent" />
-                    <Stat label="change in median group headroom" value={signedUsd(res.delta.headroom)} note="room for a higher total rent" />
+                    <Stat label={`${home.rooms[res.renoIdx].label}: change in p50 fair share`} value={`${signedUsd(res.delta.roomP50)}/mo`} note="same house rent" />
+                    <Stat label="change in median group headroom" value={`${signedUsd(res.delta.headroom)}/mo`} note="room for a higher total rent" />
                   </div>
                   <p className="qv-small qv-muted" style={{ margin: 0 }}>
                     The house rent stays {usd(home.rent)}, so the renovated room's higher share comes out of the other rooms.
@@ -242,7 +243,7 @@ function OperatorBody({ api }) {
       {opData && (
         <div className="qv-span-12">
           <Note>
-            Build-time file operator.json is loaded ({opData.label || 'SYNTHETIC population'}). The numbers above are recomputed live in this browser for the selected house.
+            The build-time file operator.json is loaded ({opData.label || 'SYNTHETIC population'}). The numbers above are recomputed live in this browser for the selected house.
           </Note>
         </div>
       )}

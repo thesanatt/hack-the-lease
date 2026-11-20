@@ -9,7 +9,7 @@ export function MemberCard({ m, color, revealed, onToggle, privateInfo, onCap, p
         <span className="name">{m.name}</span>
         <Pill title="Room values come from this fictional persona's own theta, not learned picks">demo values</Pill>
       </div>
-      <div className="qv-small qv-muted">{m.program || 'Student'}{place ? ` . ${place}` : ''}</div>
+      <div className="qv-small qv-muted">{m.program || 'Student'}{place ? `, ${place}` : ''}</div>
       <div className="qv-row qv-small" style={{ marginTop: 6 }}>
         <span>Rent cap</span>
         <span className="qv-mono" aria-label={revealed ? undefined : 'hidden'}>{revealed ? usd(privateInfo?.cap) : '$ ****'}</span>
