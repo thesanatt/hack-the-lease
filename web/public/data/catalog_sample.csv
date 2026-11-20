@@ -1,0 +1,42 @@
+Term,Session,Acad Group,Class Nbr,Subject,Catalog Nbr,Section,Course Title,Component,Codes,M,T,W,TH,F,S,SU,Start Date,End Date,Time,Location,Instructor,Units
+SAMPLE,Regular Academic Session,Engineering,40101,Electrical Engineering & Computer Sci (EECS), 482,001,Introduction to Operating Systems,LEC,,M,,W,,,,,,,1030-12PM,1670 BBB,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40102,Electrical Engineering & Computer Sci (EECS), 482,002,Introduction to Operating Systems,LEC,,M,,W,,,,,,,430-6PM,1800 CHEM,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40103,Electrical Engineering & Computer Sci (EECS), 482,003,Introduction to Operating Systems,LEC,,,T,,TH,,,,,,6-730PM,1311 EECS,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40104,Electrical Engineering & Computer Sci (EECS), 482,011,Introduction to Operating Systems,LAB,,,,,TH,,,,,,1030-1130AM,1371 GGBL,Sample,
+SAMPLE,Regular Academic Session,Engineering,40105,Electrical Engineering & Computer Sci (EECS), 482,012,Introduction to Operating Systems,LAB,,,,,,F,,,,,1130-1230PM,1005 EECS,Sample,
+SAMPLE,Regular Academic Session,Engineering,40106,Electrical Engineering & Computer Sci (EECS), 482,013,Introduction to Operating Systems,LAB,,,,W,,,,,,,6-7PM,2160 UGL,Sample,
+SAMPLE,Regular Academic Session,Engineering,40107,Electrical Engineering & Computer Sci (EECS), 482,014,Introduction to Operating Systems,LAB,,,T,,,,,,,,830-930PM,1060 FMCRB,Sample,
+SAMPLE,Regular Academic Session,Engineering,40108,Electrical Engineering & Computer Sci (EECS), 482,015,Introduction to Operating Systems,LAB,,,,,,F,,,,,1-2PM,1005 EECS,Sample,
+SAMPLE,Regular Academic Session,Engineering,40109,Electrical Engineering & Computer Sci (EECS), 376,001,Foundations of Computer Science,LEC,,,T,,TH,,,,,,9-1030AM,1670 BBB,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40110,Electrical Engineering & Computer Sci (EECS), 376,002,Foundations of Computer Science,LEC,,,T,,TH,,,,,,1030-12PM,1500 EECS,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40111,Electrical Engineering & Computer Sci (EECS), 376,011,Foundations of Computer Science,DIS,,,,,,F,,,,,230-330PM,1003 EECS,Sample,
+SAMPLE,Regular Academic Session,Engineering,40112,Electrical Engineering & Computer Sci (EECS), 376,012,Foundations of Computer Science,DIS,,,,W,,,,,,,2-3PM,1210 CHEM,Sample,
+SAMPLE,Regular Academic Session,Engineering,40113,Electrical Engineering & Computer Sci (EECS), 376,013,Foundations of Computer Science,DIS,,,,,TH,,,,,,7-8PM,1504 GGBL,Sample,
+SAMPLE,Regular Academic Session,Engineering,40114,Electrical Engineering & Computer Sci (EECS), 445,001,Introduction to Machine Learning,LEC,,M,,W,,,,,,,3-430PM,1311 EECS,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40115,Electrical Engineering & Computer Sci (EECS), 445,002,Introduction to Machine Learning,LEC,,,T,,TH,,,,,,3-430PM,1670 BBB,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40116,Electrical Engineering & Computer Sci (EECS), 485,001,Web Systems,LEC,,M,,W,,,,,,,1230-2PM,1670 BBB,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40117,Electrical Engineering & Computer Sci (EECS), 484,001,Database Management Systems,LEC,,,T,,TH,,,,,,12-130PM,1500 EECS,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40118,Electrical Engineering & Computer Sci (EECS), 484,002,Database Management Systems,LEC,,M,,W,,,,,,,6-730PM,1800 CHEM,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40119,Electrical Engineering & Computer Sci (EECS), 281,001,Data Structures and Algorithms,LEC,,M,,W,,,,,,,3-430PM,1670 BBB,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40120,Electrical Engineering & Computer Sci (EECS), 281,011,Data Structures and Algorithms,LAB,,,,,,F,,,,,1030-1230PM,1690 BBB,Sample,
+SAMPLE,Regular Academic Session,LSA,40121,Economics (ECON), 101,001,Principles of Economics I,LEC,,M,,W,,,,,,,830-10AM,AUD A AH,Sample,4
+SAMPLE,Regular Academic Session,LSA,40122,Economics (ECON), 101,002,Principles of Economics I,LEC,,,T,,TH,,,,,,830-10AM,AUD B AH,Sample,4
+SAMPLE,Regular Academic Session,LSA,40123,Economics (ECON), 101,011,Principles of Economics I,DIS,,,,,,F,,,,,9-10AM,G115 AH,Sample,
+SAMPLE,Regular Academic Session,LSA,40124,Economics (ECON), 101,012,Principles of Economics I,DIS,,,,,,F,,,,,10-11AM,2160 UGL,Sample,
+SAMPLE,Regular Academic Session,LSA,40125,Economics (ECON), 101,013,Principles of Economics I,DIS,,,,,TH,,,,,,4-5PM,2160 UGL,Sample,
+SAMPLE,Regular Academic Session,LSA,40126,Economics (ECON), 101,014,Principles of Economics I,DIS,,,,W,,,,,,,8-9PM,G127 AH,Sample,
+SAMPLE,Regular Academic Session,Nursing,40127,Nursing (NURS), 372,001,Therapeutic Nursing Care II,LEC,,M,,W,,,,,,,9-11AM,1250 NIB,Sample,4
+SAMPLE,Regular Academic Session,Nursing,40128,Nursing (NURS), 372,002,Therapeutic Nursing Care II,LEC,,M,,W,,,,,,,1-3PM,1250 NIB,Sample,4
+SAMPLE,Regular Academic Session,Nursing,40129,Nursing (NURS), 373,001,Behavioral Health,LEC,,,,,,F,,,,,9-12PM,2150 NIB,Sample,3
+SAMPLE,Regular Academic Session,Nursing,40130,Nursing (NURS), 373,002,Behavioral Health,LEC,,,,W,,,,,,,330-630PM,2150 NIB,Sample,3
+SAMPLE,Regular Academic Session,Nursing,40131,Nursing (NURS), 370,001,Care of the Family: Reproductive Health,LEC,,,T,,TH,,,,,,1-230PM,1250 NIB,Sample,3
+SAMPLE,Regular Academic Session,Nursing,40132,PNE, 350,101,Therapeutic Nursing Care II & Community Health,CLN,,,T,,TH,,,,,,630-3PM,UH,Sample,5
+SAMPLE,Regular Academic Session,Nursing,40133,PNE, 350,102,Therapeutic Nursing Care II & Community Health,CLN,,,T,,TH,,,,,,7-330PM,UH,Sample,5
+SAMPLE,Regular Academic Session,Nursing,40134,PNE, 350,103,Therapeutic Nursing Care II & Community Health,CLN,,,,,,F,S,,,,630-3PM,UH,Sample,5
+SAMPLE,Regular Academic Session,Nursing,40135,PNE, 350,104,Therapeutic Nursing Care II & Community Health,CLN,,,T,,TH,,,,,,2-1030PM,UH,Sample,5
+SAMPLE,Regular Academic Session,LSA,40136,Psychology (PSYCH), 111,001,Introduction to Psychology,LEC,,M,,W,,,,,,,4-530PM,AUD D AH,Sample,4
+SAMPLE,Regular Academic Session,LSA,40137,Psychology (PSYCH), 111,002,Introduction to Psychology,LEC,,M,,W,,,,,,,11-1230PM,AUD C AH,Sample,4
+SAMPLE,Regular Academic Session,LSA,40138,Sociology (SOC), 100,001,Principles of Sociology,LEC,,M,,W,,,,,,,330-5PM,AUD B AH,Sample,4
+SAMPLE,Regular Academic Session,LSA,40139,Statistics (STATS), 250,001,Introduction to Statistics and Data Analysis,LEC,,M,,W,,,,,,,1130-1PM,1800 CHEM,Sample,4
+SAMPLE,Regular Academic Session,LSA,40140,Statistics (STATS), 250,002,Introduction to Statistics and Data Analysis,LEC,,,T,,TH,,,,,,4-530PM,1800 CHEM,Sample,4
+SAMPLE,Regular Academic Session,Engineering,40141,Electrical Engineering & Computer Sci (EECS), 499,001,Directed Study,IND,,,,,,,,,,,ARR,ARR,Sample,1

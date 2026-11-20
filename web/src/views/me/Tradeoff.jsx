@@ -99,7 +99,8 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
           <div className="to-tip" style={{ left: `${(X(hov.x) / W) * 100}%`, top: `${(Y(hov.y) / H) * 100}%` }}>
             <b>{hov.name}</b>
             <span>{money(hov.x)}/mo cost to you</span>
-            <span>{money(hov.price)}/mo with utilities</span>
+            <span>{money(hov.price)}/mo, the room picked for you</span>
+            <span>rooms from {money(hov.from)}</span>
             <span>{hours(hov.y * 60)} h/wk</span>
           </div>
         )}

@@ -90,6 +90,35 @@ infeasible. `scripts/check_data.mjs` re-checks this on every run (it cuts each c
 Built by `engine/operator.js` and `scripts/build_operator.mjs` (decide builder) from the shares in
 `engine/config.js` (`marginals`), drawn independently. Not described here beyond that.
 
+### catalog_sample.csv and plans_sample.json: SAMPLE (Next year tab)
+
+`catalog_sample.csv` has 41 rows (40 sections, plus one `ARR` row the parser skips). It uses the column layout of
+the U-M Schedule of Classes CSV as published in past years. The real header has not been checked against a
+current file. `catalog_sample.meta.json` carries the label shown on screen: "SAMPLE catalog: course numbers are
+real; sections, times and rooms are made up".
+
+- Real: course numbers and titles (EECS 281, 376, 445, 482, 484, 485, 499; ECON 101; PSYCH 111; SOC 100;
+  STATS 250; NURS 370, 372, 373). The nursing clinical is listed as `PNE 350`. The UMSN 2026-27 undergraduate
+  handbook lists the Therapeutic Nursing Care II clinical as PNE 350 to 366, 5 credits. Building codes map to
+  real places through `engine/ics.js` (BBB, EECS, GGBL, FMCRB, CHEM, AH, UGL, NIB, UH).
+- Made up: every section number, day, time, room number, class number and component split, and the
+  instructor (`Sample`). Start and end dates are left blank. Term is `SAMPLE`.
+- How it is shaped: most EECS sections are on North Campus, with one Central option for some components. There
+  are some evening sections, and the EECS 482 lab has five sections. ECON 101 is all Central. Nursing lectures
+  are at NIB, and the clinical is at University Hospital (two early shifts, one Friday and Saturday, one
+  evening). Times were spread out only so that a plan can usually be scheduled without clashes. No number
+  was set to steer a result.
+
+`plans_sample.json` ("SAMPLE plans, made up") holds two plans that `engine/catalog.js` draws weeks from:
+
+| id | Persona (walking limits) | Courses | Choice | Maybe |
+|---|---|---|---|---|
+| cs | jordan | EECS 482 lecture and lab, EECS 376 lecture and discussion, ECON 101 lecture and discussion | one of EECS 445, 485, 484 | research lab job, Ford Robotics Building, Tue Thu 13:00 to 17:00, odds 0.4 |
+| nursing | maya | NURS 372, NURS 373, PNE 350 clinical | one of PSYCH 111, SOC 100, STATS 250 | part-time job, Kerrytown Market, Mon Wed 18:30 to 21:30, odds 0.5 |
+
+The odds and the share of full sections (early 5%, normal 20%, late 40%) are assumptions, not data. The repo
+never ships a real Registrar file. A student's own file is read in the browser and never uploaded.
+
 ## What we do not have
 
 No real listings, rents, room sizes or occupancy. No student data of any kind. No street lighting data and no

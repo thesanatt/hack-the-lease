@@ -1,8 +1,8 @@
 // The pitch slides. Each slide is one picture and one sentence. Every number is computed live by the engine
-// (slides 1 to 3, see data.js) or read from web/public/data/evidence/*.json (slide 5). Nothing numeric is typed
+// (slides 1 to 4, see data.js) or read from web/public/data/evidence/*.json (slide 6). Nothing numeric is typed
 // in here except labels and the published method names. The detail lives in the presenter notes (press N).
 import { useEffect, useMemo, useState } from 'react';
-import { campusExample, studentExample, groupExample, evidenceFigures, DATE_LABEL, TIMES, DEFAULT_HOME } from './data.js';
+import { campusExample, studentExample, groupExample, nextYearExample, evidenceFigures, DATE_LABEL, TIMES, DEFAULT_HOME, NEXT_PLAN } from './data.js';
 import { DiffHistogram, RegretCurves, CheckGrid, r5Diffs, regretSeries, C } from '../evidence/charts.jsx';
 
 const int = (x) => (Number.isFinite(x) ? Math.round(x).toLocaleString('en-US') : '-');
@@ -147,7 +147,116 @@ function Legs({ legs, t0, X, y }) {
   );
 }
 
-// 2. What one student sees: every home, cost to Jordan a month against hours a week, colored by fit for Jordan's week.
+// 2. Next year: the lease is signed before the schedule exists. The price of not knowing (EVPI), what each
+// unknown is worth finding out first (EVPPI, with about two standard errors), and the home that loses least.
+// Computed by runNextYear with the Next year tab's defaults, so both show the same dollars.
+function NextYear({ api }) {
+  const [planId, setPlanId] = useState(NEXT_PLAN);
+  const [st, setSt] = useState({ status: 'running', f: 0 });
+  useEffect(() => {
+    let live = true;
+    setSt((s) => ({ status: 'running', f: 0, r: s.r }));
+    nextYearExample(api, (f) => live && setSt((s) => (s.status === 'running' ? { ...s, f } : s)), planId)
+      .then((r) => live && setSt({ status: r ? 'done' : 'missing', r }))
+      .catch((e) => { console.warn(e); if (live) setSt({ status: 'error' }); });
+    return () => { live = false; };
+  }, [api, api.version, planId]);
+  const r = st.status === 'done' ? st.r : null;
+  const s = r?.safest;
+  const pm = r ? Math.max(1, Math.round(2 * (r.evpi.se || 0))) : 0;
+  const small = r && !(r.evpi.value >= 0.5); // rounds to $0: say "under $1" instead
+  const plans = r?.plans || st.r?.plans || [];
+  const aside = (
+    <div className="pd-aside">
+      {plans.length > 1 && (
+        <label className="pd-picker">
+          <span className="pd-sr">Sample plan</span>
+          <select value={planId} onChange={(e) => { setPlanId(e.target.value); e.target.blur(); /* arrows go back to the slides */ }}>
+            {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </label>
+      )}
+      <span className="pd-chip">Sample catalog</span>
+    </div>
+  );
+  return (
+    <Slide
+      title="You sign before your schedule exists."
+      aside={aside}
+      foot={r ? `${r.plan.name}: ${int(r.n)} possible weeks drawn from a sample catalog (real course numbers, made-up sections), each routed through all ${int(r.homes)} sample listings on the real timetables. Same numbers as the Next year tab.` : null}
+    >
+      {st.status === 'running' && <Wait what={`Routing next year's possible weeks through every home${st.f > 0 ? `: ${Math.round(st.f * 100)}%` : ''}.`} />}
+      {(st.status === 'missing' || st.status === 'error') && <Wait what="The class catalog module or sample is not in this build." />}
+      {r && (
+        <div className="pd-two">
+          <div>
+            <UnknownBars r={r} />
+          </div>
+          <div className="pd-hero">
+            {small ? (
+              <>
+                <div className="pd-hero-v">Under $1<span> a month</span></div>
+                <div className="pd-hero-l">what not knowing next year's schedule costs on this plan</div>
+              </>
+            ) : (
+              <>
+                <div className="pd-hero-v">{usd(r.evpi.value)}<span> a month</span></div>
+                <div className="pd-hero-l">what not knowing next year's schedule costs, plus or minus {usd(pm)}</div>
+              </>
+            )}
+            {s?.home && (
+              <div className="pd-safe">
+                <div className="pd-safe-tag">Loses least</div>
+                <div className="pd-safe-n">{s.home.name}{s.roomLabel ? <span className="pd-gray">, {s.roomLabel}</span> : null}</div>
+                <div className="pd-pair-n"><span>{usd(s.p10)} to {usd(s.p90)}<small> a month across the weeks</small></span><span>{Math.round((s.pBest || 0) * 100)}%<small> of weeks the best</small></span></div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </Slide>
+  );
+}
+
+// One bar per unknown: what knowing it before you sign is worth, $ a month. The dashed line is knowing all of it,
+// drawn only when it is $1 or more (the hero already says "Under $1"). No error whiskers here: the notes cover
+// the error, and on a projector a line through a bar reads as a strike-through.
+function UnknownBars({ r }) {
+  const rows = r.unknowns.filter((u, i) => i < 3 || u.value >= 1).slice(0, 5);
+  const evpi = r.evpi.value || 0;
+  const line = evpi >= 0.5;
+  const W = 760, L = 290, R = 100, T = 46, rowH = 66, B = 8;
+  const H = T + Math.max(1, rows.length) * rowH + B;
+  const max = Math.max(5, evpi, ...rows.map((u) => u.value));
+  const X = (v) => L + (Math.max(0, Math.min(max, v)) / max) * (W - L - R);
+  // A value label sits just right of its bar, unless the dashed line would run through it; then it moves past the line.
+  const labelX = (v, text) => {
+    const x = X(v) + 12;
+    const w = 13 * text.length + 4;
+    return line && X(evpi) >= x - 6 && X(evpi) <= x + w ? X(evpi) + 12 : x;
+  };
+  return (
+    <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img"
+      aria-label={`What knowing each unknown before signing is worth a month: ${rows.map((u) => `${u.label} ${usd(u.value)}`).join('; ')}. Knowing all of it: ${line ? usd(evpi) : 'under $1'}.`}>
+      <line x1={X(0)} x2={X(0)} y1={T - 12} y2={H - B} stroke={C.ink} strokeWidth="1" />
+      {line && <line x1={X(evpi)} x2={X(evpi)} y1={T - 12} y2={H - B} stroke={C.ink} strokeWidth="1.5" strokeDasharray="5 5" />}
+      {line && <text x={X(evpi)} y={T - 20} textAnchor={X(evpi) - L < 200 ? 'start' : 'end'} className="pd-axis">Knowing all of it, {usd(evpi)}</text>}
+      {rows.map((u, i) => {
+        const y = T + i * rowH + rowH / 2;
+        const v = usd(u.value);
+        return (
+          <g key={u.id}>
+            <text x={L - 16} y={y + 6} textAnchor="end" className="pd-bar-k">{u.label}</text>
+            <rect x={X(0)} y={y - 14} width={Math.max(2, X(u.value) - X(0))} height="28" rx="4" fill={i === 0 ? C.green : C.mid} />
+            <text x={labelX(u.value, v)} y={y + 7} className="pd-lane-v">{v}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// 3. What one student sees: every home, cost to Jordan a month against hours a week, colored by fit for Jordan's week.
 const FIT = ['#D9CBA8', '#B5BE94', '#87A57F', '#55896A', '#1F6F4A'];
 function Student({ api }) {
   const [st, setSt] = useState({ status: 'running' });
@@ -261,7 +370,7 @@ function RentScatter({ r }) {
   );
 }
 
-// 3. What a group gets: the house, floor by floor, each room with its person and rent.
+// 4. What a group gets: the house, floor by floor, each room with its person and rent.
 const FLOOR_ORDER = ['attic', '4', '3', '2', '1', 'basement'];
 const FLOOR_NAME = { attic: 'Attic', 4: '4th floor', 3: '3rd floor', 2: '2nd floor', 1: '1st floor', basement: 'Basement' };
 function Group({ api }) {
@@ -354,7 +463,8 @@ function HouseDiagram({ r }) {
   );
 }
 
-// 4. How it works, drawn as a route line: each stage is a stop, ending in two terminals.
+// 5. How it works, drawn as a route line: each stage is a stop, ending in two terminals. The class catalog
+// joins as a branch at "Your week", since it feeds the possible weeks, not the router.
 function HowItWorks({ api, ev }) {
   const f = ev ? evidenceFigures(ev) : {};
   const c = api.config || {};
@@ -368,12 +478,17 @@ function HowItWorks({ api, ev }) {
     { k: 'Your best home', m: 'Ranked in dollars a month' },
     { k: 'Fair split', m: 'Envy-free, private caps' },
   ];
-  const W = 1200, H = 360, y = 150, xs = [60, 360, 620, 860], fx = 1000, ey = [70, 250];
+  const branch = { k: 'Class catalog', m: 'Sample, Schedule of Classes layout', join: 2 };
+  const W = 1200, H = 360, y = 150, xs = [60, 360, 620, 860], fx = 1000, ey = [70, 250], bx = 300, by = 46;
   return (
-    <Slide title="Six stops, all in the browser, offline." foot="No API keys and no language model. Every number traces back to a timetable row or a linear program.">
-      <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Pipeline: ${stops.map((s) => s.k).join(', ')}, then ${ends.map((e) => e.k).join(' and ')}.`}>
+    <Slide title="Seven stops, all in the browser, offline." foot="No API keys and no language model. Every number traces back to a timetable row, a catalog row or a linear program.">
+      <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Pipeline: ${stops.map((s) => s.k).join(', ')}, with the ${branch.k} joining at ${stops[branch.join].k}, then ${ends.map((e) => e.k).join(' and ')}.`}>
         <line x1={xs[0]} x2={xs[3]} y1={y} y2={y} stroke={C.green} strokeWidth="8" strokeLinecap="round" />
+        <path d={`M${bx},${by} C${bx + 170},${by} ${xs[branch.join] - 130},${y} ${xs[branch.join]},${y}`} fill="none" stroke={C.green} strokeWidth="8" strokeLinecap="round" />
         {ey.map((e) => <path key={e} d={`M${xs[3]},${y} C${xs[3] + 110},${y} ${fx - 110},${e} ${fx},${e}`} fill="none" stroke={C.green} strokeWidth="8" strokeLinecap="round" />)}
+        <circle cx={bx} cy={by} r="15" fill="#fff" stroke={C.ink} strokeWidth="4" />
+        <text x={bx - 28} y={by + 2} textAnchor="end" className="pd-stop-k">{branch.k}</text>
+        <text x={bx - 28} y={by + 28} textAnchor="end" className="pd-stop-m">{branch.m}</text>
         {stops.map((s, i) => (
           <g key={s.k}>
             <circle cx={xs[i]} cy={y} r="15" fill={s.real ? C.ink : '#fff'} stroke={C.ink} strokeWidth="4" />
@@ -388,13 +503,13 @@ function HowItWorks({ api, ev }) {
             <text x={fx + 32} y={ey[i] + 24} className="pd-stop-m">{e.m}</text>
           </g>
         ))}
-        <text x={xs[0] - 14} y={y - 40} className="pd-stop-m">Real data</text>
+        <text x={xs[0] - 14} y={y + 102} className="pd-stop-m">Real data</text>
       </svg>
     </Slide>
   );
 }
 
-// 5. Evidence: three checks, each a small chart and one number.
+// 6. Evidence: three checks, each a small chart and one number.
 function Evidence({ ev }) {
   if (!ev) return <Slide title="Each model checked against something independent."><Wait what="Reading the evidence files." /></Slide>;
   const f = evidenceFigures(ev);
@@ -423,7 +538,7 @@ function Evidence({ ev }) {
   );
 }
 
-// 6. The business, as a hypothesis.
+// 7. The business, as a hypothesis.
 function Business({ api }) {
   const W = 1200, H = 300;
   const colors = (api?.data?.personas || []).map((p) => p.color).filter(Boolean).slice(0, 5);
@@ -453,7 +568,7 @@ function Business({ api }) {
   );
 }
 
-// 7. Next (optional): the line, extended with dashed stops not built yet.
+// 8. Next (optional): the line, extended with dashed stops not built yet.
 function Next() {
   const stops = ['Real listings', 'Real students', 'Fall timetables', 'Night, weather', 'Stop limits'];
   const W = 1200, H = 260, y = 110, x0 = 60, step = 212;
@@ -486,9 +601,22 @@ export const SLIDES = [
       'Point at the lines: same home, three campuses, walk or bus, 2:00 PM or 11:30 PM. The minutes are computed live, not typed in.',
       'Bus lines are drawn in each route\'s real color. Dashed is walking, gray is waiting at the stop. The navy band is a trip after dark.',
       'The 11:30 PM bus: fewer buses, so longer waits, and the walk is in the dark.',
-      'Second problem: in Ann Arbor you sign months before you know your fall schedule. Ann Arbor\'s ORD-24-03 lets a landlord sign next year\'s tenant 210 days into the current lease.',
+      'Second problem, the next slide: in Ann Arbor you sign months before you know your fall schedule. Ann Arbor\'s ORD-24-03 lets a landlord sign next year\'s tenant 210 days into the current lease.',
       'Bus minutes run from leaving the building to the front door, wait at the stop included. Walking is 1.3 m/s on OpenStreetMap streets.',
       'If asked: you can switch the home in the menu at the top right.',
+    ],
+  },
+  {
+    id: 'nextyear', title: 'Next year', Comp: NextYear,
+    notes: [
+      "Read the title. In Ann Arbor you sign next year's lease months before next year's class schedule exists.",
+      "The big number is what not knowing next year's schedule costs, in dollars a month. In plain words: how much better the pick would be if you knew the schedule first (expected value of perfect information).",
+      "The bars: what knowing each single unknown before you sign is worth. The top bar is the one to find out first. The dashed line is knowing everything at once. Each value has an error from resampling the weeks; the Next year tab draws it as a thin line under each bar.",
+      "Under it, the home that loses least across all the possible weeks, with its range a month and how often it is the best one.",
+      "How: the sample Nursing junior plan (NURS 372 and NURS 373 lectures, a PNE 350 clinical section, one Central Campus course of PSYCH 111, SOC 100 or STATS 250, and maybe a part-time job downtown on Monday and Wednesday evenings, 50% odds) drawn 200 times from the class catalog, with some sections full as at normal registration. Maya's walking limits (Maya is a fictional sample student). Each possible week is routed through every home on the real timetables and ranked as on the You tab.",
+      "Be plain about the data: the catalog is SAMPLE. Course numbers are real; sections, times and rooms are made up, in the layout of the U-M Schedule of Classes file as of past years. That header is not yet checked against a current file.",
+      "The menu at the top right switches the sample plan (Nursing junior or CS junior); the Next year tab shows the same numbers for the same plan. The CS junior plan shows under $1: say what it means. One home is safe whatever that schedule turns out to be, so sign it.",
+      "Then switch to the Next year tab: click an option chip under a bar to settle that unknown and watch the numbers and the map change. A student can load their own Registrar file there; it is read in the browser and never uploaded.",
     ],
   },
   {
@@ -517,10 +645,12 @@ export const SLIDES = [
     id: 'how', title: 'How it works', Comp: HowItWorks,
     notes: [
       'Read the line left to right like a bus route: real timetables and streets, our router, the week, the picks, then the two outputs, the best home and the fair split.',
+      "Class catalog: the branch that joins at Your week. It reads a section file in the Registrar's layout (a labeled sample here, or a student's own file read in the browser) and draws the weeks a student could end up with next year.",
       'Router: Connection Scan Algorithm (Dibbelt et al. 2017), a published method for timetable routing.',
       'Your week: every trip of your week from every home. Walk, wait, ride and minutes after dusk, with dusk from the NOAA solar equations.',
       'Picks: each question is chosen to teach the model the most (BALD, Houlsby et al. 2011, with a particle filter). That is the AI part. No language model, on purpose: it runs offline and every number can be traced.',
       'Ranking: expected regret in $ a month over many possible fall weeks and many draws of your values (Monte Carlo).',
+      "Next year: the price of not knowing is the expected value of perfect information; the bars are its partial version per unknown (EVPPI), with bootstrap errors over the possible weeks.",
       'Fair split: the envy-free rent method behind Spliddit, with private caps, solved as a linear program.',
     ],
   },

@@ -68,26 +68,72 @@ async function main() {
   };
   const key = (k) => page.keyboard.press(k);
 
+  // Waits until the Next year hero shows a price that contains `text` and nothing is computing.
+  const nxReady = async (text) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < 20000) {
+      const ok = await page.evaluate((t) => (document.querySelector('.nx-big')?.textContent || '').includes(t) && !document.querySelector('.nx-hero.is-busy'), text);
+      if (ok) return true;
+      await page.waitForTimeout(100);
+    }
+    log('Next year price did not show', text);
+    return false;
+  };
+
   log('pitch slide 1');
   await page.goto(`http://localhost:${PORT}/#pitch`);
   await wait(4);
   await key('Home');
-  await caption('The problem. "10 minutes from campus" depends on which campus, which way and what hour. Computed live from the TheRide and U-M timetables.');
-  await wait(9);
+  await caption('The problem. "10 minutes from campus" depends on which campus and what hour. Computed live from TheRide and U-M timetables.');
+  await wait(7);
+  await caption("And the lease is signed before the student knows where next year's classes will be.");
+  await wait(5);
+
+  log('next year: nursing');
+  await tab('Next year');
+  await nxReady('$31');
+  await caption('Next year. A sample Nursing junior: clinical section, one course and a maybe job are still unknown. 200 possible weeks from a sample class catalog.');
+  await wait(7);
+  await caption('Each week is routed through all 30 homes on the real buses. Not knowing costs her $31 a month, plus or minus $11.');
+  await wait(6);
+  await caption('The home that loses least: Catherine St, $1,164 to $1,511 a month across the weeks, the best in 66% of them.');
+  await wait(6);
+  // Put the bars at the top of the screen (the heading alone is already in view at 1280x720).
+  await page.evaluate(() => { const el = document.getElementById('nx-first'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); });
+  await wait(1);
+  await caption('What to find out first: her PNE 350 clinical section is worth $23 a month to know, the job $22. Her lectures are worth $0.');
+  await wait(7);
+  await click('104, Medical Campus, Tue 2:00 PM', { exact: true });
+  await nxReady('$23');
+  await caption('Settle it: say her clinical is section 104, the late shift. Now the job is the one thing left to ask about, $22 a month.');
+  await wait(6);
+  await key('Home');
+  await caption('The home that loses least changes to Broadway St, $1,184 to $1,624 a month. The map renumbers.');
+  await wait(6);
+
+  log('next year: cs');
+  await click('CS junior', { exact: true });
+  await nxReady('Under $1');
+  await caption('A sample CS junior, with maybe a research lab job on North Campus. Here not knowing costs under $1 a month.');
+  await wait(6);
+  await caption('Catherine St is the best in 96% of the possible weeks. The answer flips: sign now, nothing is worth finding out first.');
+  await wait(5);
+  await caption('A student can load their own Registrar file. It never leaves the browser.');
+  await wait(7);
 
   log('you: top 3');
   await tab('You');
   await wait(2);
-  await caption('Jordan (fictional) studies engineering on North Campus and has a late lab. Every home is run through that week, door to door.');
+  await caption('Once the week is known, the You tab ranks every home for it. Jordan (fictional) has a lab until 11:30 PM twice a week.');
   await wait(6);
-  await caption('Your top 3: cost to you a month, hours a week getting around, late nights, and one reason in dollars against a typical home.');
-  await wait(7);
+  await caption('Top pick Broadway St: $1,351 a month once time and late nights count.');
+  await wait(5);
 
   log('you: cheapest rent on the chart');
   await key('End');
   await scrollTo('The cheapest rent, rooms from');
-  await caption('Trade-offs: the square is the cheapest rent, Georgetown Blvd, rooms from $821. It costs Jordan $187 a month more once time and late nights count.');
-  await wait(6);
+  await caption('The cheapest rent, Georgetown Blvd, rooms from $821, costs Jordan $187 a month more.');
+  await wait(5);
   try {
     const r = page.locator('.to-chart svg rect').first();
     await r.scrollIntoViewIfNeeded({ timeout: 3000 });
@@ -99,83 +145,28 @@ async function main() {
   await wait(1);
 
   log('you: map playback');
-  await caption('Georgetown: twice a week there is no way home within Jordan\'s 10 minute walking limit at night. Bus 22, then an 11 minute walk.');
+  await caption("Georgetown at night: bus 22, then an 11 minute walk in the dark, over Jordan's 10 minute limit.");
   await click(/Play this trip|Step through this trip/);
   await wait(8.5);
-
-  log('you: calendar import');
-  await key('End');
-  await click('Import a calendar', { exact: true });
-  try { await page.getByLabel(/Use my calendar to build my week/).check({ timeout: 3000 }); } catch { log('no consent box'); }
-  await caption('A week can come from a calendar file. Nothing is read until the box is ticked, and nothing leaves the browser.');
-  await wait(4);
-  await click('Use the sample week', { exact: true });
-  await wait(1.5);
-  await caption('The SYNTHETIC sample file: classes are matched to real campus buildings. One it cannot match waits for a place, not a guess.');
-  await wait(8);
-  await click('Discard', { exact: true });
-  try { await page.locator('dialog[open]').getByRole('button', { name: 'Close' }).click({ timeout: 2000 }); } catch { log('no close'); }
-
-  log('you: picks');
-  await scrollTo('Teach it what you care about');
-  await caption('Which week would you rather live? Each question is the one whose answer teaches the model the most.');
-  await wait(6);
-  await click(/This one: Washtenaw/);
-  await wait(1);
-  await click('Answer the rest', { exact: true });
-  await caption('Jordan\'s demo values answer the rest. After a few picks the model knows about what Jordan\'s time is worth.');
-  await wait(6);
-
-  log('you: details');
-  await key('Home');
-  try { await page.locator('.you-details > summary').click({ timeout: 3000 }); } catch { log('no details'); }
-  await wait(1);
-  await scrollTo('chance Broadway St house');
-  await caption('Details: Broadway is best in 74% of 24 possible weeks and 200 value draws. The cheapest rent, Georgetown, ranks 8th.');
-  await wait(8);
-
-  log('you: what if');
-  await click('Late lab on Central', { exact: true });
-  await wait(2);
-  await key('Home');
-  await caption('What if the late lab moves to Central Campus? A new top three, within $7 a month of each other. Broadway falls to ninth.');
-  await wait(8);
 
   log('group');
   await tab('Your group');
   await wait(2);
-  await caption('Five friends, one house. Each room and rent share is set so nobody would swap, under every private cap. A checker confirms it.');
+  await caption('Five fictional friends, one house. Each gets a room, and the $4,150 rent is split so nobody would swap. A separate checker confirms it.');
   await wait(8);
-  await scrollTo('Tour times');
-  await caption('When can all five see the house? Every weekday half-hour is checked against each week and the real buses. Only Friday works.');
-  await wait(8);
-  try { await page.locator('.gv-msg > summary').click({ timeout: 3000 }); } catch { log('no see message'); }
-  await caption('Quorum drafts the note with no names, rents or caps. It never sends anything.');
-  await wait(5);
-  await key('Home');
   await click('Lower a cap', { exact: true });
-  await caption('Priya privately lowers her cap. No fair split fits Broadway any more, so the group moves. Only Priya sees her $25 gap.');
+  await caption('Priya privately lowers her cap. Broadway no longer fits, so the group moves to Georgetown. Only Priya sees her $25 gap.');
   await wait(9);
 
-  log('owners');
-  await tab('Owners');
-  await wait(2);
-  await caption('Owners: each room\'s fair rent range from 200 sample groups, against the asking rent. At Church St the back room asks $12 too much, the basement $5.');
-  await wait(8);
-  await scrollTo('Add a half bath');
-  await caption('A half bath in the basement raises that room\'s fair rent $32 a month and lowers the others, at the same house rent. The bath value is an assumption.');
-  await wait(8);
-
-  log('pitch slides 4 and 5');
+  log('pitch evidence');
   await tab('Pitch');
-  await key('Home');
-  for (let i = 0; i < 3; i++) await key('ArrowRight');
-  await caption('How it works: our own transit router, question picker and fair-split solver. No LLM and no outside services at runtime.');
+  await key('End');
+  await key('ArrowLeft');
+  await key('ArrowLeft');
+  await wait(1);
+  await caption('Evidence: the router matches a separate router on 3,000 of 3,000 trips; the split is envy-free on 2,000 of 2,000 random houses.');
   await wait(8);
-  await key('ArrowRight');
-  await caption('Evidence: the router checked against an independent reference and against r5py, the split against published cases.');
-  await wait(8);
-  await caption('All homes, rents and people are synthetic. Timetables, streets and campus places are real.');
+  await caption('The class catalog, homes, rents and people are samples. Timetables, streets and campus places are real.');
   await wait(5);
 
   const video = page.video();

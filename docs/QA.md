@@ -70,15 +70,19 @@ p10, p50 and p90 across those groups is its fair share. A renovation re-solves t
 | Jordan's late trip | Georgetown Blvd 19 min; its last walk is 10.8 min, over the 10 min cap on a single walk (13.5 min walking in all); Broadway St 18 min with 6.3 min walking | script section 1 |
 | Pitch slide 1 | Plymouth Rd apartment (North Campus): from Beyster 11 min at 2 PM, 24 at 11:30 PM; from the UgLi 31 and 39; range 11 to 53 min | script section 0 |
 | Jordan before any pick | Broadway St $38 regret, P(best) 71%; value of knowing $18/mo; break-even $75/h vs median $14.9/h | script section 2a |
-| Your top 3, before any pick | Broadway St $1,351/mo cost to you, $923 rent, 4.4 h/wk, 2 late nights, "Lower rent +$178/mo vs a typical home"; Catherine St $1,414; East Ann St $1,470 | script section 10 |
+| Your top 3, before any pick | Broadway St $1,351/mo cost to you, $923 rent, 4.4 h/wk, 2 late nights, "Lower rent: $178/mo better than a typical home"; Catherine St $1,414; East Ann St $1,470 | script section 10 |
 | Jordan's ranking after 3 picks | Broadway St $36 regret, P(best) 74%; value of knowing $31/mo; break-even $75/h vs median $15.2/h | script section 2b |
 | Filter baseline | Cheapest North Campus home, Georgetown Blvd ($821 from), ranks #8 of 30 for Jordan: $269 regret, $233/mo worse than Broadway; P(best) 9.4% | script section 2c |
 | Lab moved to Central | Broadway falls #1 to #9; top three Lawrence St $52, Church St $54, Lincoln Ave $58 (spread $6); leader P(best) 28%; value of knowing $34/mo; top 3 cards $1,411 / $1,414 / $1,418 cost to you | script sections 3a and 10 |
 | Group split, Broadway St, $4,150 | $773 / $883 / $859 / $779 / $854; 4 of 20 envy margins exactly $0; envy-free in 2% of value draws | script section 4 |
 | Priya's cap move | $875 to $830 makes Broadway infeasible; group moves to Georgetown Blvd ($3,950); her private gap $25 | script section 4b |
-| Owners asking vs fair | Church St house ($4,650), the house Owners opens on: 1 of 5 rooms priced off; Back room asks $910 against a fair range of $859 to $898, so "$12 over"; 339 of 2,000 sample students pick it first | script section 5 |
+| Owners asking vs fair | Church St house ($4,650), the house Owners opens on: 2 of 5 rooms priced off (Back room $12 over, Basement room $5 over); Back room asks $910 against a fair range of $859 to $898, so "$12 over"; 339 of 2,000 sample students pick it first | script section 5 |
 | Owners half bath | Basement room +$32/mo typical fair rent at the same house rent (Attic -$6, Front -$6, Back $0, Parlor -$18); +$40/mo group value; slider at $30 gives +$17, at $120 gives +$65 | script section 5 |
-| Tests | 98 engine tests pass (`npm test`), 27 view tests pass (`cd web && npm test`) | run Fri Nov 20 |
+| Next year, Nursing junior (the tab opens here; pitch slide 2 too) | "$31 a month", plus or minus $11 (EVPI $31.19, one standard error $5.62); loses least Catherine St, Parlor room, $1,164 to $1,511/mo, best in 66% of 200 weeks; find out first: PNE 350 clinical section $23/mo, part-time job $22/mo, every other unknown $0 | script section 11a |
+| Next year, Nursing, clinical 104 settled | 45 of 200 weeks; "$23 a month", plus or minus $9; loses least Broadway St, Garden room, $1,184 to $1,624/mo, 62%; the job is now worth $22/mo. Settling 101 gives $2, 102 gives $5, 103 gives $11, with Catherine St first each time | script section 11b |
+| Next year, CS junior | "Under $1 a month" (EVPI $0.45); Catherine St, $1,447 to $1,719/mo, best in 96%; every unknown under $1. Lab job odds at 70%: still under $1 (EVPI $0.49), $1,444 to $1,711/mo, 96% | script sections 11a and 11c |
+| Next year, compute | 200 weeks routed through 30 homes in about 0.2 to 1 s in Node (Nursing is faster than CS; the browser is similar); ranking and the bars about 0.25 s; settling only filters and re-ranks, under 0.1 s | script section 11 |
+| Tests | 107 engine tests pass (`node --test "test/*.test.mjs"`), 35 view tests pass (`cd web && npm test`), the Next year tests included | run Fri Nov 20 |
 
 ## Hard questions, short honest answers
 
@@ -306,6 +310,57 @@ timetables and OpenStreetMap streets. The router matches an independent referenc
 r5py within a median of 1 minute (section 6). The rent split is a linear program whose result a separate checker
 verifies: nobody envies anyone, caps hold, and shares add up to the rent. It runs offline in milliseconds, and the
 same inputs always give the same answer.
+
+## Next year: the price of not knowing
+
+**"Where does the catalog come from? Why a sample?"** The U-M Registrar posts each term's Schedule of Classes as a
+CSV (for example FA2026.csv on ro.umich.edu). When we fetched it, the file redirected to the U-M login, so we
+could not ship it or pull it live. So the repo ships a SAMPLE catalog in the same column layout: the course
+numbers are real, and every section, time and room is made up. The column header is from past years and is not
+checked against a current file. A signed-in student downloads the file and clicks **Load my registrar file**. It
+is read in the browser and never uploaded.
+
+**"Do past sections predict next year?"** Not exactly, and we have not measured how well. Sections, times and
+rooms change. The assumption is that next year's mix of sections looks like the latest file. The student loads
+the newest file once it posts, and the numbers update.
+
+**"Students choose their sections. Why draw them at random?"** The model draws open sections at random, with
+some full as at normal registration (each section full 20% of the time; 5% for Early, 40% for Late). That is a
+fair guess for a student who cannot pick yet. A student who will pick sections near home faces a smaller price
+than we show. To model that, settle the sections you know you will take: click their chips.
+
+**"How is the price computed, in plain words?"** We draw 200 weeks the student could end up with. Each week is
+routed door to door through all 30 homes on the real timetables and priced in dollars a month, as on the You tab:
+rent, time, walking in the dark and trips with no ride, at the same starting values as the You tab before any
+pick. If you knew your week, you would pick the best home for that week. You do not, so you pick the one that is
+best on average: the home that loses least. The price is how much worse that home does, on average, than the best
+home for each week. It is the expected value of perfect information, in dollars a month.
+
+**"And 'What to find out first'?"** The same idea for one unknown at a time. Suppose you learned only your
+clinical section. For each answer you would pick the best home for the weeks with that section. The bar is how
+much that saves on average (expected value of partial perfect information). No bar can be worth more than the
+price. A bar at $0 means the answer does not change which home you should sign. Clicking a chip keeps only the
+weeks with that answer and runs the ranking again.
+
+**"What are the error bars?"** The plus or minus and the thin line under each bar are about two standard
+errors. We resample the 200 weeks 100 times and recompute. They show the noise from drawing 200 weeks, not doubt
+about the catalog or the odds. Nursing: $31 plus or minus $11, so the price is clearly above zero, about $20 to
+$42. The clinical and the job bars ($23 and $22) overlap, so call them a tie.
+
+**"When do students sign, and when is the schedule known?"** Ann Arbor ORD-24-03 (adopted 4 March 2024) bars
+showing or signing a new tenant until 210 days into the current lease. For a Sept 1 lease that is about March 30
+(our arithmetic). Student press reports many students sign earlier, through pre-lease deals (Michigan Daily, 2023
+and 2024, in our research notes). We have not checked U-M's registration
+dates for next fall against a source, so do not quote a date. The point stands either way: the lease covers two
+terms, and the second term's schedule comes months after signing.
+
+**"The CS junior shows under $1. Is that a bug?"** No. For that plan one home, Catherine St, is best in 96% of the
+possible weeks, so nothing is worth finding out first: sign it. That is a useful answer too. In the Nursing plan the
+clinical section and the job change which home is best, so its price is $31.
+
+**"Is the PNE 350 clinical real?"** The course number is. The UMSN 2026-27 undergraduate handbook lists the
+Therapeutic Nursing Care II clinical as PNE 350 to 366, 5 credits (docs/DATA.md). The four sample sections,
+their times and University Hospital as the place are made up.
 
 ## Known limitations
 

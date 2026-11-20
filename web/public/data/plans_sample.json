@@ -1,0 +1,39 @@
+{
+  "label": "SAMPLE plans, made up",
+  "plans": [
+    {
+      "id": "cs",
+      "name": "Sample CS junior",
+      "personaId": "jordan",
+      "courses": [
+        { "id": "c482", "course": "EECS 482", "components": ["LEC", "LAB"] },
+        { "id": "c376", "course": "EECS 376", "components": ["LEC", "DIS"] },
+        { "id": "c101", "course": "ECON 101", "components": ["LEC", "DIS"] }
+      ],
+      "choices": [
+        { "id": "elective", "label": "Which elective", "of": ["EECS 445", "EECS 485", "EECS 484"], "components": ["LEC"] }
+      ],
+      "maybes": [
+        { "id": "labjob", "label": "Research lab job", "odds": 0.4, "days": ["tue", "thu"], "place": "fmcrb", "start": "13:00", "end": "17:00" }
+      ],
+      "fixed": []
+    },
+    {
+      "id": "nursing",
+      "name": "Sample Nursing junior",
+      "personaId": "maya",
+      "courses": [
+        { "id": "n372", "course": "NURS 372", "components": ["LEC"] },
+        { "id": "n373", "course": "NURS 373", "components": ["LEC"] },
+        { "id": "p350", "course": "PNE 350", "components": ["CLN"] }
+      ],
+      "choices": [
+        { "id": "central", "label": "Which Central Campus course", "of": ["PSYCH 111", "SOC 100", "STATS 250"], "components": ["LEC"] }
+      ],
+      "maybes": [
+        { "id": "downtownjob", "label": "Part-time job downtown", "odds": 0.5, "days": ["mon", "wed"], "place": "kerrytown", "start": "18:30", "end": "21:30" }
+      ],
+      "fixed": []
+    }
+  ]
+}

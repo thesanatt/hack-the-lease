@@ -1,8 +1,10 @@
 // Numbers for the pitch slides. Nothing here is typed in by hand: every figure is computed by the engine in
-// this browser (campusExample, groupExample) or read from web/public/data/evidence/*.json (loadEvidence).
-// Plain JS, no React, so `node` can run the same functions (see the check at the bottom of PitchView notes).
+// this browser (campusExample, nextYearExample, studentExample, groupExample) or read from
+// web/public/data/evidence/*.json (loadEvidence).
+// Plain JS, no React, so `node` can run the same functions.
 import { pickGroup, modalRoutine, candidateHouses, solveAllHouses, capThreshold } from '../group/logic.js';
 import { editableWeek, modalRoutine as meModal, uncertainRoutine } from '../me/routine.js';
+import { runNextYear, loadNextYearSample, NEXT_DEFAULT_PLAN } from '../next/compute.js';
 
 export const DAY = 'tue';
 export const DATE = '2026-12-01';
@@ -189,4 +191,36 @@ export function evidenceFigures(ev) {
     };
   }
   return f;
+}
+
+// Next year, as the Next year tab shows it before anything but the plan is changed: a sample plan
+// (plans_sample.json; NEXT_DEFAULT_PLAN, the Nursing junior, unless the slide's menu picks another) on the sample catalog, k = 200 possible weeks, seed 1, normal registration,
+// the plan's own odds, nothing settled. Same runNextYear call and same arguments as NextView.jsx (K, SEED there),
+// so the slide and the tab show the same dollars; runNextYear caches, so whichever opens second is instant.
+// The sample (catalog, plans, label) is loaded once per api object.
+export const NEXT_PLAN = NEXT_DEFAULT_PLAN;
+export const NEXT_K = 200;
+export const NEXT_SEED = 1;
+const nextSamples = new WeakMap();
+export async function nextYearExample(api, onProgress, planId = NEXT_PLAN) {
+  if (!api?.mod?.('catalog') || !api.has?.('week') || !api.has?.('decide') || !api.has?.('prefs')) return null;
+  let p = nextSamples.get(api);
+  if (!p) {
+    p = loadNextYearSample(api);
+    nextSamples.set(api, p);
+    p.catch(() => nextSamples.delete(api));
+  }
+  const sample = await p;
+  const plan = sample.plans.find((x) => x.id === planId) || sample.plans[0];
+  if (!plan || !sample.parsed?.sections?.length) return null;
+  const res = await runNextYear(api, {
+    plan, sections: sample.parsed.sections, k: NEXT_K, seed: NEXT_SEED, priority: 'normal', odds: {}, settled: {}, onProgress,
+  });
+  if (!res || res.empty || !res.voi || !res.safest) return null;
+  const byId = new Map(res.factors.map((f) => [f.id, f]));
+  const unknowns = (res.voi.byFactor || []).map((b) => ({ ...byId.get(b.id), ...b, kind: byId.get(b.id)?.kind }));
+  return {
+    plan, plans: sample.plans.map((x) => ({ id: x.id, name: x.name })), meta: sample.meta, res, unknowns,
+    evpi: res.voi.evpi, safest: res.safest, n: res.scenarios.length, homes: api.data.homes.length,
+  };
 }

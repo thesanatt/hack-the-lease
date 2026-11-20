@@ -16,6 +16,7 @@ const lazyView = (name) => {
 // Hash routes stay #me, #group, #operator, #evidence, #pitch.
 const VIEWS = [
   { id: 'me', label: 'You', file: 'Me', Comp: MeView },
+  { id: 'next', label: 'Next year', file: 'Next', Comp: lazyView('Next') },
   { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group') },
   { id: 'operator', label: 'Owners', file: 'Operator', Comp: lazyView('Operator') },
   { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence') },

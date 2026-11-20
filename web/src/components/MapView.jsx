@@ -101,7 +101,7 @@ const CSS = `
 .qmap-play button:focus-visible { outline: 2px solid ${INK}; outline-offset: 2px; border-radius: 14px; }
 .qmap-play .ic { width: 28px; height: 28px; border-radius: 14px; background: ${INK}; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .qmap-play .clk { font: 500 13px 'IBM Plex Sans', Arial, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.qmap-play .leg { color: ${GRAY}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.qmap-play .leg { color: ${GRAY}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 420px; }
 .qmap-tip { position: absolute; z-index: 4; pointer-events: none; padding: 4px 8px; transform: translate(-50%, calc(-100% - 12px)); white-space: nowrap; }
 `;
 let cssDone = false;

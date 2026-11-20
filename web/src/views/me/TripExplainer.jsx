@@ -1,7 +1,7 @@
 // One home's week in full, and one trip drawn leg by leg: walk (dashed ink), wait (hollow), bus (route color and
 // number from the GTFS feeds), with clock times at each change. Time after dusk is a navy band under the leg.
 // Props: api, home, week (WeekResult), routineWeek, selectedIdx, onSelect(idx), dusk (seconds), legs (from tripLegs)
-import { WeekStrip, readableOn } from '../../components/index.js';
+import { AutoStrip, readableOn } from '../../components/index.js';
 import { clock, toSec, DAY_LABEL } from './routine.js';
 import './calendar/parts.css';
 import { shapesNow, rideCoords, streetWalk } from '../../engine/shapes.js';
@@ -116,7 +116,7 @@ export default function TripExplainer({ api, week, routineWeek, selectedIdx, onS
   const dur = trip?.mode ? Math.round((trip.arrive - trip.depart) / 60) : null;
   return (
     <div>
-      <WeekStrip trips={week.trips} entries={routineWeek} selected={selectedIdx} onSelect={(t, i) => onSelect(i)} dusk={dusk} />
+      <AutoStrip trips={week.trips} entries={routineWeek} selected={selectedIdx} onSelect={(t, i) => onSelect(i)} dusk={dusk} />
       {trip && (
         <div className="mp-trip">
           <div className="mp-trip-head">

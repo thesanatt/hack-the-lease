@@ -1,10 +1,12 @@
 // Every number the demo script (docs/DEMO.md) and the Q&A sheet (docs/QA.md) quote, recomputed from the engine.
-//   node scripts/demo_numbers.mjs            (from the repo root, Node 22, no network, about 3 s)
+//   node scripts/demo_numbers.mjs            (from the repo root, Node 22, no network, about 5 s)
 // It repeats what the app does on screen, with the same seeds, so the numbers here match the browser:
 //   Me view       web/src/views/MeView.jsx (posterior seed 7, scenario seed 11, draws seed 3, auto-answer seeds 1000+k)
 //   Group view    web/src/views/GroupView.jsx + group/logic.js (EF draws seed 11)
 //   Operator view web/src/views/OperatorView.jsx (population seed 11, engine operator.js path)
+//   Next year     web/src/views/NextView.jsx + next/compute.js (runNextYear, k 200, seed 1; section 11)
 // Homes, rooms and rents are SYNTHETIC. People are FICTIONAL personas. Timetables, streets and places are real.
+// The class catalog and the two plans for section 11 are SAMPLE: course numbers are real, sections are made up.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -457,4 +459,83 @@ for (const off of [false, true]) {
   if (x) say(`   ${off ? 'off-prior' : 'prior'} set, BALD, tau x1, 80% interval coverage after ${RC.picks} picks: ${model.PARAMS.map((k) => `${k} ${pct(x.coverage[k])}`).join(', ')}`);
 }
 say(`R6 detail: ${R6.result.pairs - R6.result.both_reachable} of ${R6.result.pairs} trips not reachable in both routers (only in Quorum: ${R6.result.reachable_only_in_quorum ?? 'n/a'})`);
+
+// ---------- 11. Next year tab and pitch slide 2 (web/src/views/NextView.jsx, next/*.jsx, pitch/data.js) ----------
+// The same runNextYear call as the tab: k = 200, seed 1, normal registration, the plan's own odds unless changed.
+// Every quoted string below is formatted with the tab's own helpers (next/format.js), so it reads as on screen.
+// The catalog and plans are SAMPLE: course numbers are real; sections, times and rooms are made up.
+{
+  const catalog = await import('../engine/catalog.js');
+  const { runNextYear, NEXT_DEFAULT_PLAN } = await import('../web/src/views/next/compute.js');
+  const { money, moneyRange, pct: pct0, findOutSentence } = await import('../web/src/views/next/format.js');
+  const mods = { catalog, decide, prefs, week };
+  const api = {
+    version: 0, config: cfg,
+    data: { homes, places, personas, placeById, homeById },
+    has: (n) => !!mods[n], mod: (n) => mods[n] || null,
+    weekFor: (routine, ids, opts = {}) => week.evaluateWeek(planner, routine, ids, { cfg, dates: cfg.termDates, ...opts }),
+  };
+  const csv = readFileSync(path.join(DATA, 'catalog_sample.csv'), 'utf8');
+  const parsed = catalog.parseCatalogCSV(csv, places);
+  const plansFile = json('plans_sample.json');
+  const planOf = (id) => plansFile.plans.find((p) => p.id === id);
+  const K = 200, SEED = 1;
+  const run = (plan, extra = {}) => runNextYear(api, { plan, sections: parsed.sections, k: K, seed: SEED, priority: 'normal', odds: {}, settled: {}, ...extra });
+  const counts = (scen, fid) => { const c = new Map(); for (const s of scen) { const o = s.attrs?.[fid]; if (o != null) c.set(o, (c.get(o) || 0) + 1); } return c; };
+  // What the tab shows, in its own words (Hero.jsx, Unknowns.jsx, Weeks.jsx).
+  const show = (r, { chips = false } = {}) => {
+    const ev = r.voi.evpi, s = r.safest;
+    const pm = Math.max(1, Math.round(2 * (ev.se || 0)));
+    const big = ev.value >= 0.5 ? `"${money(ev.value)} a month", "plus or minus ${money(pm)}"` : '"Under $1 a month" (no plus or minus line)';
+    say(`price: ${big}   [EVPI ${ev.value.toFixed(2)} +- ${(ev.se || 0).toFixed(2)} one standard error; check decide.evpi ${decide.evpi(r.rank.tensor).evpi.toFixed(2)}]`);
+    say(`loses least: "${s.home.name}", "${s.roomLabel || ''}", "${moneyRange(s.p10, s.p90)}/mo" across your possible weeks, "${pct0(s.pBest)}" of them it is the best   [mean ${s.meanCost?.toFixed(2)}, worst 10% ${s.worst10?.toFixed(2)}, expected regret ${s.expRegret?.toFixed(2)}]`);
+    say(`map top 3: ${r.rank.slice(0, 3).map((x, i) => `${i + 1} ${nm(x.homeId)}`).join('; ')}`);
+    say(`${r.scenarios.length} of ${r.nAll} possible weeks; ${r.nDraws} value draws; conflicts unresolved ${r.stats.conflictsUnresolved}; missing courses ${r.stats.missingCourses.length ? r.stats.missingCourses.join(', ') : 'none'}`);
+    const byId = new Map(r.factors.map((f) => [f.id, f]));
+    const rows = r.voi.byFactor.map((b) => ({ ...byId.get(b.id), ...b, kind: byId.get(b.id)?.kind }));
+    say('What to find out first (bars, high to low):');
+    rows.forEach((x, i) => {
+      const c = counts(r.scenarios, x.id);
+      const shownBar = i < 3 || x.value >= 1;
+      say(`   ${shownBar ? '' : '(hidden) '}"${x.label}" "${money(x.value)}/mo"   [${x.value.toFixed(2)} +- ${(x.se || 0).toFixed(2)}]`);
+      if (chips) say(`      chips: ${x.options.map((o) => `"${o.label}" ${c.get(o.id) ? `${Math.round((100 * (c.get(o.id) || 0)) / r.scenarios.length)}%` : 'disabled'}`).join('; ')}`);
+    });
+    const hidden = rows.filter((x, i) => !(i < 3 || x.value >= 1)).length;
+    if (hidden) say(`button: "${hidden} more, each under $1 a month"`);
+    say(`sentence: "${findOutSentence(rows[0])}"`);
+    if (r.campus?.length) say(`where your classes would be: ${r.campus.map((c) => `${c.area} ${pct0(c.share)}`).join(', ')}`);
+    say(`compute: sample ${Math.round(r.ms.sample)} ms, routing ${Math.round(r.ms.route)} ms, rank ${Math.round(r.ms.rank)} ms, voi ${Math.round(r.ms.voi)} ms`);
+    return rows;
+  };
+  say('');
+  H(`11. Next year: the catalog. ${parsed.sections.length} sections read, skipped ${JSON.stringify(parsed.skipped)}, unmatched ${parsed.unmatched.length}. Tab default plan: ${NEXT_DEFAULT_PLAN}`);
+  const order = [NEXT_DEFAULT_PLAN, ...plansFile.plans.map((p) => p.id).filter((id) => id !== NEXT_DEFAULT_PLAN)];
+  const first = {};
+  for (const id of order) {
+    const plan = planOf(id);
+    H(`11a. Next year, ${plan.name} (persona ${plan.personaId}), as the tab opens${id === NEXT_DEFAULT_PLAN ? ' (default plan; pitch slide 2 shows the same)' : ''}`);
+    say(`odds chips: ${(plan.maybes || []).map((m) => `"${m.label}" ${Math.round(m.odds * 100)}%`).join('; ') || 'none'}`);
+    const r = await run(plan);
+    first[id] = { r, rows: show(r, { chips: true }) };
+  }
+  for (const id of order) {
+    const plan = planOf(id);
+    const { r, rows } = first[id];
+    const topF = rows[0];
+    H(`11b. Next year, ${plan.name}: settle the top unknown, "${topF.label}", one option at a time`);
+    for (const o of topF.options) {
+      const c = counts(r.scenarios, topF.id).get(o.id) || 0;
+      if (!c) { say(`"${o.label}": disabled, in none of the possible weeks`); continue; }
+      const rs = await run(plan, { settled: { [topF.id]: o.id } });
+      say(`-- settled chip "${topF.label}: ${o.label}" (${c} weeks)`);
+      show(rs);
+    }
+  }
+  const cs = planOf('cs');
+  for (const m of cs.maybes || []) {
+    H(`11c. Next year, ${cs.name}: "${m.label}" odds slider from ${Math.round(m.odds * 100)}% to 70%`);
+    const r = await run(cs, { odds: { [m.id]: 0.7 } });
+    show(r, { chips: true });
+  }
+}
 console.log('\nDone.');
