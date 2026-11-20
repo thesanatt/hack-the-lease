@@ -414,6 +414,43 @@ Quorum never sends it; there is a Copy button. A local model could polish the wo
 the best sample home. The post is made up, and its spot is a guess along Catherine St, so it shows how the
 comparison works, not a real price.
 
+## Profile, Browse and Saved (the student flow)
+
+**How does it read a resume without AI?** `engine/profile.js`, plain rules. It matches the 31 real campus places
+and U-M nicknames (the same table the calendar import uses), reads days and times ("Tue and Thu 1pm to 5pm",
+"most nights until midnight"), a budget, an hourly wage, bike or no bike, and phrases like "don't like walking
+home at night". PDFs are turned into text in the browser with pdf.js. Tested in `test/profile.test.mjs`.
+
+**What does the profile change?** The week (every row feeds the router), the walking limits (a "short" late walk
+is 6 minutes), the budget (homes over it sort below the rest and say by how much), and the starting values: a
+wage sets the value of time at half of it (Small 2012, same rule as before), and "private bathroom", "natural
+light", "bigger room" or "safety" raise that weight 2.5 times. Picks on `#me` can still move all of them.
+
+**What if the resume has no class times?** Quorum does not guess. A course or place written without days or
+times shows **Needs a time** with a small editor, and is not routed until it has one. Courses go to their
+department's building (EECS to the EECS Building, FIN to Ross, PHYSICS and MATH to Central Campus), marked
+"building guessed" with a dropdown to fix it. A student with no times at all can click **Use a typical week**
+for a FICTIONAL sample week of their program; it is never added on its own.
+
+**Privacy?** Read on the device, kept only in that browser (localStorage). Emails and phone numbers are removed
+before anything is stored. Links are listed, never opened. No age, gender or other demographics are read.
+
+**Is the Includes / Does not include list AI?** No. It is computed, line by line, in `web/src/student/match.js`:
+budget against the room's rent with utilities; "close to downtown" (or any campus or building) as the walk on
+the OSM street graph, 15 minutes or less; room size, private bathroom and daylight from the listing's rooms;
+"a ride home for every late trip" and minutes to class from the router's trips for her week. What the listings
+do not record (quiet, pets, parking) is listed as not in the listing, never guessed. "Has N of M" counts only
+what the student asked for.
+
+**Why can a Great fit have few matches?** Two different questions. The badge is the engine's all-in score for
+the week (rent, time, late nights, room). The checklist is the student's own wish list. Browse sorts by Most
+matches when the profile asks for things, so the two disagree in the open, not in secret.
+
+**What do Great, Good and Weaker fit mean?** Rank among all 30 homes for this week: top 20%, next 30%, the rest.
+
+**Limits.** Rules miss phrasings they were not written for; the student sees every row and can remove or add.
+Word files are not read (PDF, text and .ics are). The "about N trips" line counts trips to and from each entry.
+
 ## Known limitations
 
 - Walking speed is 1.3 m/s for everyone. No hills, snow or ice.
@@ -434,3 +471,17 @@ comparison works, not a real price.
 - Tour times use each member's most likely week only, and each trip is checked on the December timetable.
 - "No pickup" or "no drop-off" flags in the middle of a trip are not modeled. Flags at a trip's first or last
   stop are (the reference check found that case on route 63 and the pipeline now handles it).
+
+**How does it read a week-calendar screenshot?** From the layout, in `engine/grid.js`: the day headers give the
+columns, the hour labels snapped to the grid's own lines give the time scale (least squares), each colored block
+is found from its pixels (its column is the day, its top and bottom edges are the start and end, to 5 minutes),
+then only the text inside each block is read. Exams (MID, section 999) are skipped. List-style screenshots are
+read as lines. All on the device. Tested on a real Fall schedule screenshot: 7 of 7 classes, about 4 seconds.
+
+**How does Schedule a tour pick times?** `engine/tours.js` (the group tour finder) for one person: every weekday
+half hour from 9 AM to 7 PM when the student is free, can get from where they are just before to the house on the
+real timetables within their walking limits, and still reach their next entry on time. Booked tours count as busy.
+The three best (least travel, no tight connections) are numbered; every open slot is clickable on My calendar.
+Dates are the next one on that weekday, skipping Thanksgiving and the day after. The .ics file is made in the
+browser. Contact landlord drafts a message from the profile (move-in, budget, pets, parking, the tour time); the
+student copies it or opens it in their own mail app. Contacts are fictional (example.com, 555-01xx).

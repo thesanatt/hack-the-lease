@@ -11,8 +11,6 @@ docs/DEMO.md (the 5 minute script) and docs/QA.md (judge questions).
 - The backup video (docs/backup/quorum_demo_backup.mp4, 3:01) shows the 10:50 AM flow. It does not show the Fit
   scores or the newer sample students.
 - Printable student cards for the judges: docs/cards/student_cards.pdf (QR codes open the live site as that student).
-  Print it (US Letter, 4 cards a page, cut along the lines) and hand one card to each judge at the start of Q&A:
-  "Scan it: that is you as a Michigan student, on the real buses." Scan one yourself first to check it opens.
 
 ## The problem we chose
 
@@ -86,9 +84,7 @@ Owners and How we know are for judges' questions: per-room fair rent for owners,
 ## Open work, in priority order
 
 1. Simple mode (docs/SIMPLE.md): answer first in plain words, at most one number per card, a "Show the numbers"
-   switch. Half built on branch "simple" (commit 7fdab35, unfinished and untested). To finish: git checkout simple,
-   ask Claude to complete docs/SIMPLE.md, run every check in CLAUDE.md, update docs/DEMO.md, then merge to main
-   (which redeploys the live site). If it is not done and checked an hour before the slot, present from main as is.
+   switch. The team asked for this; it is specified, not built.
 2. Re-record the backup video for the current flow: cd scripts/record && npm install && npx playwright install
    chromium && node record.mjs (needs web/dist built first).
 3. Zeren's tour booking agent: build it on its own branch; merge only after the checks below pass.
@@ -104,9 +100,8 @@ Owners and How we know are for judges' questions: per-room fair rent for owners,
 ## Permissions
 
 - GitHub: both of you are invited to thesanatt/hack-the-lease with write access. Accept the email invite.
-- Vercel: quorum-a2.vercel.app is on Sanat's Vercel account and is connected to this GitHub repo. Every push to
-  main redeploys it within about 10 seconds (vercel.json serves the committed web/dist; there is no build step on
-  Vercel, so run npm run build and commit web/dist yourself). Pushes to other branches get a preview URL. You need
-  no Vercel access: GitHub write access is enough. That also means a broken push to main breaks the demo site, so
-  run the checks first. To roll back, push a revert of the bad commit.
+- Vercel: quorum-a2.vercel.app is on Sanat's personal (Hobby) Vercel account, which cannot add members. It stays as
+  the frozen demo build; the student-card QR codes point to it. If you change the app and want it hosted, deploy
+  your own copy from your own free Vercel account: npx vercel login, then from the repo folder
+  npx vercel deploy web/dist --prod. That gives you a new URL; the cards keep pointing to the frozen one.
 - No API keys, accounts or paid services are needed: the app runs fully offline in the browser.

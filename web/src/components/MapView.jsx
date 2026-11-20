@@ -226,6 +226,7 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
   const shapeIdx = useRef(null);
   const tipRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   clickRef.current = onHomeClick;
 
   const showTip = (text, x, y) => {
@@ -238,10 +239,18 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
 
   useEffect(() => {
     let cancelled = false;
-    const m = new maplibregl.Map({
-      container: box.current, style: STYLE, center: [-83.735, 42.283], zoom: 12.4,
-      attributionControl: false, dragRotate: false, pitchWithRotate: false, maxZoom: 17, minZoom: 10,
-    });
+    let m;
+    try {
+      m = new maplibregl.Map({
+        container: box.current, style: STYLE, center: [-83.735, 42.283], zoom: 12.4,
+        attributionControl: false, dragRotate: false, pitchWithRotate: false, maxZoom: 17, minZoom: 10,
+      });
+    } catch (e) {
+      // No WebGL (old phone, locked-down laptop, GPU off): keep the rest of the page working.
+      console.warn('Map unavailable:', e?.message || e);
+      setFailed(true);
+      return undefined;
+    }
     m.touchZoomRotate.disableRotation();
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.current = m;
@@ -498,7 +507,12 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
   return (
     <div className="map qmap" style={{ height }}>
       <div ref={box} style={{ position: 'absolute', inset: 0 }} />
-      {track && (
+      {failed && (
+        <div role="note" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center', color: '#6b665e', fontSize: 14 }}>
+          The map needs WebGL, which this browser has turned off. Every number on this page still works.
+        </div>
+      )}
+      {track && !failed && (
         <div className="qmap-play qmap-card">
           <button type="button" onClick={onPlay} disabled={!ready}>
             <span className="ic">{icon}</span>{label}

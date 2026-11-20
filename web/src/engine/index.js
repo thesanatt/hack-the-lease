@@ -47,9 +47,9 @@ export async function createEngine({ onProgress = () => {}, base = './data/' } =
   timings.coreLoad = performance.now() - t0;
 
   onProgress('Loading homes, personas and evidence', 0.5);
-  const [homesFile, personasFile, recovery, router, lp, operator] = await Promise.all([
+  const [homesFile, personasFile, recovery, router, lp, operator, detailsFile] = await Promise.all([
     opt('homes.json'), opt('personas.json'), opt('evidence/recovery.json'), opt('evidence/router.json'),
-    opt('evidence/lp.json'), opt('operator.json'),
+    opt('evidence/lp.json'), opt('operator.json'), opt('listing_details.json'),
   ]);
   const placeholder = { homes: !homesFile, personas: !personasFile };
   const hf = homesFile || PLACEHOLDER_HOMES;
@@ -81,6 +81,8 @@ export async function createEngine({ onProgress = () => {}, base = './data/' } =
       places, homes, homesLabel, personas, personasLabel, meta, routes: meta.routes,
       evidence: { recovery, router, lp }, operator, placeholder,
       homeById: new Map(homes.map((h) => [h.id, h])),
+      // SYNTHETIC landlord-style details per home (scripts/make_listing_details.mjs); empty if the file is missing.
+      detailsById: new Map((detailsFile?.details || []).map((d) => [d.id, d])),
       placeById: new Map(places.map((p) => [p.id, p])),
     },
     planner, tt, timings,

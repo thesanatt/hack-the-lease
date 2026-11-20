@@ -3,7 +3,10 @@
 Quorum helps University of Michigan students choose where to live from the week they will actually live.
 Built for Hack the Lease, Nov 19 to 20, 2026.
 
-- **Me**: one student's week (classes, lab, job, gym) runs through every candidate home on the real TheRide and
+- **Saved, My profile, Browse** (the first three tabs): a student drops a resume or writes a few lines;
+  `engine/profile.js` reads their week, limits, budget and values in the browser; Browse labels every home's fit
+  and Saved ranks the hearted homes for that week, one sentence and two numbers per home.
+- **Me** (now at `#me`, off the top bar): one student's week (classes, lab, job, gym) runs through every candidate home on the real TheRide and
   U-M bus timetables. A few "which week would you rather live?" picks learn what the student's time, dark walks
   and room features are worth. Homes are ranked by expected regret across the fall weeks the student might have.
 - **Group**: five friends renting one house. Quorum picks the house, assigns rooms and splits the rent so nobody

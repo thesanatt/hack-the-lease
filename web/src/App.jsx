@@ -16,13 +16,17 @@ const lazyView = (name) => {
 
 // Hash routes stay #me, #group, #operator, #evidence, #pitch. "Next semester" keeps #next (it was "Next year").
 const VIEWS = [
-  { id: 'me', label: 'You', file: 'Me', Comp: MeView },
+  { id: 'saved', label: 'Saved', file: 'Saved', Comp: lazyView('Saved') },
+  { id: 'profile', label: 'My profile', file: 'Profile', Comp: lazyView('Profile') },
+  { id: 'browse', label: 'Browse', file: 'Browse', Comp: lazyView('Browse') },
   { id: 'next', label: 'Next semester', file: 'Next', Comp: lazyView('Next') },
-  { id: 'listings', label: 'Listings', file: 'Listings', Comp: lazyView('Listings') },
   { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group') },
-  { id: 'operator', label: 'Owners', file: 'Operator', Comp: lazyView('Operator') },
   { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence') },
   { id: 'pitch', label: 'Pitch', file: 'Pitch', Comp: lazyView('Pitch') },
+  // Off the top bar, still reachable by link for Q&A: the full You view, the post paster, the owners view.
+  { id: 'me', label: 'You (detail)', file: 'Me', Comp: MeView, hidden: true },
+  { id: 'listings', label: 'Paste a post', file: 'Listings', Comp: lazyView('Listings'), hidden: true },
+  { id: 'operator', label: 'Owners', file: 'Operator', Comp: lazyView('Operator'), hidden: true },
 ];
 
 // One view failing to load or render must not blank the whole app: the top bar stays and says what broke.
@@ -53,7 +57,7 @@ function getEngine() {
 // The part before "?" picks the view; deep links like #me?who=maya keep their query for the view to read.
 const viewFromHash = () => {
   const { view } = splitHash(window.location.hash);
-  return VIEWS.some((v) => v.id === view) ? view : 'me';
+  return VIEWS.some((v) => v.id === view) ? view : 'saved';
 };
 const queryFromHash = () => splitHash(window.location.hash).query;
 
@@ -82,9 +86,9 @@ export default function App() {
     <div className={`frame view-${view}`}>
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to the page</a>
       <header className="topbar">
-        <a className="wordmark" href="#me" onClick={(e) => { e.preventDefault(); go('me'); }}>Quorum</a>
+        <a className="wordmark" href="#saved" onClick={(e) => { e.preventDefault(); go('saved'); }}>Quorum</a>
         <nav className="tabs" aria-label="Views">
-          {VIEWS.map((v) => (
+          {VIEWS.filter((v) => !v.hidden || v.id === view).map((v) => (
             <a key={v.id} href={`#${v.id}`} className="tab" aria-current={v.id === view ? 'page' : undefined}
               onClick={(e) => { e.preventDefault(); go(v.id); }}>
               {v.label}
