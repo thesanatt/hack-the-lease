@@ -18,11 +18,13 @@ const lazyView = (name) => {
 const VIEWS = [
   { id: 'saved', label: 'Saved', file: 'Saved', Comp: lazyView('Saved') },
   { id: 'profile', label: 'My profile', file: 'Profile', Comp: lazyView('Profile') },
+  { id: 'roommate', label: 'Roommate profile', file: 'Roommate', Comp: lazyView('Roommate') },
   { id: 'browse', label: 'Browse', file: 'Browse', Comp: lazyView('Browse') },
   { id: 'next', label: 'Next semester', file: 'Next', Comp: lazyView('Next') },
   { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group') },
-  { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence') },
-  { id: 'pitch', label: 'Pitch', file: 'Pitch', Comp: lazyView('Pitch') },
+  // Presentation pages, off the top bar but open by link: #evidence and #pitch.
+  { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence'), hidden: true },
+  { id: 'pitch', label: 'Pitch', file: 'Pitch', Comp: lazyView('Pitch'), hidden: true },
   // Off the top bar, still reachable by link for Q&A: the full You view, the post paster, the owners view.
   { id: 'me', label: 'You (detail)', file: 'Me', Comp: MeView, hidden: true },
   { id: 'listings', label: 'Paste a post', file: 'Listings', Comp: lazyView('Listings'), hidden: true },

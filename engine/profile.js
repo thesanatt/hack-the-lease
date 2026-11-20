@@ -124,6 +124,14 @@ export function timesIn(s) {
     if (b <= a && b < 12 * 60) b += 12 * 60;
     if (b > a && b - a <= 14 * 60) return { start: hm(a), end: hm(b), explicit: true };
   }
+  // "at 2 to 3", "from 9 to 10": no am or pm; 1 to 6 read as afternoon, 7 to 11 as morning, 12 as noon
+  m = /\b(?:at|from)\s+(\d{1,2})(?::(\d{2}))?\s*(?:-|to|until|till)\s*(\d{1,2})(?::(\d{2}))?\b(?!\s*(?:roommates|friends|people|min|minutes|hours|hrs|bed|beds|sq|square|%|percent|dollars|\$))/i.exec(txt);
+  if (m && Number(m[1]) <= 12 && Number(m[3]) <= 12) {
+    const h = (x) => { const n = Number(x); return n === 12 ? 12 : n <= 6 ? n + 12 : n; };
+    let a = h(m[1]) * 60 + Number(m[2] || 0), b = h(m[3]) * 60 + Number(m[4] || 0);
+    if (b <= a) b += 12 * 60;
+    if (b > a && b - a <= 8 * 60 && b < 24 * 60) return { start: hm(a), end: hm(b), explicit: true };
+  }
   if (/\b(until|till|til)\s+midnight\b/i.test(txt)) return { end: '23:59', explicit: true };
   m = new RegExp(`\\b(?:until|till|til|to)\\s+${T}`, 'i').exec(txt);
   if (m && (m[3] || m[2])) return { end: hm(to24(m[1], m[2], m[3], true)), explicit: true };
@@ -208,6 +216,16 @@ export function normalizeScheduleText(text) {
   return out.join('\n');
 }
 
+// "i actually have a club meeting thursday at 2 to 3" -> "Club meeting"
+const FILLER = /\b(i|im|i'm|i am|we|actually|also|usually|always|now|have|has|got|get|go|goes|going|to|attend|do|a|an|the|my|our|on|at|from|every|each|until|till|and|in|there's|there is|is|are|will|would|this|next|semester|week|weekly|night|nights|pm|am|weekdays?|weekends?)\b/gi;
+function eventLabel(s) {
+  let t = String(s);
+  for (const [re] of DAY_WORDS) t = t.replace(new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`), ' ');
+  t = t.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?\b/gi, ' ').replace(/[^A-Za-z' ]+/g, ' ').replace(FILLER, ' ').replace(/\s+/g, ' ').trim();
+  const words = t.split(' ').filter(Boolean).slice(0, 4).join(' ');
+  return words ? words[0].toUpperCase() + words.slice(1) : 'Busy';
+}
+
 function capitalize(s) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
 
 export function readProfile(text, { places = [], personas = [], aliases = null } = {}) {
@@ -267,7 +285,6 @@ export function readProfile(text, { places = [], personas = [], aliases = null }
   const schedText = isCal ? src : src.split(/\r?\n/).filter((l) => !/\b(LEC|DIS|LAB|SEM|REC)\b/.test(l) && l.trim().length <= 90 && /\d{1,2}(:\d{2})?\s*(am|pm)?\s*(-|to)\s*\d{1,2}(:\d{2})?/i.test(l) && l.trim().split(/\s+/).length <= 14).join('\n');
   const sched = parseSchedule(schedText, places);
   const placedItems = sched.items.filter((it) => it.place);
-  sched.items.filter((it) => !it.place).forEach((it) => unplaced.push(clip(it.label, 40)));
   for (const e of toWeekEntries(placedItems, [])) {
     const id = `s_${e.place}_${e.days.join('')}_${e.start.replace(':', '')}`;
     if (used.has(id)) continue;
@@ -279,6 +296,7 @@ export function readProfile(text, { places = [], personas = [], aliases = null }
   // next to each course when given ("EECS 280 MW 10:30-12"), typical ones otherwise (tagged guessed).
   {
     const placeIds = new Set(places.map((p) => p.id));
+    const movePlace = [];
     const scheduled = entries.map((e) => e.label.toUpperCase().replace(/[ -]/g, ''));
     const seen = new Set();
     courseHits.forEach((c, i) => {
@@ -289,6 +307,9 @@ export function readProfile(text, { places = [], personas = [], aliases = null }
       const seg = src.slice(c.end, next);
       const d = daysIn(seg), t = timesIn(seg);
       const key = `${c.code}|${d.join('')}|${t?.start || ''}`;
+      // "MATH 216 is in Weiser Hall": a building for a course already read, with no new time
+      const named0 = placeMentions(seg, places, PLACE_ALIASES)[0] || roomCode(seg, places, PLACE_ALIASES);
+      if (named0 && !d.length && !t) movePlace.push({ code: c.code, place: named0.id });
       if (seen.has(key) || (seen.has(c.code) && !(d.length || t))) return;
       seen.add(key); seen.add(c.code);
       const comp = /\bDIS\b|discussion/i.test(seg) ? ' discussion' : /\bLAB\b/.test(seg) ? ' lab' : /\bSEM\b/.test(seg) ? ' seminar' : /\bREC\b/.test(seg) ? ' recitation' : '';
@@ -301,6 +322,9 @@ export function readProfile(text, { places = [], personas = [], aliases = null }
         why: clip(src.slice(Math.max(0, src.lastIndexOf('\n', c.index) + 1), lineEnd)),
       });
     });
+    for (const mv of movePlace) for (const e of entries) {
+      if (e.source === 'course' && e.label.startsWith(mv.code)) { e.place = mv.place; e.placeGuessed = false; }
+    }
   }
   for (let k = entries.length - 1; k >= 0; k--) {
     const e = entries[k];
@@ -335,6 +359,30 @@ export function readProfile(text, { places = [], personas = [], aliases = null }
         source: 'mention', why: clip(lonePlace ? line : s),
       });
     }
+  }
+
+  // ---- events with a day and a time but no building ("club meeting thursday at 2 to 3"): kept with no place.
+  // They show on the calendar and block tour times; their trips are not counted until a building is chosen.
+  const schedLines = schedText.split('\n');
+  for (const it of sched.items.filter((x) => !x.place)) {
+    const raw = schedLines[(it.line || 0) - 1] || it.label;
+    if (COURSE_AT.test(raw) || courseHits.some((c) => raw.toUpperCase().includes(c.code.replace(' ', '')) || raw.toUpperCase().includes(c.code))) continue; // a course line: the course reader has it
+    const t2 = timesIn(raw);
+    if (!t2?.start || !t2?.end) continue;            // "2 to 3 roommates" is not a time
+    const label = eventLabel(raw);
+    entries.push({ id: `u_${label.toLowerCase().replace(/\W+/g, '')}_${it.days.join('')}_${it.start.replace(':', '')}`, label, days: [...it.days], start: it.start, end: it.end,
+      place: null, p: 1, alt: [], on: true, source: 'event', why: clip(it.label) });
+  }
+  for (const s0 of sent) {
+    const line = lineOf.get(s0) || s0;
+    if (/BEGIN:VCALENDAR|DTSTART/i.test(s0)) continue;
+    if (placeMentions(line, places, PLACE_ALIASES).length || roomCode(line, places, PLACE_ALIASES) || COURSE_AT.test(line)) continue;
+    const d = daysIn(s0), t = timesIn(s0);
+    if (!d.length || !t?.start || !t?.end) continue;
+    if (entries.some((e) => e.why && (e.why.includes(clip(s0)) || clip(s0).includes(e.why)))) continue;
+    const label = eventLabel(s0);
+    entries.push({ id: `u_${label.toLowerCase().replace(/\W+/g, '')}_${d.join('')}_${t.start.replace(':', '')}`, label, days: d, start: t.start, end: t.end,
+      place: null, p: 1, alt: [], on: true, source: 'event', why: clip(s0) });
   }
 
   // ---- typical classes for their program, when they gave none of their own
@@ -404,8 +452,8 @@ export function readProfile(text, { places = [], personas = [], aliases = null }
   if (rm) notes.push({ key: 'roommates', label: `Living with ${rm[1]} ${rm[2].toLowerCase()}`, why: clip(sent.find((s) => s.includes(rm[0])) || rm[0]) });
   else note('roommates', 'Wants roommates', /\b(roommates?|housemates?)\b/i);
   note('alone', 'Wants to live alone', /\b(live alone|living alone|my own place|studio)\b/i);
-  note('car', 'Has a car (parking is not in the sample listings)', /\b(i have|i own|my)\s+(a\s+)?car\b/i);
-  note('pet', 'Has a pet (pet rules are not in the sample listings)', /\b(my|a|our)\s+(dog|cat|pet)\b/i);
+  note('car', 'Has a car, needs parking', /\b(have|own|bring|bringing|drive)\b[^.]{0,25}\bcar\b|\bmy car\b|\b(need|want)s?\s+(a\s+)?parking\b/i);
+  note('pet', 'Has a pet', /\b(my|a|our|have a|two)\s+(dog|cat|pet|puppy|kitten)s?\b/i);
   note('quiet', 'Wants a quiet place', /\b(quiet|calm|no parties)\b/i);
 
   // ---- where they want to live, room size, group size
@@ -427,7 +475,10 @@ export function readProfile(text, { places = [], personas = [], aliases = null }
   const WORDN = { two: 2, three: 3, four: 4, five: 5 };
   const groupSize = rm ? (WORDN[rm[1].toLowerCase()] || Number(rm[1])) + 1 : null;
 
-  return { program, entries, typical, modes, modesWhy, budget, budgetWhy, wage, wageWhy, likes, notes, courses, links, unplaced, kept, near, minSqft, minSqftWhy, groupSize };
+  // ---- listing preferences ("furnished", "in-unit laundry", "AC", "8-month lease", "move in by Aug 20"...)
+  const wants = readWants(src, sent);
+
+  return { program, entries, typical, wants, modes, modesWhy, budget, budgetWhy, wage, wageWhy, likes, notes, courses, links, unplaced, kept, near, minSqft, minSqftWhy, groupSize };
 }
 
 // "close to downtown", "near North Campus", "walking distance to Ross", "walkable to Kerrytown".
@@ -454,6 +505,7 @@ const SUBJECT_PLACE = [
   [/^(FIN|MKT|TO|BCOM|ACC|STRATEGY|BA|MO|BE|BIT|ES|LHC|TAX)$/, 'ross'],
   [/^LAW$/, 'law'],
   [/^(CHEM|BIOLCHEM)$/, 'chem'],
+  [/^(MATH|PSYCH)$/, 'easthall'],
 ];
 const KNOWN_SUBJECTS = new Set(['EECS', 'MATH', 'PHYSICS', 'CHEM', 'STATS', 'ECON', 'PSYCH', 'BIOLOGY', 'BIOLCHEM', 'ENGLISH', 'HISTORY',
   'SOC', 'POLSCI', 'COMM', 'PHIL', 'ENGR', 'MECHENG', 'AEROSP', 'NURS', 'FIN', 'MKT', 'ACC', 'MUSIC', 'THEORY', 'SPANISH', 'FRENCH',
@@ -466,6 +518,48 @@ const COURSE_SLOTS = [
   { days: ['mon', 'wed', 'fri'], start: '09:00', end: '10:00' },
   { days: ['tue', 'thu'], start: '15:30', end: '17:00' },
 ];
+
+// Preferences about the listing itself. Each has a key the Browse checklist knows (web/src/student/match.js).
+export const WANT_KEYS = {
+  furnished: 'Furnished', laundry: 'Free laundry', ac: 'Air conditioning', dishwasher: 'Dishwasher', internet: 'Internet included',
+  outdoor: 'Outdoor space', house: 'A house', apartment: 'An apartment', lease8: 'School-year lease (8 months)', lease12: '12-month lease',
+  newer: 'Newer building', notBasement: 'Not a basement room', smokeFree: 'Smoke-free', classMin: 'Short trip to class', moveIn: 'Move-in date',
+};
+const WANT_RE = [
+  ['furnished', /\b(furnished|comes with furniture|with furniture)\b/i, /\bunfurnished\b/i],
+  ['laundry', /\b(laundry|washer|dryer|w\/d)\b/i],
+  ['ac', /\b(a\/?c|air ?condition(ing|ed)?|central air)\b/i],
+  ['dishwasher', /\bdishwasher\b/i],
+  ['internet', /\b(internet|wifi|wi-fi)\s+(included|incl)/i],
+  ['outdoor', /\b(porch|yard|balcony|deck|outdoor space|patio|backyard)\b/i],
+  ['house', /\b(a|an)\s+(\w+\s+){0,2}house\b(?! ?mates?)|\bhouse rather than\b/i],
+  ['apartment', /\b(a|an)\s+(\w+\s+){0,2}(apartment|apt|condo|studio)\b/i],
+  ['lease8', /\b(8|eight)[- ]month|school[- ]year lease|academic[- ]year lease|only (during|for) the school year\b/i],
+  ['lease12', /\b(12|twelve)[- ]month|full[- ]year lease|year[- ]round\b/i],
+  ['newer', /\b(new|newer|modern|renovated|updated) (building|apartment|place|house|construction)\b/i],
+  ['notBasement', /\b(no|not a|not in the|avoid( a| the)?) basement\b|\bnot (live )?in a basement\b/i],
+  ['smokeFree', /\b(smoke[- ]free|non[- ]?smoking|no smoking)\b/i],
+];
+function readWants(src, sent) {
+  const out = [];
+  const find = (re) => sent.find((x) => re.test(x));
+  for (const [key, re, not] of WANT_RE) {
+    const s0 = find(re);
+    if (!s0 || (not && not.test(s0) && !re.test(s0.replace(not, '')))) continue;
+    if (/\b(don'?t|do not|no need|doesn'?t matter|not important)\b[^.]{0,25}$/i.test(s0.slice(0, s0.search(re)))) continue;
+    out.push({ key, label: WANT_KEYS[key], why: clip(s0) });
+  }
+  const cm = /\b(?:within|under|less than|at most|no more than|max(?:imum)?)\s+(\d{1,2})\s*(?:min|minutes)\b[^.]{0,40}\b(class|classes|campus|lecture|school)\b|\b(\d{1,2})\s*(?:min|minutes)\s+(?:or less\s+)?(?:from|to)\s+(?:my\s+)?(class|classes|campus)\b/i.exec(src);
+  if (cm) { const v = Number(cm[1] || cm[3]); if (v >= 5 && v <= 60) out.push({ key: 'classMin', label: `${v} min or less to class`, value: v, why: clip(cm[0]) }); }
+  const mv = /\bmove[- ]?in\s+(?:by|before|on|around)?\s*(aug(?:ust)?|sep(?:tember)?|jan(?:uary)?|may|jun(?:e)?)\.?\s+(\d{1,2})\b/i.exec(src);
+  if (mv) {
+    const MON = { aug: '08', sep: '09', jan: '01', may: '05', jun: '06' };
+    const mo = MON[mv[1].slice(0, 3).toLowerCase()];
+    const y = mo === '01' ? 2028 : 2027;
+    out.push({ key: 'moveIn', label: `Move in by ${mv[1].slice(0, 3)} ${Number(mv[2])}`, value: `${y}-${mo}-${String(mv[2]).padStart(2, '0')}`, why: clip(mv[0]) });
+  }
+  return out;
+}
 
 function toMinutes(s) { const [h, m] = s.split(':').map(Number); return h * 60 + m; }
 

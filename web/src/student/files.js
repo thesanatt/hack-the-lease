@@ -2,7 +2,7 @@
 // Tesseract (text recognition, run on this device from files bundled in /ocr, no network); text, Markdown,
 // CSV and calendar (.ics) files as text. Both libraries load only when needed. Nothing leaves the device.
 import { normalizeScheduleText } from '../../../engine/profile.js';
-import { findGrid, findBlocks, blockLines } from '../../../engine/grid.js';
+import { findGrid, findBlocks, blockLines, insetRect } from '../../../engine/grid.js';
 
 const TEXT_EXT = /\.(txt|md|markdown|csv|ics|ical|text|json)$/i;
 const IMG_EXT = /\.(png|jpe?g|webp|bmp|gif)$/i;
@@ -80,6 +80,10 @@ async function prepare(file) {
   return c;
 }
 
+// Hour labels down the side ("9am", "10am", "2pm") are the sign of a week grid worth a second pass.
+const looksLikeGrid = (words) => words.filter((w) => /^\d{1,2}\s?(am|pm)$/i.test(w.text) || /^[1il]{1,2}(am|pm)$/i.test(w.text)).length >= 3
+  || words.filter((w) => /^(mon|tue|wed|thu|fri)/i.test(w.text)).length >= 3;
+
 // A week-grid calendar (days across, hours down, colored class blocks) is read from its layout: engine/grid.js
 // finds the columns, the time scale and each block, then each block's own text is read. Anything else (a list
 // of classes, a resume photo) is read as lines of text.
@@ -90,13 +94,23 @@ export async function imageText(file, onProgress = () => {}) {
   const words = [];
   for (const b of data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) for (const w of l.words || []) words.push({ text: w.text, ...w.bbox });
   const img = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, canvas.width, canvas.height);
-  const grid = findGrid(img, words);
+  let grid = findGrid(img, words);
+  if (!grid && looksLikeGrid(words)) {
+    // wide colored bars can hide the headers from the first pass; sparse mode finds scattered words
+    onProgress(0.5, 'Looking for the calendar grid');
+    await worker.setParameters({ tessedit_pageseg_mode: '11' });
+    const r2 = await worker.recognize(canvas, {}, { blocks: true });
+    const w2 = [];
+    for (const b of r2.data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) for (const w of l.words || []) w2.push({ text: w.text, ...w.bbox });
+    grid = findGrid(img, w2);
+  }
+  await worker.setParameters({ tessedit_pageseg_mode: '6' });
   if (grid) {
     const blocks = findBlocks(img, grid);
     for (let i = 0; i < blocks.length; i++) {
       const bk = blocks[i];
       onProgress(i / blocks.length, `Reading class block ${i + 1} of ${blocks.length}`);
-      const r = await worker.recognize(canvas, { rectangle: { left: bk.x0, top: bk.y0, width: bk.x1 - bk.x0 + 1, height: bk.y1 - bk.y0 + 1 } });
+      const r = await worker.recognize(canvas, { rectangle: insetRect(bk) });
       bk.text = r.data.text;
     }
     const lines = blockLines(blocks);

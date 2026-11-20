@@ -31,7 +31,8 @@ test('profile: schedule lines beat the typical week, and unknown rooms are liste
   assert.equal(p.program.id, 'nursing');
   assert.ok(p.entries.some((e) => e.place === 'uh' && e.source === 'schedule' && e.start === '06:30'));
   assert.ok(!p.entries.some((e) => e.source === 'program'));
-  assert.ok(p.unplaced.length >= 1);
+  const stats = p.entries.find((e) => e.label.startsWith('STATS 250'));
+  assert.ok(stats && stats.placeGuessed, 'a course in an unknown room keeps its course and a guessed building');
 });
 
 test('profile: contact details are counted and dropped, links listed, demographics not read', () => {
@@ -91,5 +92,18 @@ test('profile: a schedule screenshot, as text recognition reads it', () => {
   const p = read(normalizeScheduleText(ocr));
   assert.deepEqual(p.entries.map((e) => [e.label, e.days.join(''), e.start, e.end, e.place]), [
     ['EECS 280', 'monwed', '10:30', '12:00', 'beyster'], ['EECS 280 discussion', 'fri', '13:30', '14:30', 'eecs'],
-    ['PHYSICS 240', 'monwedfri', '14:00', '15:00', 'angell'], ['PHYSICS 240 lab', 'thu', '18:00', '20:00', 'chem']]);
+    ['PHYSICS 240', 'monwedfri', '14:00', '15:00', 'weiser'], ['PHYSICS 240 lab', 'thu', '18:00', '20:00', 'chem']]);
+});
+
+test('profile: an event with a day and a time but no building', () => {
+  const p = read('i actually have a club meeting thursday at 2 to 3');
+  assert.deepEqual(p.entries.map((e) => [e.label, e.days.join(''), e.start, e.end, e.place, e.source]),
+    [['Club meeting', 'thu', '14:00', '15:00', null, 'event']]);
+  assert.deepEqual(read('I live with 2 to 3 roommates on weekends').entries, []);
+  assert.equal(read('Dance class MW 6-7:30pm').entries[0].start, '18:00');
+});
+
+test('profile: "MATH 216 is in Weiser Hall" moves a course already read', () => {
+  const p = read('MATH 216 MoWeFr 1:00PM - 2:00PM\nmath 216 is in weiser hall');
+  assert.deepEqual(p.entries.map((e) => [e.label, e.place, e.placeGuessed]), [['MATH 216', 'weiser', false]]);
 });

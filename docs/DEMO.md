@@ -1,8 +1,8 @@
 # Quorum demo script, new student flow (about 4:30, then a 30 s buffer)
 
-The top bar now reads **Saved**, **My profile**, **Browse**, **Next semester**, **Your group**, **How we know**,
-**Pitch**. The old You tab, the post paster and Owners are off the bar but still open by link for Q&A:
-`#me`, `#listings`, `#operator`. The previous script is `docs/DEMO_PREVIOUS.md`.
+The top bar reads **Saved**, **My profile**, **Roommate profile**, **Browse**, **Next semester**, **Your group**.
+Off the bar but open by link: the slides at `http://localhost:4173/#pitch`, the evidence page `#evidence`, and for
+Q&A the old You tab `#me`, the post paster `#listings` and Owners `#operator`. Open the slides by typing the address. The previous script is `docs/DEMO_PREVIOUS.md`.
 
 What is sample: the resume (a FICTIONAL student, Alex Rivera, labeled on the PDF; its class times are made
 up), all homes, rooms and rents (SYNTHETIC). The "typical week" button uses a FICTIONAL sample week, and only
@@ -14,13 +14,14 @@ The speed line under Saved is measured live; read it off the screen.
 ## Before you go on (5 minutes before the slot)
 
 1. Start the app: `node web/dist/serve.mjs`, open http://localhost:4173. Wait for the top bar.
-2. Reset: click **My profile**. If it is not blank, scroll down and click **Clear my profile**. Click **Saved**;
+2. Reset: click **My profile**. If it is not blank, scroll down and click **Clear my profile** (this also brings back
+   the sharing pop-up if someone clicked "don't ask again" in a rehearsal). Click **Saved**;
    if any homes show, click **Clear saved homes** at the bottom.
 3. Pre-save the five homes (saves 15 s on stage): click **Browse**, then the heart on **Broadway St house**,
    **Catherine St house**, **East Ann St house**, **Church St house**, **Georgetown Blvd house**. Browse shows nine
    homes a page; East Ann is on page 2 (page tabs at the bottom). The button top right reads **Saved (5)**.
 4. Warm up Next semester as in the previous script (click it, wait for **$31 a month**).
-5. Click **Pitch**, press **Home** for slide 1. Zoom 80% (Ctrl and minus), F11 for full screen.
+5. Go to http://localhost:4173/#pitch (type it; Pitch is off the top bar), press **Home** for slide 1. Zoom 80% (Ctrl and minus), F11 for full screen.
 
 Order of clicks: Pitch, My profile, Browse, Saved, My profile, Saved, Next semester, Your group, Pitch.
 
@@ -81,8 +82,10 @@ rank?** on card 1: "Best of all 30 homes in **57%** of the 24 weeks your schedul
 
 ## 5. Change one thing (2:25 to 3:00)
 
-Clicks: **My profile**. In **Add more** type: `Budget $950 a month. I don't like walking home alone at night.`
-Click **Add**. The summary now ends "Budget $950 a month." and **Walking home late** switches to **Short**.
+Clicks: **My profile**. In **Tell Quorum** type: `Budget $950 a month. I don't like walking home alone at night.`
+Click **Add** (**Do it** when the local AI is on; then check the list of changes it shows: a budget and a short
+late walk). A pop-up asks "You're sharing this with Quorum": click **Yes, this time** and say "it asks before it reads
+anything, and nothing is uploaded". The summary now ends "Budget $950 a month." and **Walking home late** switches to **Short**.
 Click **Saved**.
 
 Screen: Broadway still 1st, now "A ride for every trip and lower rent." **Georgetown Blvd** moves to 2nd.
@@ -94,7 +97,7 @@ The middle home has 4 trips like that." Each of the other four saved homes has 4
 > budget and drop. Broadway goes from 57 to 82 percent: with the shorter walking limit, it is the only saved
 > home where no late night leaves her without a ride.
 
-Optional, if time allows (adds about 20 s): in **Add more** also type `I want to live close to downtown, in a
+Optional, if time allows (adds about 20 s): in **Tell Quorum** also type `I want to live close to downtown, in a
 room over 150 square feet.` and open **Browse**. It sorts by **Most matches**, and each card says "Has N of M
 things you asked for" with **Includes** and **Does not include**. The Saved ranking does not change: location
 and room size are checked on the cards, not priced.
@@ -108,6 +111,11 @@ drafted message with the tour time.
 > She can tour it Monday at 2, between classes: the planner checked the buses there and back to her 3 PM
 > lecture. One click books it and drafts the message to the landlord. Quorum sends nothing.
 
+Optional (about 25 s): **Roommate profile**, type `make my calendar public to other users` and **Do it** (or tick
+the switches). Back on **Saved**, card 1, **Others interested**: fictional sample students who like Broadway, ranked by
+a match score (budget, night owl or early bird, campus, homes in common), each opening to their roommate profile.
+**Rank with local AI** has the model re-order them with a reason each.
+
 ## 6. Next semester (3:00 to 3:40), cut first if long
 
 As in `docs/DEMO_PREVIOUS.md` step 2, short version: **$31 a month** for the sample nursing junior, the clinical
@@ -115,7 +123,7 @@ section is worth **$23 a month** to find out first; CS junior **under $1**: sign
 
 ## 7. Close (3:40 to 4:30)
 
-Pitch, **End**, Left arrow twice (Evidence slide). Same words as `docs/DEMO_PREVIOUS.md` step 7.
+Type `#pitch` at the end of the address, **End**, Left arrow twice (Evidence slide). Same words as `docs/DEMO_PREVIOUS.md` step 7.
 
 ## If something breaks
 

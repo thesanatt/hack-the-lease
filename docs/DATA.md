@@ -185,3 +185,9 @@ landlords or prices. Shown on the Saved tab and used for the pets, parking and q
 
 Read on the device by Tesseract.js 5 (Apache 2.0) with the `eng` 4.0.0_best_int model from
 `@tesseract.js-data/eng`, bundled in `web/public/ocr`. Nothing is sent anywhere.
+
+## places.json additions (Nov 20, 4 PM)
+
+Weiser Hall (500 Church St, formerly the Dennison Building), East Hall (530 Church St), Mason Hall (419 State St)
+and the Modern Languages Building (812 Washington St), with coordinates from the mguide.app U-M building directory,
+looked up Nov 20 2026. The other 31 places are from OSM as before. MATH and PSYCH classes default to East Hall.
