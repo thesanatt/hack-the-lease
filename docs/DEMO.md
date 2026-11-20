@@ -117,7 +117,7 @@ The middle home has 4 trips like that." Each of the other four saved homes has 4
 > home where no late night leaves her without a ride.
 
 Optional, if time allows (adds about 20 s): in **Tell Quorum** also type `I want to live close to downtown, in a
-room over 150 square feet.` and open **Browse**. It sorts by **Most matches**, and each card says "Has N of M
+room over 150 square feet.` and open **Browse**. It stays sorted by **Best fit** (the other sort is **Lowest rent**), and each card says "Has N of M
 things you asked for" with **Includes** and **Does not include**. The Saved ranking does not change: location
 and room size are checked on the cards, not priced.
 

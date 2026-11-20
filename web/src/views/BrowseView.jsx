@@ -47,7 +47,7 @@ export default function BrowseView({ api }) {
   const budget = profile?.budget ?? null;
   const [area, setArea] = useState('all');
   const [inBudget, setInBudget] = useState(false);
-  const [sort, setSort] = useState(null); // null: Most matches when the profile asks for things, else Best fit
+  const [sort, setSort] = useState(null); // null: Best fit
   const [page, setPage] = useState(0);
 
   const areas = useMemo(() => [...new Set(homes.map((h) => h.area))].sort(), [homes]);
@@ -64,15 +64,13 @@ export default function BrowseView({ api }) {
     return { home: h, r, m, price: r?.rent ?? fromPrice(h), from: fromPrice(h) };
   }), [homes, res, profile, medianWeekMin, anchor]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const anyAsk = all.some((x) => (x.m?.asked || 0) > 0);
-  const sortKey = sort || (anyAsk ? 'match' : 'fit');
+  const sortKey = sort || 'fit';
   const list = useMemo(() => {
     let l = all;
     if (area !== 'all') l = l.filter((x) => x.home.area === area);
     if (inBudget && budget) l = l.filter((x) => x.price <= budget);
     const cmp = {
       fit: (a, b) => (a.r && b.r ? a.r.pos - b.r.pos : a.from - b.from),
-      match: (a, b) => (b.m?.met ?? 0) - (a.m?.met ?? 0) || (a.r && b.r ? a.r.pos - b.r.pos : a.from - b.from),
       price: (a, b) => a.from - b.from,
     }[sortKey] || ((a, b) => a.from - b.from);
     return [...l].sort(cmp);
@@ -85,7 +83,7 @@ export default function BrowseView({ api }) {
   const turn = (i) => { setPage(i); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   const sortOptions = res
-    ? [{ value: 'fit', label: 'Best fit' }, { value: 'match', label: 'Most matches' }, { value: 'price', label: 'Lowest rent' }]
+    ? [{ value: 'fit', label: 'Best fit' }, { value: 'price', label: 'Lowest rent' }]
     : [{ value: 'price', label: 'Lowest rent' }];
 
   return (
