@@ -1,0 +1,227 @@
+[
+ {
+  "id": "ugli",
+  "label": "Shapiro Library (UgLi)",
+  "area": "Central",
+  "kind": "study",
+  "lat": 42.275632,
+  "lon": -83.737189,
+  "source": "OSM Nominatim: Shapiro Undergraduate Library, Ann Arbor"
+ },
+ {
+  "id": "hatcher",
+  "label": "Hatcher Graduate Library",
+  "area": "Central",
+  "kind": "study",
+  "lat": 42.276223,
+  "lon": -83.738177,
+  "source": "OSM Nominatim: Hatcher Graduate Library, Ann Arbor"
+ },
+ {
+  "id": "union",
+  "label": "Michigan Union",
+  "area": "Central",
+  "kind": "campus",
+  "lat": 42.27517,
+  "lon": -83.741513,
+  "source": "OSM Nominatim: Michigan Union, Ann Arbor"
+ },
+ {
+  "id": "angell",
+  "label": "Angell Hall",
+  "area": "Central",
+  "kind": "class",
+  "lat": 42.276725,
+  "lon": -83.739753,
+  "source": "OSM Nominatim: Angell Hall, Ann Arbor"
+ },
+ {
+  "id": "chem",
+  "label": "Chemistry Building",
+  "area": "Central",
+  "kind": "class",
+  "lat": 42.278035,
+  "lon": -83.736708,
+  "source": "OSM Nominatim: Chemistry Building, 930 North University Avenue, Ann Arbor"
+ },
+ {
+  "id": "ross",
+  "label": "Ross School of Business",
+  "area": "Central",
+  "kind": "class",
+  "lat": 42.272779,
+  "lon": -83.736974,
+  "source": "OSM Nominatim: Ross School of Business, Ann Arbor"
+ },
+ {
+  "id": "league",
+  "label": "Michigan League",
+  "area": "Central",
+  "kind": "campus",
+  "lat": 42.279348,
+  "lon": -83.737711,
+  "source": "OSM Nominatim: Michigan League, Ann Arbor"
+ },
+ {
+  "id": "imsb",
+  "label": "Intramural Sports Building",
+  "area": "South",
+  "kind": "gym",
+  "lat": 42.269374,
+  "lon": -83.742236,
+  "source": "OSM Nominatim: Intramural Sports Building, Ann Arbor"
+ },
+ {
+  "id": "stadium",
+  "label": "Michigan Stadium",
+  "area": "South",
+  "kind": "campus",
+  "lat": 42.265828,
+  "lon": -83.747827,
+  "source": "OSM Nominatim: Michigan Stadium, Ann Arbor"
+ },
+ {
+  "id": "pierpont",
+  "label": "Pierpont Commons",
+  "area": "North",
+  "kind": "campus",
+  "lat": 42.291119,
+  "lon": -83.717603,
+  "source": "OSM Nominatim: Pierpont Commons, Ann Arbor"
+ },
+ {
+  "id": "dude",
+  "label": "Duderstadt Center",
+  "area": "North",
+  "kind": "study",
+  "lat": 42.291176,
+  "lon": -83.715767,
+  "source": "OSM Nominatim: Duderstadt Center, Ann Arbor"
+ },
+ {
+  "id": "beyster",
+  "label": "Beyster Building",
+  "area": "North",
+  "kind": "class",
+  "lat": 42.293017,
+  "lon": -83.716346,
+  "source": "OSM Nominatim: Bob and Betty Beyster Building, Ann Arbor"
+ },
+ {
+  "id": "ggbrown",
+  "label": "G.G. Brown Lab",
+  "area": "North",
+  "kind": "class",
+  "lat": 42.293303,
+  "lon": -83.713992,
+  "source": "OSM Nominatim: G. G. Brown Laboratory, Ann Arbor"
+ },
+ {
+  "id": "eecs",
+  "label": "EECS Building",
+  "area": "North",
+  "kind": "class",
+  "lat": 42.292341,
+  "lon": -83.713876,
+  "source": "OSM Nominatim: Electrical Engineering and Computer Science Building, Ann Arbor"
+ },
+ {
+  "id": "fmcrb",
+  "label": "Ford Robotics Building",
+  "area": "North",
+  "kind": "class",
+  "lat": 42.294592,
+  "lon": -83.709413,
+  "source": "OSM Nominatim: Ford Motor Company Robotics Building, Ann Arbor"
+ },
+ {
+  "id": "ncrb",
+  "label": "North Campus Rec Building",
+  "area": "North",
+  "kind": "gym",
+  "lat": 42.295542,
+  "lon": -83.720169,
+  "source": "OSM Nominatim: North Campus Recreation Building, Ann Arbor"
+ },
+ {
+  "id": "music",
+  "label": "Moore Building (Music)",
+  "area": "North",
+  "kind": "class",
+  "lat": 42.290382,
+  "lon": -83.720973,
+  "source": "OSM Nominatim: Earl V. Moore Building, Ann Arbor"
+ },
+ {
+  "id": "uh",
+  "label": "University Hospital",
+  "area": "Medical",
+  "kind": "work",
+  "lat": 42.284681,
+  "lon": -83.729424,
+  "source": "OSM Nominatim: University Hospital, 1500 East Medical Center Drive, Ann Arbor"
+ },
+ {
+  "id": "nursing",
+  "label": "School of Nursing (NIB)",
+  "area": "Medical",
+  "kind": "class",
+  "lat": 42.283924,
+  "lon": -83.73779,
+  "source": "OSM Nominatim: 400 North Ingalls Street, Ann Arbor"
+ },
+ {
+  "id": "thsl",
+  "label": "Taubman Health Sciences Library",
+  "area": "Medical",
+  "kind": "study",
+  "lat": 42.283529,
+  "lon": -83.734534,
+  "source": "OSM Nominatim: Taubman Health Sciences Library, Ann Arbor"
+ },
+ {
+  "id": "btc",
+  "label": "Blake Transit Center",
+  "area": "Downtown",
+  "kind": "transit",
+  "lat": 42.278366,
+  "lon": -83.746507,
+  "source": "OSM Nominatim: Blake Transit Center, Ann Arbor"
+ },
+ {
+  "id": "mainst",
+  "label": "Main St at Liberty",
+  "area": "Downtown",
+  "kind": "work",
+  "lat": 42.300979,
+  "lon": -83.697803,
+  "source": "OSM Nominatim: Main Street, Ann Arbor"
+ },
+ {
+  "id": "tj",
+  "label": "Trader Joe's",
+  "area": "East",
+  "kind": "errand",
+  "lat": 42.258441,
+  "lon": -83.712903,
+  "source": "OSM Nominatim: Trader Joe's, 2398 East Stadium Boulevard, Ann Arbor"
+ },
+ {
+  "id": "meijer",
+  "label": "Meijer (Ann Arbor-Saline)",
+  "area": "South",
+  "kind": "errand",
+  "lat": 42.241094,
+  "lon": -83.765606,
+  "source": "OSM Nominatim: Meijer, Ann Arbor-Saline Road, Ann Arbor"
+ },
+ {
+  "id": "kroger",
+  "label": "Kroger (Packard)",
+  "area": "South",
+  "kind": "errand",
+  "lat": 42.277522,
+  "lon": -83.782136,
+  "source": "OSM Nominatim: Kroger, Ann Arbor"
+ }
+]
