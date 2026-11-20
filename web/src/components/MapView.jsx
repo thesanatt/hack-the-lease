@@ -87,6 +87,8 @@ const CSS = `
   font: 600 13px/1 'IBM Plex Sans', Arial, sans-serif; cursor: pointer; }
 .qmap-rank.sel { width: 28px; height: 28px; border-radius: 14px; font-size: 15px; outline: 2px solid ${INK}; outline-offset: 1px; }
 .qmap-rank:focus-visible { outline: 2px solid ${INK}; outline-offset: 3px; }
+.qmap-namewrap { display: flex; }
+.qmap-namewrap.flip .qmap-name { transform: translateX(calc(-100% - 2 * var(--off, 10px))); }
 .qmap-name { font: 600 13px 'IBM Plex Sans', Arial, sans-serif; color: ${INK}; background: #fff; border: 1px solid ${HAIR}; border-radius: 6px; padding: 1px 6px; white-space: nowrap; cursor: pointer; }
 .qmap-name.quiet { font-weight: 400; background: ${PAPER}; border-color: transparent; padding: 0 3px; }
 .qmap-place { width: 8px; height: 8px; position: relative; pointer-events: none; }
@@ -185,8 +187,12 @@ function declutter(boxEl, items, ranks = []) {
     el.style.visibility = 'visible';
     if (it.flip) it.el.classList.remove('flip');
     let r = el.getBoundingClientRect();
-    if (!it.always && bad(r) && it.flip) { it.el.classList.add('flip'); r = el.getBoundingClientRect(); }
-    if (!it.always && bad(r)) { el.style.visibility = 'hidden'; if (it.flip) it.el.classList.remove('flip'); continue; }
+    if (bad(r) && it.flip) {
+      it.el.classList.add('flip');
+      const r2 = el.getBoundingClientRect();
+      if (bad(r2)) it.el.classList.remove('flip'); else r = r2;
+    }
+    if (!it.always && bad(r)) { el.style.visibility = 'hidden'; continue; }
     taken.push(r);
   }
 }
@@ -332,13 +338,20 @@ export default function MapView({ homes = [], places = [], placeLabels = true, s
       .sort((a, b) => (b.id === selectedHomeId) - (a.id === selectedHomeId));
     for (const h of named) {
       const isSel = h.id === selectedHomeId;
+      // The marker element is a bare wrapper; the visible pill is an inner span so it can flip to the left of its
+      // dot near the right edge of the map (MapLibre owns the wrapper's transform).
       const el = document.createElement('div');
-      el.className = `qmap-name${isSel ? '' : ' quiet'}`;
-      el.textContent = h.short || h.name || h.id;
+      el.className = 'qmap-namewrap';
+      const tx = document.createElement('span');
+      tx.className = `qmap-name${isSel ? '' : ' quiet'}`;
+      tx.textContent = h.short || h.name || h.id;
+      el.appendChild(tx);
       el.title = h.name || h.id;
       el.addEventListener('click', (e) => { e.stopPropagation(); clickRef.current?.(h.id); });
-      add(el, [h.lon, h.lat], { anchor: 'left', offset: [rankOf(h.id) ? (isSel ? 20 : 16) : (isSel ? 16 : 9), 0] });
-      items.push({ el, always: isSel, prio: isSel ? 0.2 : 3 });
+      const off = rankOf(h.id) ? (isSel ? 20 : 16) : (isSel ? 16 : 9);
+      tx.style.setProperty('--off', `${off}px`);
+      add(el, [h.lon, h.lat], { anchor: 'left', offset: [off, 0] });
+      items.push({ el, label: tx, always: isSel, prio: isSel ? 0.2 : 3, flip: true });
     }
 
     // campus places: hollow squares, short labels

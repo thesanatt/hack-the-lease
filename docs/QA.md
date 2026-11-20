@@ -151,6 +151,12 @@ Georgetown Blvd. For Jordan's real week Quorum ranks it 8th, $233 a month worse 
 Broadway. The 11 minute dark walk home twice a week is on screen. It is still best in 9% of draws, which is why
 we sort by regret and not by chance of being best.
 
+**"Slide 2 says $413 a month, the You tab says $187. Which is it?"** Both are computed live by the same engine,
+with different values. The You tab before any pick starts from typical values across 24 possible weeks: there
+the cheapest rent, Georgetown, saves $2 a month and costs $187 more. Slide 2 uses Jordan's own demo values on
+Jordan's most likely week, where a trip with no ride home costs Jordan more, so the gap is $413. Slide 2 also
+picks the room Jordan would take at those values, so its rents name a different room.
+
 **"Is the router right?"** It matched an independent reference router exactly on 3,000 trips. Against R5 it is
 within 1 minute at the median. R5 differs by design: it waits at least 60 s before every boarding and allows
 1,000 m transfers; ours allows 500 m.

@@ -17,3 +17,6 @@ __pycache__/
 
 .DS_Store
 Thumbs.db
+
+# temporary recording frames
+scripts/record/.video/

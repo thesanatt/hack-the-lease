@@ -131,10 +131,13 @@ function Draft({ house, n, slots, tours }) {
     [house, n, slots, tours],
   );
   const ref = useRef(null);
+  const box = useRef(null);
   const [status, setStatus] = useState('');
   useEffect(() => { setStatus(''); }, [text]);
 
+  // Fallback when the clipboard API is blocked: show the message and select it for Ctrl+C.
   const selectAll = () => {
+    if (box.current) box.current.open = true;
     const el = ref.current;
     if (!el) return false;
     el.focus();
@@ -159,17 +162,20 @@ function Draft({ house, n, slots, tours }) {
         {slots.map((s, k) => (
           <li key={`${s.day}-${s.start}`}>
             <span className="n">{k + 1}</span>
-            <span className="when">{DAY_SHORT[s.day]} {clock12(s.start)}</span>
+            <span className="when">{DAY_SHORT[s.day]} {clock12(s.start).toUpperCase()}</span>
             <span className="gv-small gv-gray">{s.travelMin} min of travel for the group</span>
           </li>
         ))}
       </ol>
-      <textarea ref={ref} readOnly value={text} rows={Math.min(18, text.split('\n').length + 3)}
-        aria-label="Draft message to the listing contact" onFocus={(e) => e.target.select()} />
       <div className="gv-draft-actions">
         <button type="button" className="gv-btn primary" onClick={copy}>Copy message</button>
         <span className="gv-small gv-gray" role="status" aria-live="polite">{status || 'Quorum sends nothing.'}</span>
       </div>
+      <details className="gv-msg" ref={box}>
+        <summary>See the message</summary>
+        <textarea ref={ref} readOnly value={text} rows={Math.min(14, text.split('\n').length + 1)}
+          aria-label="Draft message to the listing contact" onFocus={(e) => e.target.select()} />
+      </details>
     </div>
   );
 }

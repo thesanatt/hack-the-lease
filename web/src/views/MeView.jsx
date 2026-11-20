@@ -291,11 +291,13 @@ export default function MeView({ api }) {
                 </button>
               ))}
             </span>
-            <span className="chip-group" role="group" aria-label="Minimum change time between buses">
+            <span className="you-who-l">Bus change</span>
+            <span className="chip-group" role="group" aria-label="Minimum time to change buses">
               {[0, 60, 180].map((v) => (
                 <button key={v} type="button" className="chip" aria-pressed={changeS === v}
+                  title={`Allow at least ${v / 60} min to change buses`}
                   onClick={() => { snapshot(); api.setConfig({ changeDefaultS: v === 60 ? undefined : v }); }}>
-                  {v} s change
+                  {v / 60} min
                 </button>
               ))}
             </span>

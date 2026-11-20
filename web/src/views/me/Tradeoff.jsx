@@ -45,8 +45,14 @@ export default function Tradeoff({ api, rank, weekMap, fitById, selected, onSele
   if (top && cheap) {
     if (cheap.id === top.id) sentence = `Your top pick also has the cheapest rent, at ${hours(cheap.y * 60)} hours a week.`;
     else {
-      const d = cheap.y - top.y;
-      sentence = `The cheapest rent costs you ${hours(cheap.y * 60)} hours a week, ${hours(Math.abs(d) * 60)} ${d >= 0 ? 'more' : 'fewer'} than your top pick.`;
+      // Lead with money: the point of the chart is that the lowest rent is not the lowest cost to you.
+      const dCost = cheap.x - top.x, dRent = top.price - cheap.price;
+      if (dCost >= 1 && dRent >= 0) {
+        sentence = `The cheapest rent saves ${money(dRent)} a month but costs you ${money(dCost)} more, once time and late nights count.`;
+      } else {
+        const d = cheap.y - top.y;
+        sentence = `The cheapest rent costs you ${hours(cheap.y * 60)} hours a week, ${hours(Math.abs(d) * 60)} ${d >= 0 ? 'more' : 'fewer'} than your top pick.`;
+      }
     }
   }
 

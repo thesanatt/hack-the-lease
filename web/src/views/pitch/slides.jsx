@@ -116,6 +116,14 @@ function TripChart({ ex }) {
   );
 }
 
+// Light route colors (for example pale pink) vanish on paper or on the after-dark band, so they get a thin ink edge.
+function isLight(c) {
+  const v = String(c || '').replace('#', '');
+  if (v.length !== 6) return false;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6;
+}
+
 function Legs({ legs, t0, X, y }) {
   const m = (s) => (s - t0) / 60;
   return (
@@ -126,7 +134,8 @@ function Legs({ legs, t0, X, y }) {
         if (l.type === 'ride') {
           return (
             <g key={i}>
-              <rect x={a} y={y - 5} width={b - a} height={10} rx="3" fill={hex(l.color)} />
+              <rect x={a} y={y - 5} width={b - a} height={10} rx="3" fill={hex(l.color)}
+                stroke={isLight(hex(l.color)) ? C.ink : 'none'} strokeOpacity="0.7" strokeWidth="1" />
               {b - a > 26 && <text x={(a + b) / 2} y={y - 10} textAnchor="middle" className="pd-route-t">{l.route}</text>}
             </g>
           );
@@ -138,7 +147,7 @@ function Legs({ legs, t0, X, y }) {
   );
 }
 
-// 2. What one student sees: every home, rent against hours a month, colored by fit for Jordan's week.
+// 2. What one student sees: every home, cost to Jordan a month against hours a week, colored by fit for Jordan's week.
 const FIT = ['#D9CBA8', '#B5BE94', '#87A57F', '#55896A', '#1F6F4A'];
 function Student({ api }) {
   const [st, setSt] = useState({ status: 'running' });
@@ -189,24 +198,26 @@ function PairKey({ x, ring, tag }) {
       <svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke={ring} strokeWidth="2.5" /></svg>
       <div>
         <b>{tag}</b> <span className="pd-gray">{x.home.name}</span>
-        <div className="pd-pair-n"><span>{usd(x.rent)}<small>/mo</small></span><span>{int(x.hours)}<small> h/mo</small></span><span>{int(x.stranded)}<small> trips a week with no ride</small></span></div>
+        <div className="pd-pair-n"><span>{usd(x.rent)}<small>/mo rent{x.roomLabel ? `, ${x.roomLabel}` : ''}</small></span><span>{x.weekHours.toFixed(1)}<small> h/wk</small></span><span>{int(x.stranded)}<small> trips a week with no ride</small></span></div>
       </div>
     </div>
   );
 }
 
+// Same axes as the You tab's trade-off chart: cost to the student a month across, hours a week getting around up.
 function RentScatter({ r }) {
   const [hover, setHover] = useState(null);
   const rows = r.rows || [r.cheapest, r.best];
   const W = 760, H = 390, L = 56, R = 16, T = 34, B = 46;
-  const xs = rows.map((d) => d.rent), ys = rows.map((d) => d.hours);
-  const x0 = Math.floor(Math.min(...xs) / 100) * 100, x1 = Math.ceil(Math.max(...xs) / 100) * 100;
-  const y1 = Math.ceil(Math.max(...ys) / 10) * 10;
+  const xs = rows.map((d) => d.cost), ys = rows.map((d) => d.weekHours);
+  const xStep = (Math.max(...xs) - Math.min(...xs)) > 1000 ? 500 : 250;
+  const x0 = Math.floor(Math.min(...xs) / xStep) * xStep, x1 = Math.ceil(Math.max(...xs) / xStep) * xStep;
+  const y0 = Math.max(0, Math.floor(Math.min(...ys)) - 1), y1 = Math.ceil(Math.max(...ys)) + 1;
   const X = (v) => L + ((v - x0) / (x1 - x0 || 1)) * (W - L - R);
-  const Y = (v) => T + (1 - v / (y1 || 1)) * (H - T - B);
-  const xStep = (x1 - x0) > 800 ? 200 : 100;
+  const Y = (v) => T + (1 - (v - y0) / ((y1 - y0) || 1)) * (H - T - B);
   const xt = []; for (let v = x0; v <= x1; v += xStep) xt.push(v);
-  const yt = []; for (let v = 0; v <= y1; v += y1 > 40 ? 20 : 10) yt.push(v);
+  const yStep = (y1 - y0) > 8 ? 2 : 1;
+  const yt = []; for (let v = y0; v <= y1; v += yStep) yt.push(v);
   const n = rows.length;
   const fill = (d) => FIT[Math.min(FIT.length - 1, Math.floor(((n - d.rank) / Math.max(1, n - 1)) * FIT.length))];
   const special = (d) => d.home.id === r.best.home.id ? C.green : d.home.id === r.cheapest.home.id ? C.ink : null;
@@ -214,7 +225,7 @@ function RentScatter({ r }) {
   const hv = hover && rows.find((d) => d.home.id === hover);
   return (
     <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img"
-      aria-label={`${n} homes by rent and hours a month getting around. Lowest rent ${r.cheapest.home.name}, ${usd(r.cheapest.rent)}. Best for this week ${r.best.home.name}, ${usd(r.best.rent)}.`}>
+      aria-label={`${n} homes by cost to the student a month and hours a week getting around. Lowest rent ${r.cheapest.home.name}, ${usd(r.cheapest.rent)} rent, ${usd(r.cheapest.cost)} cost. Best for this week ${r.best.home.name}, ${usd(r.best.rent)} rent, ${usd(r.best.cost)} cost.`}>
       {yt.map((v) => (
         <g key={v}>
           <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke={v === 0 ? C.ink : C.line} strokeWidth="1" />
@@ -222,8 +233,8 @@ function RentScatter({ r }) {
         </g>
       ))}
       {xt.map((v) => <text key={v} x={X(v)} y={H - B + 18} textAnchor="middle" className="pd-tick">${v.toLocaleString('en-US')}</text>)}
-      <text x={(L + W - R) / 2} y={H - 6} textAnchor="middle" className="pd-axis">Rent a month</text>
-      <text x={L - 40} y={12} className="pd-axis">Hours a month getting around</text>
+      <text x={(L + W - R) / 2} y={H - 6} textAnchor="middle" className="pd-axis">Cost to {r.persona.name} a month: rent plus time, dark walks and trips with no ride</text>
+      <text x={L - 40} y={12} className="pd-axis">Hours a week getting around</text>
       <g transform={`translate(${W - R - 236}, 0)`}>
         <text x={0} y={12} className="pd-axis">Worse fit</text>
         {FIT.map((c, i) => <circle key={c} cx={84 + i * 18} cy={7} r="6" fill={c} />)}
@@ -233,17 +244,17 @@ function RentScatter({ r }) {
         const s = special(d);
         return (
           <g key={d.home.id} onMouseEnter={() => setHover(d.home.id)} onMouseLeave={() => setHover(null)}>
-            <circle cx={X(d.rent)} cy={Y(d.hours)} r="14" fill="transparent" />
-            <circle cx={X(d.rent)} cy={Y(d.hours)} r={s ? 8 : 6.5} fill={fill(d)} stroke="#fff" strokeWidth="2" />
-            {s && <circle cx={X(d.rent)} cy={Y(d.hours)} r="13" fill="none" stroke={s} strokeWidth="2.5" />}
+            <circle cx={X(d.cost)} cy={Y(d.weekHours)} r="14" fill="transparent" />
+            <circle cx={X(d.cost)} cy={Y(d.weekHours)} r={s ? 8 : 6.5} fill={fill(d)} stroke="#fff" strokeWidth="2" />
+            {s && <circle cx={X(d.cost)} cy={Y(d.weekHours)} r="13" fill="none" stroke={s} strokeWidth="2.5" />}
           </g>
         );
       })}
       {hv && (() => {
-        const label = `${hv.home.name}: ${usd(hv.rent)}, ${int(hv.hours)} h, rank ${hv.rank}`;
+        const label = `${hv.home.name}: ${usd(hv.cost)} cost, ${usd(hv.rent)} rent, ${hv.weekHours.toFixed(1)} h/wk`;
         const w = label.length * 7.4 + 18;
-        const x = Math.max(L, Math.min(W - R - w, X(hv.rent) - w / 2));
-        const y = Y(hv.hours) - 44 < T ? Y(hv.hours) + 20 : Y(hv.hours) - 44;
+        const x = Math.max(L, Math.min(W - R - w, X(hv.cost) - w / 2));
+        const y = Y(hv.weekHours) - 44 < T ? Y(hv.weekHours) + 20 : Y(hv.weekHours) - 44;
         return <g pointerEvents="none"><rect x={x} y={y} width={w} height={26} rx="4" fill="#fff" stroke={C.line} /><text x={x + 9} y={y + 17} className="pd-tip">{label}</text></g>;
       })()}
     </svg>
@@ -484,7 +495,8 @@ export const SLIDES = [
     id: 'student', title: 'What a student sees', Comp: Student,
     notes: [
       'One fictional student, Jordan, a North Campus engineer with a late lab.',
-      'Each dot is a home: rent across, hours a month getting around up. Darker green fits Jordan\'s week better.',
+      'Each dot is a home: cost to Jordan a month across (rent plus time, dark walks and trips with no ride, at Jordan\'s demo values), hours a week getting around up. Darker green fits Jordan\'s week better.',
+      'These are Jordan\'s own demo values, so the numbers differ from the You tab before the picks, which starts from typical values.',
       'Black ring: the listing with the lowest rent. Green ring: the home worth the most to Jordan once the whole week is counted.',
       'Read the dollar gap on the right. It is computed now from the real timetables, not typed in.',
       'Say this out loud: most of the gap is the cheap home\'s trips with no ride home, priced at Jordan\'s demo value per stranded trip. A real student sets that value with the picks.',

@@ -117,9 +117,12 @@
 .gv-picks .n { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--gv-green);
   color: #fff; font-size: 12px; font-weight: 600; flex: none; }
 .gv-picks .when { font-weight: 600; font-variant-numeric: tabular-nums; }
-.gv-draft textarea { display: block; width: 100%; resize: vertical; font-family: 'IBM Plex Mono', var(--font-mono, monospace); font-size: 13px;
+.gv-msg { margin-top: 14px; }
+.gv-msg > summary { cursor: pointer; font-size: 13px; color: var(--gv-gray); text-decoration: underline; text-underline-offset: 3px; width: max-content; }
+.gv-msg[open] > summary { margin-bottom: 8px; }
+.gv-draft textarea { display: block; width: 100%; resize: vertical; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
   line-height: 1.5; color: var(--gv-ink); background: var(--gv-paper); border: 1px solid var(--gv-line); border-radius: 8px; padding: 10px; }
-.gv-draft-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.gv-draft-actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
 
 /* Details */
 .gv-details { margin-top: 24px; border-top: 1px solid var(--gv-line); padding-top: 12px; }

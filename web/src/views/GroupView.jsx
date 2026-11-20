@@ -119,14 +119,16 @@ function GroupBody({ api }) {
     if (lastMove?.kind !== 'late' || lastMove.resolved || weeks.status !== 'done' || !solved || weeks.byMember === lastMove.weeksAt) return;
     const rs = solved.rows;
     const fromId = lastMove.fromId || rs[0]?.home.id;
-    let toId = fromId;
-    // Only move to a house that also stays under every cap; otherwise keep the house and mark it.
+    let toId = fromId, noneHome = false;
+    // Move to the best house under every cap that still gets them home. If none does, follow the new top house
+    // under every cap (the ranking already prices the trip with no way home), so the hero and the ranking agree.
     if (strandedAt(fromId)) {
       const ok = rs.find((r) => r.feasible && !strandedAt(r.home.id));
-      toId = ok ? ok.home.id : null;
+      if (ok) toId = ok.home.id;
+      else { noneHome = true; toId = rs.find((r) => r.feasible)?.home.id || fromId; }
     }
-    if (toId && toId !== fromId) setSelected(toId);
-    setLastMove({ ...lastMove, resolved: true, fromId, toId });
+    if (toId !== fromId) setSelected(toId);
+    setLastMove({ ...lastMove, resolved: true, fromId, toId, noneHome });
   }, [lastMove, weeks, solved]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!personas || !homes) return <p className="gv-wait">Loading the group and the houses</p>;
@@ -343,8 +345,11 @@ function MoveResult({ move, members, rows, baseline, weeks, chosen, late, placeN
     else {
       const shift = late ? `${m?.name}'s ${clock(late.end)} ${DAY_NAME[late.day]} shift` : `${m?.name}'s late shift`;
       const from = homeName(move.fromId);
-      if (!move.toId) text = `${shift} has no way home from ${from} or any house under every cap.`;
-      else if (move.toId !== move.fromId) text = `${shift} has no way home from ${from}, so ${homeName(move.toId)} is now the pick.`;
+      if (move.noneHome) {
+        text = move.toId !== move.fromId
+          ? `${shift} has no way home from any house under every cap, so the best of them, ${homeName(move.toId)}, is now the pick.`
+          : `${shift} has no way home from ${from} or any other house under every cap.`;
+      } else if (move.toId !== move.fromId) text = `${shift} has no way home from ${from}, so ${homeName(move.toId)} is now the pick.`;
       else text = `${m?.name} still gets home from ${from} after the ${late ? `${clock(late.end)} ` : ''}shift.`;
     }
   }

@@ -3,10 +3,10 @@
 For Zeren and Ruibin. One laptop, one browser window on the projector. Ruibin is at the keyboard the whole
 time. Zeren speaks steps 1 to 4. Ruibin says one line in step 3 and speaks steps 5 to 7.
 
-Spoken words: 513 in total (only the lines that start with ">" under "Say"; per step 47, 101, 68, 37, 90, 64,
-106). At about 130 words a minute that is 3 min 57 s of talking. Most clicks happen while someone talks; the
-silent clicks (marked "silent") and the scrolls add about 18 s, so the plan is about 4:15. The 30 s buffer runs to 4:45, which
-leaves 15 s before the 5:00 cut. Rehearse twice with a stopwatch.
+Spoken words: 523 in total (only the lines that start with ">" under "Say"; per step 47, 111, 68, 37, 90, 64,
+106). At about 130 words a minute that is 4 min 1 s of talking. Most clicks happen while someone talks; the
+silent clicks (marked "silent") and the scrolls add about 18 s, so the plan is about 4:20. The 30 s buffer runs to 4:50, which
+leaves 10 s before the 5:00 cut. Rehearse twice with a stopwatch.
 
 Every number below comes from the engine and was checked in the built app at 1280x720 (Fri Nov 20 2026), with
 pick 1 by hand, then **Answer the rest**. To re-check all of them in one command, from the repo folder:
@@ -46,13 +46,13 @@ Owners, and do not go back to You.
 | Time | Step | Speaker | Words |
 |---|---|---|---|
 | 0:00 to 0:25 | 1. The problem, Pitch slide 1 | Zeren | 47 |
-| 0:25 to 1:15 | 2. Jordan's top 3, the Georgetown trip on the map, a calendar file | Zeren | 101 |
-| 1:15 to 1:55 | 3. Picks, Details, the cheapest-rent baseline | Zeren, one line by Ruibin | 68 |
-| 1:55 to 2:15 | 4. One sensitivity move | Zeren | 37 |
-| 2:15 to 3:05 | 5. Your group: split, tour times, Priya's cap | Ruibin | 90 |
-| 3:05 to 3:35 | 6. Owners: asking vs fair, the half bath | Ruibin | 64 |
-| 3:35 to 4:15 | 7. Close: what we built, limits, pilot ask | Ruibin | 106 |
-| 4:15 to 4:45 | buffer | | |
+| 0:25 to 1:20 | 2. Jordan's top 3, the Georgetown trip on the map, a calendar file | Zeren | 111 |
+| 1:20 to 2:00 | 3. Picks, Details, the cheapest-rent baseline | Zeren, one line by Ruibin | 68 |
+| 2:00 to 2:20 | 4. One sensitivity move | Zeren | 37 |
+| 2:20 to 3:10 | 5. Your group: split, tour times, Priya's cap | Ruibin | 90 |
+| 3:10 to 3:40 | 6. Owners: asking vs fair, the half bath | Ruibin | 64 |
+| 3:40 to 4:20 | 7. Close: what we built, limits, pilot ask | Ruibin | 106 |
+| 4:20 to 4:50 | buffer | | |
 
 If step 5 has not started by 2:25, skip the step 6 half bath sentences. If rehearsals run long, drop the
 calendar file (step 2, clicks 5 to 7 and its last three sentences, 30 words). Never cut step 7.
@@ -73,7 +73,7 @@ walk 53, bus 31 and 39. Medical Campus walk 39, bus 23 and 39. Dark after 5:35 P
 
 Fallback if the bars do not draw: go to You and say the same lines without the numbers.
 
-## 2. Jordan's top 3, one trip, a calendar file (0:25 to 1:15), Zeren
+## 2. Jordan's top 3, one trip, a calendar file (0:25 to 1:20), Zeren
 
 Jordan is a fictional North Campus engineer with a late lab at the Duderstadt Center, Tue and Thu until 11:30 PM.
 Jordan does not bike and walks at most 10 minutes alone after 10 PM.
@@ -84,7 +84,7 @@ Clicks:
    getting around, **2 /wk** late nights, and the line "Lower rent **+$178/mo** vs a typical home". The small
    week ribbon under the numbers is Jordan's week from that house.
 2. On "the cheapest rent", press **End** once and scroll up a little to **Trade-offs**. Its sentence reads "The
-   cheapest rent costs you 4.8 hours a week, 0.4 more than your top pick." The key under the chart names
+   cheapest rent saves $2 a month but costs you $187 more, once time and late nights count." The key under the chart names
    "Cheapest rent, $921, Georgetown Blvd house, 5 bed".
 3. Click the dot inside the black square in the chart (Georgetown). Press **Home**. The line under the map now
    reads "Georgetown Blvd house, 5 bed: Tue 23:30, bus 22".
@@ -101,8 +101,8 @@ Clicks:
 Say (Zeren):
 > Jordan is a fictional North Campus engineer. Lab until 11:30 PM twice a week, and at most 10 minutes
 > walking alone at night. Quorum runs that week through all 30 homes. Top pick: Broadway, $178 a month
-> lower rent than a typical home. Now the cheapest rent, Georgetown. Twice a week, no way home within
-> Jordan's limit. Here is that trip: one bus, then an 11 minute walk in the dark. A week can also come
+> lower rent than a typical home. Now the cheapest rent, Georgetown. It saves $2 a month but costs
+> Jordan $187 more. Twice a week, no way home within Jordan's limit. Here is that trip: one bus, then an 11 minute walk in the dark. A week can also come
 > from a calendar file. After a consent box, it is read in this browser and never sent. Rooms it cannot
 > match are flagged, not guessed.
 
@@ -119,7 +119,7 @@ Duderstadt). If **Play this trip** does not move (reduced motion is on), it read
 click it, then **Next step** three times. If the sample file does not load, skip clicks 5 to 7 and still say the
 calendar lines.
 
-## 3. Picks, Details and the baseline (1:15 to 1:55), Zeren and Ruibin
+## 3. Picks, Details and the baseline (1:20 to 2:00), Zeren and Ruibin
 
 Clicks:
 1. Scroll up to **Teach it what you care about**. Pick 1 shows **Third St house, 4 bed**, Front room, $925 a
@@ -158,7 +158,7 @@ Fallback if **Answer the rest** is grayed out or does nothing: skip the picks. D
 numbers: Broadway best in 71%, $38 regret, $18 a month value of knowing; Georgetown #7, $187 a month worse. Say
 those.
 
-## 4. One sensitivity move (1:55 to 2:15), Zeren
+## 4. One sensitivity move (2:00 to 2:20), Zeren
 
 Clicks:
 1. Silent, 3 s: scroll down to **Trade-offs**. In its **What if** row click **Late lab on Central**. It turns
@@ -180,7 +180,7 @@ top two in every month (section 3b).
 Fallback if the chip does nothing: say "if the lab moves to Central, Broadway falls to ninth and the top three
 are within seven dollars" and move on.
 
-## 5. Your group (2:15 to 3:05), Ruibin
+## 5. Your group (2:20 to 3:10), Ruibin
 
 Clicks:
 1. Silent, 3 s: click **Your group** in the top bar. The left panel draws **Broadway St** as a house cut in
@@ -188,7 +188,7 @@ Clicks:
    (1st), Leo $779 (basement). Top right: **$4,150/month**. Two green checks: **Nobody would swap**, **Under
    every cap**. **Members** on the right says "Caps are private".
 2. On "tour it", scroll down to **Tour times**. Point at the grid: only Friday has green cells, "5 of 100
-   half-hours work for all 5". Point at **Fri 5:00 pm**, then at the draft message and "Quorum sends nothing."
+   half-hours work for all 5". Point at **Fri 5:00 PM**, then at **Copy message** and "Quorum sends nothing." (**See the message** opens the draft.)
    Do not click **Copy message** unless asked.
 3. On "Priya lowers her cap", press **Home** and click **Lower a cap** once. Only once. Do not click **Add a late
    shift**.
@@ -213,7 +213,7 @@ Fallback if the house does not draw within 3 seconds: say the numbers above. If 
 after the click, click the **Georgetown Blvd** card in **Houses compared**. If you clicked **Lower a cap** twice,
 click **Undo** and click it once.
 
-## 6. Owners (3:05 to 3:35), Ruibin
+## 6. Owners (3:10 to 3:40), Ruibin
 
 Clicks:
 1. Silent, 2 s: click **Owners** in the top bar. It opens on **Church St house**: **$4,650** a month, **1 of 5**
@@ -235,7 +235,7 @@ Half bath: Basement +$32/mo, Attic -$6, Front -$6, Back $0, Parlor -$18 at the s
 
 Fallback if the charts stay gray for more than 3 seconds: say the numbers above.
 
-## 7. Close (3:35 to 4:15), Ruibin
+## 7. Close (3:40 to 4:20), Ruibin
 
 Screen: stay on Owners, or point at the **Sample data** chip in the top bar.
 

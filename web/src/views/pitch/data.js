@@ -65,7 +65,10 @@ export async function studentExample(api, personaId = STUDENT) {
     const opt = decide.homeOption(home, w, persona.theta, cfg);
     const u = model.utility(persona.theta, opt);
     rows.push({
-      home, u, rent: opt.rent, room: opt.room,
+      home, u, rent: opt.rent, room: opt.room, roomLabel: opt.room?.label ?? '',
+      // Cost to this student a month, the same sign and units as the You tab's "cost to you" (-utility).
+      cost: -u,
+      weekHours: (w.weeklyMin ?? 0) / 60,
       hours: ((w.weeklyMin ?? 0) / 60) * perMonth,
       darkHours: ((w.darkWalkMin ?? 0) / 60) * perMonth,
       stranded: w.stranded?.length ?? 0,

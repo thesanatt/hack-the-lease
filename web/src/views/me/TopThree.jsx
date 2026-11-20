@@ -59,7 +59,7 @@ function Card({ api, i, row, note, reason, week, routineWeek, dusk, sel, onSelec
         </h3>
       </div>
       <div className="t3-sub">
-        <span className="t3-room">{note?.roomLabel || row.roomLabel || ''}</span>
+        <span className="t3-room">{row.roomLabel || note?.roomLabel || ''}</span>
         <span className="t3-sample">Sample listing</span>
       </div>
       <div className="t3-body">

@@ -1,6 +1,6 @@
 [
  {
-  "id": "jordan", "name": "Jordan", "program": "Computer Science (Engineering), North Campus", "color": "#1f6f8b",
+  "id": "jordan", "name": "Jordan", "program": "Computer Science (Engineering), North Campus", "color": "#3b7fc4",
   "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
   "group": true,
   "cap": 1000,
@@ -31,7 +31,7 @@
   ]
  },
  {
-  "id": "priya", "name": "Priya", "program": "Business (Ross BBA)", "color": "#3d7a3a",
+  "id": "priya", "name": "Priya", "program": "Business (Ross BBA)", "color": "#6d3b6e",
   "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
   "group": true,
   "cap": 875,
@@ -47,7 +47,7 @@
   ]
  },
  {
-  "id": "leo", "name": "Leo", "program": "LSA (Biology)", "color": "#8a6d1f",
+  "id": "leo", "name": "Leo", "program": "LSA (Biology)", "color": "#c9901a",
   "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
   "group": true,
   "cap": 960,
@@ -62,7 +62,7 @@
   ]
  },
  {
-  "id": "sam", "name": "Sam", "program": "Music (SMTD), North Campus", "color": "#6b4f3a",
+  "id": "sam", "name": "Sam", "program": "Music (SMTD), North Campus", "color": "#4a3a2e",
   "label": "FICTIONAL persona. theta values are demo values used only to auto-answer picks.",
   "group": true,
   "cap": 1000,

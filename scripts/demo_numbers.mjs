@@ -398,14 +398,18 @@ for (const [lbl, r] of [['before any pick', r0], ['after Auto-answer until done'
     const why = reasons(notes, top.map((x) => x.homeId));
     top.forEach((row, i) => {
       const w = wm.get(row.homeId);
-      say(`#${i + 1} ${nm(row.homeId)}, ${notes.get(row.homeId)?.roomLabel || row.roomLabel}: ${usd(-row.meanU)}/mo cost to you, ${usd(row.price)} rent; ${hrs(w.weeklyMin)} h/wk getting around; ${nights(w)}/wk late nights; "${why[i]}"`);
+      say(`#${i + 1} ${nm(row.homeId)}, ${row.roomLabel || notes.get(row.homeId)?.roomLabel}: ${usd(-row.meanU)}/mo cost to you, ${usd(row.price)} rent; ${hrs(w.weeklyMin)} h/wk getting around; ${nights(w)}/wk late nights; "${why[i]}"`);
     });
-    const pts = r.rank.map((x) => ({ id: x.homeId, price: x.price, y: wm.get(x.homeId).weeklyMin / 60 }));
+    const pts = r.rank.map((x) => ({ id: x.homeId, price: x.price, x: -x.meanU, y: wm.get(x.homeId).weeklyMin / 60 }));
     const tp = pts[0], ch = pts.reduce((a, b) => (b.price < a.price ? b : a), pts[0]);
     if (ch.id === tp.id) say(`Trade-offs sentence: "Your top pick also has the cheapest rent, at ${hrs(ch.y * 60)} hours a week."`);
     else {
-      const d = ch.y - tp.y;
-      say(`Trade-offs sentence: "The cheapest rent costs you ${hrs(ch.y * 60)} hours a week, ${hrs(Math.abs(d) * 60)} ${d >= 0 ? 'more' : 'fewer'} than your top pick." Key: "Cheapest rent, ${usd(ch.price)}, ${nm(ch.id)}"`);
+      // Same rule as web/src/views/me/Tradeoff.jsx: lead with money when the cheapest rent costs more.
+      const dCost = ch.x - tp.x, dRent = tp.price - ch.price, d = ch.y - tp.y;
+      const line = dCost >= 1 && dRent >= 0
+        ? `The cheapest rent saves ${usd(dRent)} a month but costs you ${usd(dCost)} more, once time and late nights count.`
+        : `The cheapest rent costs you ${hrs(ch.y * 60)} hours a week, ${hrs(Math.abs(d) * 60)} ${d >= 0 ? 'more' : 'fewer'} than your top pick.`;
+      say(`Trade-offs sentence: "${line}" Key: "Cheapest rent, ${usd(ch.price)}, ${nm(ch.id)}"`);
     }
   }
 }

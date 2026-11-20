@@ -85,8 +85,8 @@ async function main() {
 
   log('you: cheapest rent on the chart');
   await key('End');
-  await scrollTo('The cheapest rent costs you');
-  await caption('Trade-offs: every home by cost to you and hours getting around. The square marks the cheapest rent, Georgetown Blvd.');
+  await scrollTo('The cheapest rent saves');
+  await caption('Trade-offs: the square is the cheapest rent, Georgetown Blvd. It saves $2 a month but costs Jordan $187 more once time and late nights count.');
   await wait(6);
   try {
     const r = page.locator('.to-chart svg rect').first();
@@ -149,6 +149,7 @@ async function main() {
   await scrollTo('Tour times');
   await caption('When can all five see the house? Every weekday half-hour is checked against each week and the real buses. Only Friday works.');
   await wait(8);
+  try { await page.locator('.gv-msg > summary').click({ timeout: 3000 }); } catch { log('no see message'); }
   await caption('Quorum drafts the note with no names, rents or caps. It never sends anything.');
   await wait(5);
   await key('Home');
