@@ -54,14 +54,13 @@ export default function PitchView({ api }) {
     <div className="pd" ref={deck} aria-roledescription="slide deck">
       <div className="pd-bar">
         <span className="pd-count">{i + 1} / {SLIDES.length}</span>
-        <span>{s.title}</span>
         <span className="pd-ticks" role="tablist" aria-label="Slides">
           {SLIDES.map((x, k) => (
             <button key={x.id} role="tab" aria-current={k === i ? 'step' : undefined} aria-label={`Slide ${k + 1}: ${x.title}`} onClick={() => go(k)} />
           ))}
         </span>
         <span className="pd-spacer" />
-        <span className="pd-keys">Arrows move . F full screen . N notes</span>
+        <span className="pd-keys">F full screen, N notes</span>
         <button className="pd-nav" onClick={() => go(i - 1)} disabled={i === 0}>Back</button>
         <button className="pd-nav" onClick={() => go(i + 1)} disabled={i === SLIDES.length - 1}>Next</button>
       </div>
@@ -70,7 +69,7 @@ export default function PitchView({ api }) {
       </section>
       {notes && (
         <aside className="pd-notes" aria-label="Presenter notes">
-          <h4>Notes for slide {i + 1} (press N to hide)</h4>
+          <h4>Notes for slide {i + 1}: {s.title} (N hides them)</h4>
           <ul>{s.notes.map((n, k) => <li key={k}>{n}</li>)}</ul>
         </aside>
       )}

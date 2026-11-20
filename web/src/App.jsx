@@ -1,10 +1,10 @@
-// App frame: left rail (Me, Group, Operator, Evidence, Pitch), top bar with the SAMPLE DATA label, a one-line
-// "how to read this page" guide above each view (not on Pitch), attribution footer.
-// Each view is `export default function XView({ api })`. Views other than Me are owned by ui-views and loaded
-// through import.meta.glob, so a missing file shows a note instead of breaking the build.
-import { Suspense, lazy, useEffect, useState } from 'react';
+// App frame: one top bar (wordmark, five tabs, the Sample data chip, a quiet Assumptions link), the view, and
+// the attribution footer. No rail, no per-view preamble: each view leads with its own picture.
+// Each view is `export default function XView({ api })`. Views other than Me are loaded through
+// import.meta.glob, so a missing file shows a note instead of breaking the build.
+import { Component, Suspense, lazy, useEffect, useState } from 'react';
 import { createEngine } from './engine/index.js';
-import { Pill, Button, AssumptionsDrawer } from './components/index.js';
+import { AssumptionsDrawer } from './components/index.js';
 import MeView from './views/MeView.jsx';
 
 const viewFiles = import.meta.glob('./views/*View.jsx');
@@ -13,17 +13,30 @@ const lazyView = (name) => {
   return viewFiles[key] ? lazy(viewFiles[key]) : null;
 };
 
+// Hash routes stay #me, #group, #operator, #evidence, #pitch.
 const VIEWS = [
-  { id: 'me', label: 'Me', blurb: 'One student, one week', Comp: MeView,
-    guide: 'Your week, then the homes it runs through, then a few picks. The ranking puts the lowest regret first.' },
-  { id: 'group', label: 'Group', blurb: 'One house, a fair split', Comp: lazyView('Group'),
-    guide: 'Read the house ranking, then the split. Caps stay private. At the split prices nobody would swap rooms.' },
-  { id: 'operator', label: 'Operator', blurb: 'Fair rent per room', Comp: lazyView('Operator'),
-    guide: 'Each row is a home: how many SYNTHETIC students it fits, and which room rent is furthest from fair.' },
-  { id: 'evidence', label: 'Evidence', blurb: 'How we checked it', Comp: lazyView('Evidence'),
-    guide: 'Each block is one test: what it was checked against and the result from its file. A test not run says so.' },
-  { id: 'pitch', label: 'Pitch', blurb: 'Five-minute slides', Comp: lazyView('Pitch'), guide: null },
+  { id: 'me', label: 'You', file: 'Me', Comp: MeView },
+  { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group') },
+  { id: 'operator', label: 'Owners', file: 'Operator', Comp: lazyView('Operator') },
+  { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence') },
+  { id: 'pitch', label: 'Pitch', file: 'Pitch', Comp: lazyView('Pitch') },
 ];
+
+// One view failing to load or render must not blank the whole app: the top bar stays and says what broke.
+class ViewBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error) { console.error(error); }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="empty bad" role="status">
+        <span className="empty-label">{this.props.label} did not open</span>
+        <span>{String(this.state.error.message || this.state.error)}</span>
+      </div>
+    );
+  }
+}
 
 let enginePromise = null;
 const progressListeners = new Set();
@@ -60,38 +73,25 @@ export default function App() {
   const Comp = current?.Comp;
 
   return (
-    <div className="frame">
+    <div className={`frame view-${view}`}>
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to the page</a>
       <header className="topbar">
-        <span className="wordmark">Quorum</span>
-        <span className="tagline">Choose where to live from the week you live.</span>
+        <a className="wordmark" href="#me" onClick={(e) => { e.preventDefault(); go('me'); }}>Quorum</a>
+        <nav className="tabs" aria-label="Views">
+          {VIEWS.map((v) => (
+            <a key={v.id} href={`#${v.id}`} className="tab" aria-current={v.id === view ? 'page' : undefined}
+              onClick={(e) => { e.preventDefault(); go(v.id); }}>
+              {v.label}
+            </a>
+          ))}
+        </nav>
         <span className="spacer" />
-        <span className="topmeta" title="Every trip is routed on these timetables and on OpenStreetMap streets.">
-          <span className="caps">Timetables</span> TheRide and U-M, week of Nov 30 2026
+        <span className="chip-sample" title="Homes, rents and rooms are made up. People are fictional. Bus timetables, streets and places are real.">
+          Sample data
         </span>
-        <Pill tone="solid" title="Homes, rents and rooms are synthetic. Personas are fictional. Timetables, streets and places are real.">SAMPLE DATA</Pill>
-        <Button small onClick={() => setDrawer(true)} disabled={!api} title="Every constant the model uses, editable">Assumptions</Button>
+        <button type="button" className="textlink" onClick={() => setDrawer(true)} disabled={!api}>Assumptions</button>
       </header>
-      <nav className="rail" aria-label="Views">
-        {VIEWS.map((v, k) => (
-          <button key={v.id} aria-current={v.id === view ? 'page' : undefined} onClick={() => go(v.id)} title={v.blurb}>
-            <span className="rail-num" aria-hidden="true">{String(k + 1).padStart(2, '0')}</span>
-            <span className="rail-label">{v.label}</span>
-            <span className="rail-blurb">{v.blurb}</span>
-          </button>
-        ))}
-        <div className="railnote">
-          Homes and rents: SYNTHETIC. People: FICTIONAL. Bus times, streets and places: real data.
-        </div>
-      </nav>
       <main className="main" id="main" tabIndex={-1}>
-        {api && current?.guide && (
-          <p className="viewguide" key={current.id}>
-            <span className="viewguide-folio" aria-hidden="true">{String(VIEWS.indexOf(current) + 1).padStart(2, '0')} {current.label}</span>
-            <span className="viewguide-label">How to read this page</span>
-            <span className="viewguide-text">{current.guide}</span>
-          </p>
-        )}
         {error && (
           <div className="note bad">
             The data did not load: {String(error.message || error)}. Serve the app from <code>web/</code> with
@@ -100,30 +100,27 @@ export default function App() {
         )}
         {!error && !api && (
           <div className="loading" role="status" aria-live="polite">
-            <span className="caps muted">Loading, in this browser, offline</span>
             <h2>Reading the timetables</h2>
             <div className="bar" aria-hidden="true"><div style={{ width: `${Math.round(progress.f * 100)}%` }} /></div>
-            <p className="loading-step"><span className="mono">{String(Math.round(progress.f * 100)).padStart(3, ' ')}%</span> {progress.msg}</p>
-            <p className="small muted">
-              TheRide and U-M bus timetables, OpenStreetMap streets and places, then the SYNTHETIC homes. Nothing is
-              sent anywhere.
-            </p>
+            <p className="loading-step">{Math.round(progress.f * 100)}% <span className="muted">{progress.msg}</span></p>
           </div>
         )}
         {api && (api.data.placeholder.homes || api.data.placeholder.personas) && (
           <div className="note warn">
-            PLACEHOLDER: {api.data.placeholder.homes ? 'homes.json ' : ''}{api.data.placeholder.personas ? 'personas.json ' : ''}
-            not found in <code>web/public/data/</code>, so a small built-in SAMPLE set is shown.
+            {api.data.placeholder.homes ? 'homes.json ' : ''}{api.data.placeholder.personas ? 'personas.json ' : ''}
+            not found in <code>web/public/data/</code>, so a small built-in set is shown.
           </div>
         )}
         {api && Comp && (
-          <Suspense fallback={<div className="empty" role="status"><span className="caps">Loading</span> Opening the {current.label} view.</div>}>
-            <Comp api={api} />
-          </Suspense>
+          <ViewBoundary key={view} label={current.label}>
+            <Suspense fallback={<div className="empty" role="status">Opening {current.label}</div>}>
+              <Comp api={api} />
+            </Suspense>
+          </ViewBoundary>
         )}
         {api && !Comp && (
           <div className="empty warn" role="status">
-            Not built yet: the {current.label} view (<code>web/src/views/{current.label}View.jsx</code>) is not in this build.
+            {current.label} is not in this build (<code>web/src/views/{current.file}View.jsx</code>).
           </div>
         )}
       </main>
@@ -131,7 +128,6 @@ export default function App() {
         <span>Transit scheduling, geographic, and real-time data provided by permission of AAATA/TheRide</span>
         <span>U-M bus schedules: U-M Logistics, Transportation and Parking</span>
         <span>Map data (c) OpenStreetMap contributors, ODbL</span>
-        {api && <span className="muted">Loaded in {Math.round(api.timings.total)} ms</span>}
       </footer>
       {api && <AssumptionsDrawer api={api} open={drawer} onClose={() => setDrawer(false)} />}
     </div>

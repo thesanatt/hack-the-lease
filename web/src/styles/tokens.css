@@ -1,30 +1,54 @@
-/* Quorum design tokens. ui-views uses only the names listed in engine/CONTRACTS.md.
-   Look: a printed transit timetable and a newspaper table. Warm paper, ink, route colors from GTFS. */
+/* Quorum design tokens (docs/DESIGN_DIRECTION.md). Transit-map clarity: warm paper, ink, hairlines,
+   real GTFS route colors, a navy band for time after dark, one sand-to-green scale for fit.
+   Contract names (engine/CONTRACTS.md) are kept: --paper --paper-2 --ink --ink-2 --muted --line --accent
+   --accent-ink --good --bad --warn --dark-walk --font-* --r --s1..--s6. New names are additions. */
 :root {
-  --paper: #f5f0e4;        /* page */
-  --paper-2: #ece5d3;      /* panels set on the page, table stripes */
-  --ink: #1c1a16;          /* text, rules */
-  --ink-2: #3d3830;        /* secondary text */
-  --muted: #736b5d;        /* captions, units */
-  --line: #cdc3ad;         /* hairlines */
-  --accent: #b23a1c;       /* timetable red: selection, primary action */
-  --accent-ink: #fff9ef;   /* text on accent */
-  --good: #2d6a3e;
-  --bad: #9a1f1f;
-  --warn: #a8700d;
-  --dark-walk: #27305a;    /* minutes walked or biked after civil dusk */
+  --paper: #f7f5f0;        /* page */
+  --paper-2: #efebe2;      /* quiet fills: entries on a week, table stripes, input wells */
+  --card: #ffffff;         /* plain white cards */
+  --ink: #1a1a1a;          /* text, walking lines */
+  --ink-2: #3d3d3a;        /* secondary text */
+  --muted: #6b6b6b;        /* labels, units, captions */
+  --line: #dedad2;         /* 1 px hairlines */
+  --line-2: #c9c4b8;       /* a hairline that must hold on white */
+  --accent: #1f6f4a;       /* the best fit green: selection, the one primary button */
+  --accent-ink: #ffffff;   /* text on accent */
+  --accent-soft: #e3eee7;  /* selected row, focus wash */
+  --good: #1f6f4a;
+  --bad: #b3261e;
+  --warn: #9a6400;
+  --dark-walk: #1e2a4a;    /* time after civil dusk: the navy band */
+  --night: #1e2a4a;
+  --night-band: #d9deea;  /* the navy band behind evening hours, as a flat tint so blocks on it stay crisp */
 
-  /* mode colors (shell only; ui-views should not rely on these) */
-  --walk: #1c1a16;
-  --bike: #2d6a3e;
-  --ride: #2a5c8f;
-  --wait: #a8700d;
+  /* modes in a week ribbon. Bus rides use their own GTFS route color. */
+  --walk: #1a1a1a;
+  --bike: #3d3d3a;
+  --ride: #2a5c8f;         /* fallback when a ride has no route color */
+  --wait: #9a6400;
 
-  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  /* fit, worst to best: one ordered scale, light sand to deep green. Never rainbow.
+     The light end sits under 2:1 on paper, so fit dots always carry a 1 px ink ring. */
+  --fit-1: #cdb57c;
+  --fit-2: #98ad72;
+  --fit-3: #66976a;
+  --fit-4: #3d8159;
+  --fit-5: #1f6f4a;
+
+  /* group members: one fixed color each, used everywhere (chip, room, route, ribbon).
+     Validated categorical order (adjacent CVD separation passes on white). Light ones need a label beside them. */
+  --member-1: #2a78d6;
+  --member-2: #eb6834;
+  --member-3: #1baf7a;
+  --member-4: #eda100;
+  --member-5: #e87ba4;
+
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;  /* wordmark and slide titles only */
   --font-body: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
-  --font-mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+  --font-mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;      /* dense number columns only */
 
-  --r: 3px;
+  --r: 8px;                /* cards */
+  --r-sm: 4px;             /* chips, inputs, small buttons */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -33,23 +57,28 @@
   --s6: 40px;
   --s7: 64px;
 
-  /* type scale: key numbers large, labels small caps. Sizes in px at 1280 wide; the projector zoom in
-     app.css scales the whole page, so these stay fixed. */
-  --fs-label: 12px;        /* small caps labels, table heads */
-  --fs-small: 13px;        /* captions, notes */
-  --fs-body: 15px;         /* running text */
-  --fs-lede: 17px;         /* one-line page guides, panel kickers set large */
-  --fs-h3: 18px;
-  --fs-h2: 22px;           /* panel titles */
-  --fs-h1: 34px;           /* view titles */
-  --fs-num: 24px;          /* a stat */
-  --fs-num-big: 40px;      /* the one number a panel is about */
-  --track-caps: 0.08em;
+  /* type: five sizes. Big numbers, small labels. */
+  --fs-13: 13px;
+  --fs-15: 15px;
+  --fs-20: 20px;
+  --fs-28: 28px;
+  --fs-44: 44px;
+  /* older names, mapped onto the five sizes so views written against them still fit */
+  --fs-label: 13px;
+  --fs-small: 13px;
+  --fs-body: 15px;
+  --fs-lede: 15px;
+  --fs-h3: 15px;
+  --fs-h2: 20px;
+  --fs-h1: 28px;
+  --fs-num: 28px;
+  --fs-num-big: 44px;
+  --track-caps: 0.04em;
 
-  /* focus and selection */
-  --focus: #b23a1c;
-  --sel: #f1dcc7;          /* selected table row */
-  --accent-hover: #9a3017;
-  --rule-heavy: 2px solid var(--ink);
+  --focus: #1f6f4a;
+  --sel: #e3eee7;
+  --accent-hover: #185a3c;
+  --rule-heavy: 1px solid var(--line);
   --rule-light: 1px solid var(--line);
+  --motion: 200ms;
 }

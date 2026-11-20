@@ -1,39 +1,142 @@
-/* Operator view: portfolio table and the "who this house fits" week grid. Printed timetable look. */
-.op-port th button { all: unset; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
-.op-port th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.op-port th button[aria-pressed="true"] { text-decoration: underline solid; color: var(--ink); }
-.op-port tbody tr { cursor: pointer; }
-.op-port tbody tr:hover td { background: var(--paper-2); }
-.op-port tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.op-port tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); padding-left: 8px; }
-.op-port td:first-child { padding-left: 6px; }
-.op-port .lo { color: var(--good); }
-.op-port .hi { color: var(--bad); }
-.op-port .meter { display: inline-block; vertical-align: middle; width: 54px; height: 8px; margin-left: 6px;
-  border: 1px solid var(--line); position: relative; }
-.op-port .meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-2); }
-.op-port td.act { min-width: 190px; }
+/* Owners view. Transit-map clarity: paper, ink, hairlines, white cards, big numbers, small labels. */
+.ow {
+  --ow-paper: #F7F5F0; --ow-ink: #1A1A1A; --ow-gray: #6B6B6B; --ow-line: #DEDAD2;
+  --ow-green: #1F6F4A; --ow-sans: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+  --ow-mono: 'IBM Plex Mono', Consolas, monospace;
+  font-family: var(--ow-sans); color: var(--ow-ink); font-size: 15px;
+}
+.ow h1, .ow h2, .ow h3 { font-family: var(--ow-sans); font-weight: 600; letter-spacing: 0; margin: 0; }
+.ow h1 { font-size: 28px; line-height: 1.15; }
+.ow h2 { font-size: 20px; line-height: 1.2; margin-bottom: 14px; }
+.ow-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ow-quiet { color: var(--ow-gray); font-size: 13px; margin: 0; }
 
-.op-fit { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s5); }
-@media (max-width: 900px) { .op-fit { grid-template-columns: minmax(0, 1fr); } }
-.op-wins { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
-.op-wins li { margin: 2px 0; }
+.ow-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.ow-span-7 { grid-column: span 7; } .ow-span-5 { grid-column: span 5; } .ow-span-12 { grid-column: 1 / -1; }
+@media (max-width: 1100px) { .ow-span-7, .ow-span-5 { grid-column: 1 / -1; } }
 
-.op-grid { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; }
-.op-grid th { font-family: var(--font-mono); font-weight: 500; font-size: 11.5px; letter-spacing: 0.02em;
-  text-align: left; color: var(--muted); padding: 4px 6px; border-bottom: 1.5px solid var(--ink); vertical-align: bottom; }
-.op-grid th.row { color: var(--ink-2); border-bottom: 1px solid var(--line); vertical-align: middle; width: 31%; }
-.op-grid tr.campus-start th.row, .op-grid tr.campus-start td { border-top: 1.5px solid var(--ink); }
-.op-grid td { border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); padding: 0; height: 34px; }
-.op-grid td button { all: unset; box-sizing: border-box; display: block; width: 100%; height: 100%; padding: 3px 6px;
-  cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.op-grid td button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.op-grid td button:hover { background: var(--paper-2); }
-.op-grid td .n { display: block; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
-.op-grid td.mine button { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.op-grid td.mine .n { color: var(--accent-ink); opacity: 0.85; }
-.op-grid td.mine button:hover { background: var(--accent); }
-.op-grid td button:disabled { cursor: default; }
-/* the long SYNTHETIC label wraps at phone width instead of pushing the page sideways */
-.op-view .qv-label { white-space: normal; max-width: 100%; }
-.op-view .qv-panel > header { flex-wrap: wrap; gap: var(--s2); }
+.ow-card { background: #fff; border: 1px solid var(--ow-line); border-radius: 8px; padding: 20px 24px 20px; min-width: 0; scroll-margin-top: 12px; }
+.ow-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 18px; }
+.ow-head-row { align-items: baseline; margin-bottom: 12px; }
+.ow-head-row h2 { margin: 0; }
+.ow .ow-pick select { margin-top: 8px; border-color: transparent; padding-left: 0; color: var(--ow-gray); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ow .ow-pick select:hover { color: var(--ow-ink); }
+.ow select {
+  font: inherit; font-size: 13px; color: var(--ow-ink); background: #fff; border: 1px solid var(--ow-line);
+  border-radius: 6px; padding: 4px 8px; max-width: 100%;
+}
+.ow-figs { display: flex; gap: 28px; }
+
+.ow-big { display: flex; flex-direction: column; gap: 2px; }
+.ow-num-44 { font-size: 44px; font-weight: 600; line-height: 1; }
+.ow-num-28 { font-size: 28px; font-weight: 600; line-height: 1.05; }
+.ow-unit { font-size: 13px; color: var(--ow-gray); }
+.ow-sub { font-size: 13px; color: var(--ow-gray); margin: 20px 0 8px; }
+
+/* house diagram */
+.ow-house { position: relative; transition: opacity 200ms; }
+.ow-house svg, .ow-reno-chart svg { display: block; overflow: visible; }
+.ow-t-label { font-size: 13px; fill: var(--ow-ink); font-family: var(--ow-sans); }
+.ow-t-strong { font-weight: 600; }
+.ow-t-small { font-size: 13px; font-family: var(--ow-sans); }
+.ow-t-gray { fill: var(--ow-gray); }
+.ow-t-num { font-variant-numeric: tabular-nums; }
+.ow-room { outline: none; cursor: default; }
+.ow-room:focus-visible > rect:first-child { stroke: var(--ow-ink); stroke-width: 2; }
+.ow-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ow-gray); margin-top: 10px; align-items: center; }
+.ow-key span { display: inline-flex; align-items: center; gap: 6px; }
+.ow-key i { display: inline-block; width: 14px; height: 8px; border-radius: 0 4px 4px 0; }
+.ow-key-note { margin-left: auto; }
+.ow-honest { font-size: 13px; color: var(--ow-gray); margin: 6px 0 0; }
+
+.ow-tip {
+  position: absolute; z-index: 20; pointer-events: none; background: var(--ow-ink); color: #fff; font-size: 13px;
+  line-height: 1.35; padding: 6px 10px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.ow-tip-h { font-weight: 600; }
+
+/* who it fits */
+.ow-bars { position: relative; display: grid; gap: 4px; }
+.ow-bar-row { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: 12px; min-height: 26px; outline: none; border-radius: 4px; }
+.ow-bar-row:hover, .ow-bar-row:focus-visible { background: var(--ow-paper); }
+.ow-bar-row:focus-visible { box-shadow: 0 0 0 2px var(--ow-ink); }
+.ow-bar-label { font-size: 13px; line-height: 1.25; }
+.ow-bar-track { display: flex; align-items: center; gap: 6px; }
+.ow-bar { display: block; height: 12px; background: var(--ow-green); border-radius: 0 4px 4px 0; transition: width 200ms; min-width: 2px; }
+.ow-bar.other { background: #B9B3A6; }
+.ow-bar-val { font-size: 13px; color: var(--ow-ink); font-variant-numeric: tabular-nums; }
+
+/* portfolio small multiples */
+.ow-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; transition: opacity 200ms; }
+.ow-tile {
+  all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 10px;
+  border: 1px solid var(--ow-line); border-radius: 8px; cursor: pointer; background: #fff; min-width: 0;
+}
+.ow-tile:hover { border-color: var(--ow-ink); }
+.ow-tile:focus-visible { outline: 2px solid var(--ow-ink); outline-offset: 2px; }
+.ow-tile.sel { border: 2px solid var(--ow-ink); padding: 9px 11px; background: var(--ow-paper); }
+.ow-tile svg { display: block; overflow: visible; }
+.ow-tile-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ow-tile-num { font-size: 13px; color: var(--ow-gray); margin-top: auto; }
+.ow-tile-num b { font-size: 20px; font-weight: 600; color: var(--ow-ink); }
+
+/* renovation */
+.ow-reno { display: grid; grid-template-columns: minmax(220px, 4fr) minmax(0, 8fr); gap: 32px; align-items: start; }
+@media (max-width: 800px) { .ow-reno { grid-template-columns: minmax(0, 1fr); } }
+.ow-reno-side { display: flex; flex-direction: column; gap: 18px; }
+.ow-reno-side select { width: 240px; }
+.ow-big-2 { margin-top: -4px; }
+.ow-reno-chart { position: relative; transition: opacity 200ms; }
+.ow-reno-chart .ow-key { margin: 0 0 10px; }
+.ow-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ow-gray); }
+.ow-field b { color: var(--ow-ink); font-weight: 600; }
+.ow-field em { font-style: normal; color: var(--ow-gray); }
+.ow-slider input[type="range"] { width: 100%; accent-color: var(--ow-green); }
+
+/* details */
+.ow-details { border-top: 1px solid var(--ow-line); padding-top: 10px; }
+.ow-details summary { cursor: pointer; font-size: 13px; color: var(--ow-ink); text-decoration: underline; text-underline-offset: 3px; width: max-content; }
+.ow-details-body { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; margin-top: 14px; align-items: start; }
+@media (max-width: 900px) { .ow-details-body { grid-template-columns: minmax(0, 1fr); } }
+.ow-details-side { display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--ow-gray); }
+.ow-details-side p { margin: 0; line-height: 1.5; }
+.ow-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+.ow-table th { font-family: var(--ow-sans); font-size: 13px; letter-spacing: 0; text-transform: none; text-align: left; font-weight: 600; color: var(--ow-gray); border-bottom: 1px solid var(--ow-ink); padding: 6px 8px; }
+.ow-table td { line-height: 1.3; border-bottom: 1px solid var(--ow-line); padding: 6px 8px; }
+.ow-table th.n { text-align: right; }
+.ow-table td.n { text-align: right; font-family: var(--ow-mono); font-variant-numeric: tabular-nums; }
+.ow-text-btn { all: unset; cursor: pointer; font-size: 13px; color: var(--ow-ink); text-decoration: underline; text-underline-offset: 3px; width: max-content; }
+.ow-text-btn:disabled { color: var(--ow-gray); cursor: default; text-decoration: none; }
+.ow-text-btn:focus-visible { outline: 2px solid var(--ow-ink); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ow-house, .ow-bar, .ow-tiles, .ow-reno-chart { transition: none; }
+}
+
+/* where this home sits among all homes, by first picks */
+.ow-strip { position: relative; margin-top: 22px; }
+.ow-strip svg { display: block; overflow: visible; }
+
+/* Your homes: one sorted diverging bar per home, two columns */
+.ow-port { display: grid; grid-auto-flow: column; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; transition: opacity 200ms; }
+.ow-prow { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 130px minmax(0, 1fr) 56px; align-items: center; gap: 10px;
+  padding: 3px 6px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.ow-prow:hover { background: var(--ow-paper); }
+.ow-prow:focus-visible { outline: 2px solid var(--ow-ink); outline-offset: 1px; }
+.ow-prow.sel { background: var(--ow-paper); box-shadow: inset 0 0 0 1px var(--ow-ink); }
+.ow-prow.sel .ow-prow-name { font-weight: 600; }
+.ow-prow-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ow-prow-bars { display: grid; grid-template-columns: 1fr 1fr; height: 12px; }
+.ow-prow-bars .side { display: flex; height: 100%; }
+.ow-prow-bars .side.l { justify-content: flex-end; border-right: 1px solid var(--ow-gray); }
+.ow-prow-bars .side i { display: block; height: 100%; }
+.ow-prow-bars .side.l i { border-radius: 2px 0 0 2px; }
+.ow-prow-bars .side.r i { border-radius: 0 2px 2px 0; }
+.ow-prow-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.ow-port-key { display: inline-flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ow-gray); }
+.ow-port-key span { display: inline-flex; align-items: center; gap: 5px; }
+.ow-port-key i { display: inline-block; width: 12px; height: 10px; border-radius: 2px; }
+@media (max-width: 900px) { .ow-port { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); grid-template-rows: none !important; } }
+@media (prefers-reduced-motion: reduce) { .ow-port { transition: none; } }
+
+.ow-span-7 > .ow-head { margin-bottom: 4px; }

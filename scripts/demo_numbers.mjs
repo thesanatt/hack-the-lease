@@ -24,6 +24,7 @@ import * as tours from '../engine/tours.js';
 import { editableWeek, modalRoutine, uncertainRoutine, lateEntry, moveToCentral, TERM_CHOICES, autoAnswer } from '../web/src/views/me/routine.js';
 import * as G from '../web/src/views/group/logic.js';
 import { pickIrregular, canAddHalfBath } from '../web/src/views/operator/logic.js';
+import { roomState, outside } from '../web/src/views/operator/viz.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = path.join(ROOT, 'web', 'public', 'data');
@@ -130,7 +131,7 @@ function rankNow(post, effEntries, dates = cfg.termDates) {
 function printRank(r, k = 3, baseline = null) {
   r.rank.slice(0, k).forEach((row, i) => {
     const was = baseline ? baseline.findIndex((x) => x.homeId === row.homeId) : -1;
-    say(`#${i + 1} ${nm(row.homeId)}, ${row.roomLabel} ${usd(row.price)}/mo: expected regret ${usd(row.expRegret)}/mo, P(best) ${pct(row.pBest)}, all-in ${usd(-row.meanU)} (${usd(-row.hi)} to ${usd(-row.lo)})${baseline ? `  [before: #${was + 1}]` : ''}`);
+    say(`#${i + 1} ${nm(row.homeId)}, ${row.roomLabel} ${usd(row.price)}/mo: expected regret ${usd(row.expRegret)}/mo, P(best) ${pct(row.pBest)}, cost to you ${usd(-row.meanU)} (${usd(-row.hi)} to ${usd(-row.lo)})${baseline ? `  [before: #${was + 1}]` : ''}`);
   });
   if (r.rank.leadersDiffer) say(`note: most often best is ${nm(r.rank.pBestLeader)}, but lowest expected regret is ${nm(r.rank.regretLeader)}`);
   say(`Value of knowing the schedule (EVPI over ${r.nScen} weeks): ${usd(r.ev)}/mo (${r.ev.toFixed(2)})`);
@@ -197,7 +198,7 @@ H('2c. Baseline: a listing filter "cheapest home in North Campus", ranked by Quo
   const pick = north[0];
   for (const [lbl, r] of [['before any pick', r0], ['after the picks', r1]]) {
     const i = r.rank.findIndex((x) => x.homeId === pick.id), row = r.rank[i], lead = r.rank[0];
-    say(`${lbl}: the filter picks ${pick.name}, which Quorum ranks #${i + 1} of ${r.rank.length}: expected regret ${usd(row.expRegret)}/mo vs ${usd(lead.expRegret)} for #1 ${nm(lead.homeId)}, ${usd(row.expRegret - lead.expRegret)}/mo worse; P(best) ${pct(row.pBest)}; all-in ${usd(-row.meanU)} vs ${usd(-lead.meanU)}`);
+    say(`${lbl}: the filter picks ${pick.name}, which Quorum ranks #${i + 1} of ${r.rank.length}: expected regret ${usd(row.expRegret)}/mo vs ${usd(lead.expRegret)} for #1 ${nm(lead.homeId)}, ${usd(row.expRegret - lead.expRegret)}/mo worse; P(best) ${pct(row.pBest)}; cost to you ${usd(-row.meanU)} vs ${usd(-lead.meanU)}`);
   }
 }
 
@@ -293,9 +294,21 @@ for (const cut of [10, 25, 50]) {
 }
 
 // ---------- 5. Operator ----------
-H('5. Operator: one irregular house, SYNTHETIC population');
+H('5. Owners view: the house it opens on, SYNTHETIC population');
 const opData = json('operator.json');
-const home = pickIrregular(homes, opData?.houseId || opData?.featured || null);
+// Same default as web/src/views/OperatorView.jsx: the most uneven house among homes that some kind of week picks most often.
+const priced = homes.filter((h) => (h.rooms || []).length >= 2);
+const winners = new Set((opData?.demand?.homes || []).filter((d) => d.wins?.length).map((d) => d.homeId));
+const opPool = priced.filter((h) => winners.has(h.id));
+const home = pickIrregular(opPool.length ? opPool : priced, opData?.houseId || opData?.featured || null);
+{
+  const d = (opData?.demand?.homes || []).find((x) => x.homeId === home.id);
+  const N = opData?.demand?.students || 0;
+  if (d) {
+    const order = [...opData.demand.homes].sort((a, b) => b.firstShare - a.firstShare);
+    say(`Who it fits: ${Math.round(d.firstShare * N).toLocaleString('en-US')} of ${N.toLocaleString('en-US')} sample students pick it first (#${order.findIndex((x) => x.homeId === home.id) + 1} of ${order.length}); top pick for ${d.wins.length} kinds of week`);
+  }
+}
 const population = operator.makePopulation({ n: cfg.population, seed: 11, cfg });
 const renoChoices = home.rooms.map((r, j) => ({ r, j })).filter(({ r }) => canAddHalfBath(r));
 const reno = renoChoices.find(({ r }) => r.floor === 'basement') || renoChoices[0];
@@ -310,11 +323,17 @@ home.rooms.forEach((rm, j) => { const r = op.rooms[j]; say(`   ${rm.label.padEnd
 {
   const gaps = home.rooms.map((rm, j) => ({ label: rm.label, asking: rm.asking, fair: op.rooms[j].p50, gap: rm.asking - op.rooms[j].p50 }));
   say(`asking minus fair (p50): ${gaps.map((g) => `${g.label} ${g.gap >= 0 ? '+' : ''}${usd(g.gap)}`).join('; ')}`);
+  // Same rule as the Owners house chart (web/src/views/operator/viz.js): a room is priced off when its asking rent
+  // sits at least NEAR dollars past either end of its fair range; the label is the distance to that end.
+  const st = home.rooms.map((rm, j) => ({ label: rm.label, s: roomState(rm.asking, op.rooms[j]), d: outside(rm.asking, op.rooms[j]) }));
+  const offR = st.filter((x) => x.s === 'over' || x.s === 'under');
+  say(`headline "${offR.length} of ${home.rooms.length} rooms priced off"${offR.length ? `: ${offR.map((x) => `${x.label} "${usd(x.d)} ${x.s}"`).join('; ')}` : ''}`);
   const lo = gaps.reduce((a, b) => (b.gap < a.gap ? b : a)), hi = gaps.reduce((a, b) => (b.gap > a.gap ? b : a));
   say(`most underpriced: ${lo.label} asking ${usd(lo.asking)} vs fair ${usd(lo.fair)} (${usd(-lo.gap)} under); most overpriced: ${hi.label} asking ${usd(hi.asking)} vs fair ${usd(hi.fair)} (${usd(hi.gap)} over); asking rents sum to ${usd(gaps.reduce((t, g) => t + g.asking, 0))}`);
 }
 if (op.renovationDelta) {
   say(`half bath added to ${home.rooms[reno.j].label}: its p50 fair share ${op.renovationDelta.roomP50 >= 0 ? '+' : ''}${usd(op.renovationDelta.roomP50)}/mo at the same house rent; median group headroom ${op.renovationDelta.headroom >= 0 ? '+' : ''}${usd(op.renovationDelta.headroom)}/mo`);
+  say(`   change in typical fair rent per room: ${home.rooms.map((rm, j) => { const dv = op.after[j].p50 - op.rooms[j].p50; return `${rm.label} ${dv >= 0 ? '+' : '-'}${usd(Math.abs(dv))}`; }).join('; ')}`);
 }
 
 if (reno) {
@@ -333,7 +352,7 @@ for (const [lbl, r] of [['before any pick', r0], ['after Auto-answer until done'
   const notes = explain.explainAll({ homes, weekMap, theta: r.mean, cfg, places: placeById, modes: jordan.modes });
   const bestId = r.rank[0].homeId, row = r.rank[0], note = notes.get(bestId);
   say(`title: "Best for Jordan's week: ${nm(bestId)}"`);
-  say(`facts: ${usd(note.roomLabel && Number.isFinite(note.rent) ? note.rent : row.price)}/mo rent and utilities, ${note.roomLabel || row.roomLabel}; ${usd(-row.meanU)}/mo all in; ${Math.floor(weekMap.get(bestId).weeklyMin / 60)}h ${Math.round(weekMap.get(bestId).weeklyMin % 60)}m door to door a week; best in ${Math.round(100 * row.pBest)}% of possible weeks`);
+  say(`facts: ${usd(note.roomLabel && Number.isFinite(note.rent) ? note.rent : row.price)}/mo rent and utilities, ${note.roomLabel || row.roomLabel}; ${usd(-row.meanU)}/mo cost to you; ${Math.floor(weekMap.get(bestId).weeklyMin / 60)}h ${Math.round(weekMap.get(bestId).weeklyMin % 60)}m door to door a week; best in ${Math.round(100 * row.pBest)}% of possible weeks`);
   say(`headline: ${note.headline}`);
   const line = (x) => `${x.absolute ? `costs ${usd(Math.abs(x.dollars))}/mo` : `${x.dollars >= 0 ? '+' : '-'}${usd(Math.abs(x.dollars))}/mo`} ${x.label}: ${x.text}${x.trip ? `  [${x.trip.lead}: ${x.trip.text}]` : ''}`;
   say('Why it fits:'); note.fits.forEach((x) => say('   ' + line(x)));
@@ -345,6 +364,49 @@ for (const [lbl, r] of [['before any pick', r0], ['after Auto-answer until done'
   if (g && g !== bestId) {
     const ng = notes.get(g);
     say(`notes for ${nm(g)} (rank #${r.rank.findIndex((x) => x.homeId === g) + 1}): ${ng.headline} Watch: ${ng.watch.map((x) => `${x.label} (${x.dollars >= 0 ? '+' : '-'}${usd(Math.abs(x.dollars))})`).join('; ')}`);
+  }
+}
+
+// ---------- 10. You view: "Your top 3" cards and the Trade-offs sentence ----------
+// Same rules as web/src/views/me/TopThree.jsx (cardReasons, lateNights, hours) and Tradeoff.jsx (the sentence).
+{
+  const SHORT = {
+    rent: (g) => (g ? 'Lower rent' : 'Higher rent'), time: (g) => (g ? 'Less time getting around' : 'More time getting around'),
+    dark: (g) => (g ? 'Less walking after dark' : 'More walking after dark'), strand: (g) => (g ? 'A ride for every trip' : 'Trips with no ride'),
+    size: (g) => (g ? 'Bigger room' : 'Smaller room'), light: (g) => (g ? 'More daylight' : 'Less daylight'),
+  };
+  const reasons = (notes, ids) => {
+    const used = new Set();
+    return ids.map((id) => {
+      const note = notes.get(id);
+      const pool = [...(note?.fits || []), ...(note?.watch || [])].filter((r) => !r.absolute && !r.vs && Number.isFinite(r.dollars));
+      const r = pool.find((x) => !used.has(x.key));
+      if (!r) return '(no reason line)';
+      used.add(r.key);
+      const good = r.dollars >= 0;
+      return `${SHORT[r.key] ? SHORT[r.key](good) : r.label} ${good ? '+' : '-'}${usd(Math.abs(r.dollars))}/mo vs a typical home`;
+    });
+  };
+  const nights = (w) => new Set(w.trips.filter((t) => t.stranded || t.darkMin > 0).map((t) => t.day)).size;
+  const hrs = (min) => (min / 60).toFixed(1);
+  const cases = [['before any pick', r0, entries], ['after "Answer the rest"', r1, entries], ['after "Late lab on Central" (same picks)', r2, moved]];
+  for (const [lbl, r, ents] of cases) {
+    H(`10. You view, Your top 3, ${lbl}`);
+    const wm = weekFor(modalRoutine(ents, jordan.modes), homeIds);
+    const notes = explain.explainAll({ homes, weekMap: wm, theta: r.mean, cfg, places: placeById, modes: jordan.modes });
+    const top = r.rank.slice(0, 3);
+    const why = reasons(notes, top.map((x) => x.homeId));
+    top.forEach((row, i) => {
+      const w = wm.get(row.homeId);
+      say(`#${i + 1} ${nm(row.homeId)}, ${notes.get(row.homeId)?.roomLabel || row.roomLabel}: ${usd(-row.meanU)}/mo cost to you, ${usd(row.price)} rent; ${hrs(w.weeklyMin)} h/wk getting around; ${nights(w)}/wk late nights; "${why[i]}"`);
+    });
+    const pts = r.rank.map((x) => ({ id: x.homeId, price: x.price, y: wm.get(x.homeId).weeklyMin / 60 }));
+    const tp = pts[0], ch = pts.reduce((a, b) => (b.price < a.price ? b : a), pts[0]);
+    if (ch.id === tp.id) say(`Trade-offs sentence: "Your top pick also has the cheapest rent, at ${hrs(ch.y * 60)} hours a week."`);
+    else {
+      const d = ch.y - tp.y;
+      say(`Trade-offs sentence: "The cheapest rent costs you ${hrs(ch.y * 60)} hours a week, ${hrs(Math.abs(d) * 60)} ${d >= 0 ? 'more' : 'fewer'} than your top pick." Key: "Cheapest rent, ${usd(ch.price)}, ${nm(ch.id)}"`);
+    }
   }
 }
 

@@ -25,12 +25,16 @@ const minOf = (sec) => (Number.isFinite(sec) ? Math.round(sec / 60) : null);
 export function campusExample(api, homeId = DEFAULT_HOME) {
   const planner = api.planner;
   const placeById = api.data.placeById || new Map(api.data.places.map((p) => [p.id, p]));
-  const rows = CAMPUSES.map((c) => ({ ...c, place: placeById.get(c.id)?.label || c.id, walk: null, bus: [] }));
+  const rows = CAMPUSES.map((c) => ({ ...c, place: placeById.get(c.id)?.label || c.id, walk: null, bus: [], legs: [] }));
   for (const t of TIMES) {
     rows.forEach((row) => {
       const res = planner.leaveAt(DAY, row.id, t.s, [homeId])?.get(homeId);
       if (row.walk == null && res?.walk) row.walk = minOf(res.walk.sec);
       row.bus.push(res?.transit ? minOf(res.transit.arrive - t.s) : null);
+      // The legs of that bus trip (walk, wait, ride with its GTFS route color), for drawing only.
+      let legs = null;
+      try { legs = res?.transit && typeof planner.legsFor === 'function' ? planner.legsFor(res, homeId)?.legs || null : null; } catch { legs = null; }
+      row.legs.push(legs);
     });
   }
   const solar = api.mod?.('solar');
@@ -73,7 +77,7 @@ export async function studentExample(api, personaId = STUDENT) {
   byU.forEach((r, k) => { r.rank = k + 1; });
   const best = byU[0];
   const cheapest = rows.reduce((a, b) => (b.rent < a.rent ? b : a));
-  return { persona, n: rows.length, best, cheapest, gap: best.u - cheapest.u };
+  return { persona, n: rows.length, best, cheapest, gap: best.u - cheapest.u, rows };
 }
 
 // The demo group of five, as the Group tab solves it: each member's most likely week through every
@@ -111,6 +115,7 @@ export async function groupExample(api) {
     split: members.map((m, i) => ({
       name: m.name, color: m.color,
       room: top.home.rooms[top.res.assignment[i]]?.label,
+      roomInfo: top.home.rooms[top.res.assignment[i]] || null,
       price: top.res.prices[top.res.assignment[i]],
     })),
     houses: houses.length,

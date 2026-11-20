@@ -1,8 +1,9 @@
-// One home's week in full, and one trip explained leg by leg with route names from the GTFS feeds.
+// One home's week in full, and one trip drawn leg by leg: walk (dashed ink), wait (hollow), bus (route color and
+// number from the GTFS feeds), with clock times at each change. Time after dusk is a navy band under the leg.
 // Props: api, home, week (WeekResult), routineWeek, selectedIdx, onSelect(idx), dusk (seconds), legs (from tripLegs)
-import { WeekStrip, Pill } from '../../components/index.js';
-import { clock, DAY_LABEL } from './routine.js';
-import { MODE_LABEL } from './format.js';
+import { WeekStrip, readableOn } from '../../components/index.js';
+import { clock, toSec, DAY_LABEL } from './routine.js';
+import './calendar/parts.css';
 import { shapesNow, rideCoords, streetWalk } from '../../engine/shapes.js';
 
 // Legs for one WeekResult trip. Transit uses planner.legs (one single-origin scan from the trip's departure).
@@ -30,7 +31,7 @@ export function tripPaths(api, trip, legs) {
     const c = safe(() => P.pathCoords(trip.from, trip.to, trip.mode));
     if (!c) return [];
     const coords = [pt(trip.from), ...c, pt(trip.to)].filter(Boolean);
-    return [{ coords, color: trip.mode === 'bike' ? '#2d6a3e' : '#1c1a16', width: 4, dash: trip.mode === 'walk',
+    return [{ coords, color: '#1c1a16', width: trip.mode === 'bike' ? 3 : 4, dash: trip.mode === 'walk',
       dep: trip.depart, arr: trip.arrive, label: `${trip.mode === 'bike' ? 'Bike' : 'Walk'} to ${placeName(api, trip.to)}`, kind: trip.mode }];
   }
   if (!legs) return [];
@@ -63,65 +64,76 @@ export function tripPaths(api, trip, legs) {
   return out;
 }
 
-const tripTitle = (api, t) => {
-  const name = (id) => api.data.placeById.get(id)?.label || api.data.homeById.get(id)?.name || id;
-  return `${name(t.from)} to ${name(t.to)}`;
-};
+const placeLabel = (api, id) => api.data.placeById.get(id)?.label || api.data.homeById.get(id)?.name || id;
 
-export default function TripExplainer({ api, home, week, routineWeek, selectedIdx, onSelect, dusk, legs }) {
+const KIND = { walk: 'Walk', transfer: 'Walk', bike: 'Bike', wait: 'Wait', ride: 'Bus' };
+
+function legTitle(api, l) {
+  const span = `${clock(l.dep)} to ${clock(l.arr)}`;
+  if (l.type === 'ride') return `Bus ${l.route || ''} ${l.routeName || ''} toward ${l.headsign || ''}, ${l.fromName || ''} to ${l.toName || ''}, ${span}`.replace(/\s+/g, ' ');
+  if (l.type === 'wait') return `Wait at ${l.atName || 'the stop'}, ${span}`;
+  if (l.type === 'bike') return `Bike, including ${Math.round(api.config.bikeOverheadS / 60)} min to unlock and park, ${span}`;
+  if (l.type === 'transfer') return `Walk to change, ${l.fromName || ''} to ${l.toName || ''}, ${span}`;
+  return `Walk${l.toName ? ` to ${l.toName}` : ''}, ${span}`;
+}
+
+function LegStrip({ api, legs, dusk }) {
+  const shown = legs.legs.filter((l) => l.sec > 0 || l.type === 'ride');
+  if (!shown.length) return null;
+  return (
+    <div className="mp-strip" role="list" aria-label="Trip, leg by leg">
+      {shown.map((l, i) => {
+        const min = Math.max(1, Math.round(l.sec / 60));
+        const ride = l.type === 'ride';
+        const color = ride ? l.color || '#2a5c8f' : null;
+        const darkFrom = dusk != null && l.arr > dusk ? Math.max(0, (Math.max(l.dep, dusk) - l.dep) / Math.max(1, l.arr - l.dep)) : null;
+        const kind = l.type === 'transfer' ? 'walk' : l.type;
+        return (
+          <div key={i} role="listitem" className={`leg ${kind}`} style={{ flexGrow: Math.max(60, l.sec) }} title={legTitle(api, l)}
+            aria-label={legTitle(api, l)}>
+            <span className="top">
+              {ride ? <span className="route" style={{ background: color, color: readableOn(color) }}>{l.route}</span> : KIND[l.type]}
+            </span>
+            <span className="mark" style={ride ? { background: color } : undefined}>
+              {darkFrom != null && <span className="dk" style={{ left: `${darkFrom * 100}%` }} />}
+            </span>
+            <span className="bot"><span className="clk">{clock(l.dep)}</span><span className="m">{min} min</span></span>
+          </div>
+        );
+      })}
+      <div className="leg end" role="listitem" aria-label={`Arrive ${clock(legs.arrive)}`}>
+        <span className="top">&nbsp;</span>
+        <span className="mark" />
+        <span className="bot"><span className="clk">{clock(legs.arrive)}</span></span>
+      </div>
+    </div>
+  );
+}
+
+export default function TripExplainer({ api, week, routineWeek, selectedIdx, onSelect, dusk, legs }) {
   if (!week) return null;
   const trip = week.trips[selectedIdx];
-  const min = (s) => Math.round(s / 60);
+  const dur = trip?.mode ? Math.round((trip.arrive - trip.depart) / 60) : null;
   return (
     <div>
       <WeekStrip trips={week.trips} entries={routineWeek} selected={selectedIdx} onSelect={(t, i) => onSelect(i)} dusk={dusk} />
-      <p className="small muted" style={{ marginTop: 4 }}>
-        Bars are trips: <span style={{ color: 'var(--walk)' }}>walk</span>, <span style={{ color: 'var(--bike)' }}>bike</span>,{' '}
-        <span style={{ color: 'var(--ride)' }}>bus</span>, <span style={{ color: 'var(--bad)' }}>hatched: no allowed way</span>.
-        A navy underline marks minutes outside civil daylight; the shaded evening starts at civil dusk. Click a bar.
-      </p>
       {trip && (
-        <div style={{ marginTop: 8 }}>
-          <h3 style={{ marginBottom: 2 }}>
-            {DAY_LABEL[trip.day]} {trip.kind === 'arriveBy' ? `arrive by ${trip.time}` : `leave at ${trip.time}`}: {tripTitle(api, trip)}
-          </h3>
-          <div className="row-flex small" style={{ marginBottom: 6 }}>
-            {trip.mode ? <Pill>{MODE_LABEL[trip.mode] || trip.mode}</Pill> : <Pill tone="bad">no allowed way</Pill>}
-            {trip.stranded && trip.mode && <Pill tone="bad" title="Every allowed option breaks a walking limit; costed at the best option anyway">over the walking limit</Pill>}
-            {trip.mode && <span className="mono">{clock(trip.depart)} to {clock(trip.arrive)}, {min(trip.arrive - trip.depart)} min</span>}
-            {trip.darkMin > 0.5 && <span style={{ color: 'var(--dark-walk)' }}>{Math.round(trip.darkMin)} min after dark (lease average)</span>}
-            {trip.slackMin > 0.5 && <span className="muted">{Math.round(trip.slackMin)} min early</span>}
+        <div className="mp-trip">
+          <div className="mp-trip-head">
+            <span className="when">{DAY_LABEL[trip.day]} {trip.time ? clock(toSec(trip.time)) : clock(trip.depart)}</span>
+            <span className="what">{placeLabel(api, trip.from)} to {placeLabel(api, trip.to)}</span>
+            {dur != null && <span className="dur">{dur} min door to door</span>}
+            {trip.mode && dusk != null && trip.arrive > dusk && <span className="dk">after dark</span>}
           </div>
-          {legs ? (
-            <ul className="legs">
-              {legs.legs.filter((l) => l.sec > 0 || l.type === 'ride').map((l, i) => (
-                <li key={i}>
-                  <span className="t">{clock(l.dep)}</span>
-                  <span>
-                    {l.type === 'ride'
-                      ? <span className="glyph" style={{ background: l.color || 'var(--ride)', borderColor: l.color || 'var(--ride)' }} />
-                      : <span className="glyph" style={{ background: l.type === 'wait' ? 'var(--paper)' : l.type === 'bike' ? 'var(--bike)' : 'var(--ink)', borderColor: l.type === 'bike' ? 'var(--bike)' : 'var(--ink)', borderRadius: l.type === 'wait' ? 0 : '50%' }} />}
-                  </span>
-                  <span>
-                    {l.type === 'ride' && (
-                      <>
-                        <Pill tone="route" color={l.color}>{l.route}</Pill>{' '}
-                        <strong>{l.routeName}</strong> toward {l.headsign}
-                        <div className="small muted">{l.fromName} to {l.toName}{l.feed ? `, ${l.feed === 'A' ? 'TheRide' : 'U-M'}` : ''}</div>
-                      </>
-                    )}
-                    {l.type === 'walk' && <>Walk {l.toName ? `to ${l.toName}` : l.fromName ? `from ${l.fromName}` : ''}</>}
-                    {l.type === 'bike' && <>Bike, including {Math.round(api.config.bikeOverheadS / 60)} min to unlock and park</>}
-                    {l.type === 'wait' && <>Wait at {l.atName}</>}
-                    {l.type === 'transfer' && <>Walk to change: {l.fromName} to {l.toName}</>}
-                  </span>
-                  <span className="t">{min(l.sec)} min</span>
-                </li>
-              ))}
-              <li><span className="t">{clock(legs.arrive)}</span><span /><span>Arrive</span><span /></li>
-            </ul>
-          ) : trip.mode === 'transit' ? <p className="small muted">The leg list for this trip could not be rebuilt.</p> : null}
-          {!trip.mode && <p className="small">No walk, bike or bus option meets the walking limits for this trip.</p>}
+          {!trip.mode ? (
+            <div className="mp-strip none" role="img" aria-label="No ride fits your walking limits">
+              <span className="hatch" />
+              <span className="mp-trip-note">No ride fits your walking limits</span>
+            </div>
+          ) : legs ? (
+            <LegStrip api={api} legs={legs} dusk={dusk} />
+          ) : <p className="mp-gray">This trip could not be redrawn.</p>}
+          {trip.mode && trip.stranded && <div className="mp-trip-note">Over your walking limit</div>}
         </div>
       )}
     </div>

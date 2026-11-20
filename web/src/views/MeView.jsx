@@ -1,21 +1,25 @@
-// Me mode: one student's real week through every candidate home on the real timetables, about six pairwise
-// picks to learn what time and room features are worth, then a ranking across the fall weeks they might have.
+// You: one student's real week through every candidate home on the real timetables, about six pairwise picks
+// to learn what time and room features are worth, then a ranking across the fall weeks they might have.
+// Layout: map plus "Your top 3", Details, the trade-off chart with What if chips, the picks, then the week.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Panel, Pill, Button, Seg, Stat, MapView, NotBuilt } from '../components/index.js';
+import { Button, MapView, NotBuilt } from '../components/index.js';
 import { useConfigVersion } from '../engine/useConfig.js';
-import JumpBar from '../components/JumpBar.jsx';
-import Verdict from './me/Verdict.jsx';
+import { useNotes } from './me/Verdict.jsx';
 import CalendarDrop from './me/CalendarDrop.jsx';
 import { rng } from '../../../engine/rng.js';
 import { PARAM_INFO, utility } from '../../../engine/model.js';
 import WeekEditor from './me/WeekEditor.jsx';
+import WeekCalendar from './me/WeekCalendar.jsx';
 import HomeList from './me/HomeList.jsx';
 import TripExplainer, { tripLegs, tripPaths } from './me/TripExplainer.jsx';
 import PickCard from './me/PickCard.jsx';
-import Learned, { fmtEstimate } from './me/Learned.jsx';
-import Ranking from './me/Ranking.jsx';
+import Learned from './me/Learned.jsx';
+import TopThree from './me/TopThree.jsx';
+import Tradeoff from './me/Tradeoff.jsx';
+import Details from './me/Details.jsx';
 import { editableWeek, modalRoutine, uncertainRoutine, lateEntry, moveToCentral, TERM_CHOICES, autoAnswer, DAY_LABEL } from './me/routine.js';
-import { money, hm, pct } from './me/format.js';
+import { pct } from './me/format.js';
+import './me/verdict/you.css';
 
 const SCENARIO_SEED = 11;
 
@@ -201,152 +205,136 @@ export default function MeView({ api }) {
   }, [effEntries, places]);
   const mapHomes = useMemo(() => homes.map((h) => ({ ...h, short: h.name.split(' ').slice(0, 2).join(' ') })), [homes]);
 
+  const [editing, setEditing] = useState(false);
+  const notes = useNotes({ api, homes, weekMap, ranked, summary, cfg, persona });
+  const rank = ranked?.rank || null;
+  // Fit for color by rank order, in five even steps (quintiles): 1 for the best fifth, 0 for the worst.
+  // Rank order spreads the scale; expected regret itself bunches most homes near the best end.
+  const fitById = useMemo(() => {
+    if (!rank?.length) return null;
+    const n = rank.length;
+    return Object.fromEntries(rank.map((r, i) => [r.homeId, n > 1 ? (4 - Math.min(4, Math.floor((i / n) * 5))) / 4 : 1]));
+  }, [rank]);
+  const rankById = useMemo(() => (rank ? Object.fromEntries(rank.slice(0, 3).map((r, i) => [r.homeId, i + 1])) : null), [rank]);
+  const select = (id) => { setSelHome(id); setSelTrip(null); };
+
   if (!persona) return <div className="note warn">No personas are loaded.</div>;
 
+  const termKeys = Object.keys(TERM_CHOICES);
+  const tripCaption = trip
+    ? `${homeById.get(shownHome)?.name}: ${DAY_LABEL[trip.day]} ${trip.time}${routeNames.length ? `, bus ${routeNames.join(' then ')}` : trip.mode === 'walk' ? ', on foot' : ''}`
+    : null;
+
   return (
-    <div>
-      <JumpBar items={[
-        { label: 'Persona', find: 'Me' }, { label: 'Your week', find: 'Your week' }, { label: 'Map', find: 'Map' }, { label: 'Homes', find: 'Homes' },
-        { label: 'Picks', find: 'Which week would you rather live?' }, { label: 'Ranking', find: 'Ranking' },
-      ]} />
-      <Panel title="Me" kicker="One student. Pick a persona, edit the week, answer a few picks, read the ranking."
-        aside={<Pill tone="muted">SAMPLE</Pill>}>
-        <p className="small muted">{api.data.homesLabel} {api.data.personasLabel}</p>
-        <div className="row-flex" style={{ marginBottom: 8 }}>
-          {personas.map((p) => (
-            <Button key={p.id} pressed={p.id === personaId} onClick={() => setPersonaId(p.id)} title={p.program}>
-              {p.name}
-            </Button>
-          ))}
-        </div>
-        <div className="stats">
-          <Stat label="Persona" value={persona.name} note={persona.program} />
-          <Stat label="Private rent cap" value={persona.cap ? money(persona.cap) : '--'} unit="/mo" />
-          <Stat label="Bike" value={persona.modes?.bike ? 'yes' : 'no'} />
-          <Stat label="Longest walk" value={persona.modes?.maxWalkMin ?? '--'} unit="min" note={`${persona.modes?.maxLateWalkMin ?? '--'} min after ${persona.modes?.lateHour ?? '--'}`} />
-          <Stat label="Homes" value={homes.length} note="SYNTHETIC listings" />
-        </div>
-      </Panel>
-
-      <Verdict api={api} homes={homes} homeById={homeById} ranked={ranked} weekMap={weekMap} summary={summary}
-        persona={persona} cfg={cfg} entries={effEntries} selected={shownHome}
-        onSelect={(id) => { setSelHome(id); setSelTrip(null); }} />
-
-      <div className="grid-week">
-        <Panel title="Your week" kicker="Toggle an entry, change its place, add a job">
-          <CalendarDrop api={api} places={places} placeById={placeById} entries={entries} setEntries={setEntries} persona={persona} />
-          <WeekEditor entries={effEntries} setEntries={setEntries} places={places} placeById={placeById}
-            lateId={lab?.id} movedId={labCentral ? lab?.id : null} />
-        </Panel>
-        <Panel title="Map" kicker={trip ? `${DAY_LABEL[trip.day]} ${trip.time}${routeNames.length ? `, routes ${routeNames.join(', ')}` : ''}` : 'Homes and your places'}>
-          <MapView homes={mapHomes} places={mapPlaces} selectedHomeId={shownHome} onHomeClick={(id) => { setSelHome(id); setSelTrip(null); }}
-            labelIds={ranked?.rank ? ranked.rank.slice(0, 6).map((r) => r.homeId) : homes.slice(0, 6).map((h) => h.id)}
-            paths={paths} height={360} fit={paths.length ? 'paths' : 'all'} />
-          <p className="small muted" style={{ marginTop: 4 }}>Bus legs follow each trip's route shape from the feed. Walks follow OpenStreetMap streets and are dashed. Play this trip runs the clock door to door.</p>
-        </Panel>
+    <div className="you">
+      <div className="you-who" role="group" aria-label="Whose week">
+        <span className="you-who-l">Whose week</span>
+        {personas.map((p) => (
+          <button key={p.id} type="button" className="chip" aria-pressed={p.id === personaId} onClick={() => setPersonaId(p.id)} title={p.program}>
+            {p.name}
+          </button>
+        ))}
       </div>
 
       {!week ? <NotBuilt module="week" what="running the week through each home" /> : (
-        <div className="grid-me">
-          <Panel title="Homes" kicker={weekMap ? `${homes.length} SYNTHETIC homes, most likely week, computed in ${Math.round(weekMs)} ms` : 'Running the week through every home'}>
-            {weekMap ? (
-              <HomeList homes={homes} weekMap={weekMap} routineWeek={modal.week} selected={shownHome}
-                onSelect={(id) => { setSelHome(id); setSelTrip(null); }} sortKey={sortKey} setSortKey={setSortKey} cfg={cfg} />
-            ) : <div className="note bad">The week could not be evaluated. See the console.</div>}
-          </Panel>
-          <div className="sticky">
-            <Panel title={homeById.get(shownHome)?.name || 'Home'} kicker="This week from here, trip by trip">
-              {shownWeek && (
-                <>
-                  <div className="stats">
-                    <Stat label="Door to door" value={hm(shownWeek.weeklyMin)} unit="/wk" />
-                    <Stat label="Walking" value={Math.round(shownWeek.walkMin)} unit="min" />
-                    <Stat label="Waiting" value={Math.round(shownWeek.waitMin)} unit="min" />
-                    <Stat label="No ride" value={shownWeek.stranded.length} unit="trips" tone={shownWeek.stranded.length ? 'bad' : ''} />
-                  </div>
-                  <TripExplainer api={api} home={homeById.get(shownHome)} week={shownWeek} routineWeek={modal.week}
-                    selectedIdx={tripIdx} onSelect={setSelTrip} dusk={duskS} legs={legs} />
-                </>
-              )}
-            </Panel>
+        <section className="you-hero" aria-label="Your best homes">
+          <div className="you-map">
+            <MapView homes={mapHomes} places={mapPlaces} selectedHomeId={shownHome} onHomeClick={select}
+              labelIds={[]}
+              fitById={fitById || undefined} rankById={rankById || undefined}
+              paths={paths} height={664} fit="all" />
+            {tripCaption && <p className="you-map-cap">{tripCaption}</p>}
           </div>
-        </div>
+          <div className="you-top">
+            <h2>Your top 3</h2>
+            <TopThree api={api} rank={rank} notes={notes} weekMap={weekMap} routineWeek={modal.week} dusk={duskS}
+              selected={shownHome} onSelect={select} />
+          </div>
+        </section>
+      )}
+
+      {week && decide && prefs && (
+        <Details api={api} ranked={ranked} notes={notes} shownHome={shownHome} homeById={homeById} persona={persona}
+          baseline={baseline} onClearBaseline={() => setBaseline(null)} onSelect={select}>
+          {shownWeek && (
+            <div className="dt-block">
+              <h3>Trips from {homeById.get(shownHome)?.name}</h3>
+              <TripExplainer api={api} home={homeById.get(shownHome)} week={shownWeek} routineWeek={modal.week}
+                selectedIdx={tripIdx} onSelect={setSelTrip} dusk={duskS} legs={legs} />
+            </div>
+          )}
+          {weekMap && (
+            <div className="dt-block">
+              <h3>Every home, your most likely week</h3>
+              <HomeList homes={homes} weekMap={weekMap} routineWeek={modal.week} selected={shownHome}
+                onSelect={select} sortKey={sortKey} setSortKey={setSortKey} cfg={cfg} />
+            </div>
+          )}
+        </Details>
+      )}
+
+      {week && decide && prefs && (
+        <section className="you-sec" aria-labelledby="you-to">
+          <h2 id="you-to">Trade-offs</h2>
+          <div className="you-whatif" role="group" aria-label="What if">
+            <span className="you-who-l">What if</span>
+            {lab && (
+              <button type="button" className="chip" aria-pressed={labCentral} onClick={() => { snapshot(); setLabCentral((v) => !v); }}
+                title={`${lab.label}, ${lab.days.map((d) => DAY_LABEL[d]).join(' ')} ${lab.start} to ${lab.end}`}>
+                {lab.label} on Central
+              </button>
+            )}
+            <span className="chip-group" role="group" aria-label="Daylight dates">
+              {termKeys.map((k) => (
+                <button key={k} type="button" className="chip" aria-pressed={term === k} onClick={() => { snapshot(); setTerm(k); }}>
+                  {k === 'lease' ? 'Whole lease' : TERM_CHOICES[k].label}
+                </button>
+              ))}
+            </span>
+            <span className="chip-group" role="group" aria-label="Minimum change time between buses">
+              {[0, 60, 180].map((v) => (
+                <button key={v} type="button" className="chip" aria-pressed={changeS === v}
+                  onClick={() => { snapshot(); api.setConfig({ changeDefaultS: v === 60 ? undefined : v }); }}>
+                  {v} s change
+                </button>
+              ))}
+            </span>
+          </div>
+          <Tradeoff api={api} rank={rank} weekMap={weekMap} fitById={fitById} selected={shownHome} onSelect={select} />
+        </section>
       )}
 
       {!prefs ? <NotBuilt module="prefs" what="learning what your time is worth from picks" /> : week && (
-        <div className="grid-me">
-          <Panel title="Which week would you rather live?" kicker={`question chosen in ${Math.round(pairMs)} ms`}
-            aside={<Button small variant="quiet" onClick={resetPicks}>Start over</Button>}>
-            {homeOptions && (
-              <PickCard api={api} pair={pair} options={cands?.options || []} weekMap={weekMap} routineWeek={modal.week}
-                nPicks={post?.nPicks ?? 0} stop={stopShown} canAuto={!!persona.theta} onAnswer={answer} onAuto={onAuto}
-                onAutoAll={onAutoAll} last={last} busy={busy} />
-            )}
-          </Panel>
-          <Panel title="What the picks say" kicker="80% intervals, dollars">
-            <Learned summary={summary} prior={post?.prior || {}} info={PARAM_INFO} truth={persona.theta} />
-          </Panel>
-        </div>
+        <section className="you-sec" aria-labelledby="you-picks">
+          <div className="you-sec-head">
+            <h2 id="you-picks">Teach it what you care about</h2>
+            <Button small variant="quiet" onClick={resetPicks}>Start over</Button>
+          </div>
+          {homeOptions && (
+            <PickCard api={api} pair={pair} options={cands?.options || []} weekMap={weekMap} routineWeek={modal.week}
+              nPicks={post?.nPicks ?? 0} stop={stopShown} canAuto={!!persona.theta} onAnswer={answer} onAuto={onAuto}
+              onAutoAll={onAutoAll} last={last} busy={busy} personaName={persona.name} dusk={duskS} />
+          )}
+          {(post?.nPicks ?? 0) >= 1 && (
+            <div className="you-learned">
+              <Learned summary={summary} prior={post?.prior || {}} info={PARAM_INFO} truth={persona.theta} />
+            </div>
+          )}
+        </section>
       )}
 
-      {!decide ? <NotBuilt module="decide" what="the ranking across possible fall weeks" /> : week && prefs && (
-        <Panel title="Ranking" kicker={ranked?.rank ? `${homes.length} homes x ${ranked.nScen} possible fall weeks x ${ranked.nDraws} preference draws: weeks ${Math.round(ranked.scenMs)} ms, ranking ${Math.round(ranked.rankMs)} ms` : 'Computing the ranking'}
-          aside={baseline && <Button small variant="quiet" onClick={() => setBaseline(null)}>Clear comparison</Button>}>
-          <div className="row-flex" style={{ marginBottom: 10 }}>
-            <span className="caps">What if</span>
-            {lab ? (
-              <Button small pressed={labCentral} onClick={() => { snapshot(); setLabCentral((v) => !v); }}
-                title={`${lab.label}, ${lab.days.map((d) => DAY_LABEL[d]).join(' ')} ${lab.start} to ${lab.end}`}>
-                {labCentral ? `${lab.label} moved to Central` : `Move ${lab.label.toLowerCase()} to Central`}
-              </Button>
-            ) : <span className="small muted">No evening entry to move.</span>}
-            <span className="small muted">Daylight</span>
-            <Seg value={term} onChange={(v) => { snapshot(); setTerm(v); }} label="Daylight dates"
-              options={Object.entries(TERM_CHOICES).map(([k, t]) => ({ value: k, label: t.label }))} />
-            <span className="small muted">Change time</span>
-            <Seg value={changeS} onChange={(v) => { snapshot(); api.setConfig({ changeDefaultS: v === 60 ? undefined : v }); }} label="Minimum change time"
-              options={[0, 60, 180].map((s) => ({ value: s, label: `${s} s` }))} />
-          </div>
-          {ranked?.error && <div className="note bad">The ranking failed: {ranked.error}</div>}
-          {ranked?.rank && (
-            <>
-              <Ranking api={api} rank={ranked.rank} baseline={baseline} selected={shownHome} onSelect={(id) => { setSelHome(id); setSelTrip(null); }} />
-              <div className="grid2" style={{ marginTop: 12 }}>
-                <div>
-                  <h3>Value of knowing your schedule</h3>
-                  {ranked.ev != null && (ranked.ev >= 1 ? (
-                    <p>Knowing which fall week you get before you sign is worth about <strong className="mono">{money(ranked.ev)}</strong> per month to you. If finding out costs less than that, find out before you sign.</p>
-                  ) : (
-                    <p>Your choice does not depend on which fall week you get (under {money(1)} per month).</p>
-                  ))}
-                  <p className="small muted">Expected value of perfect information over the {ranked.nScen} sampled weeks, in dollars per month.</p>
-                </div>
-                <div>
-                  <h3>Break-even</h3>
-                  {ranked.be.map((b) => {
-                    const nm = (k) => homeById.get(k === 'A' ? b.A : b.B)?.name;
-                    const what = b.param === 'vTime' ? 'your time is worth' : 'an hour walking after dark costs you';
-                    const est = `$${fmtEstimate(b.current)}`;
-                    const kind = ranked.pointKind === 'median' ? 'median estimate' : 'estimate';
-                    if (b.value != null && b.value > 300) {
-                      return <p key={b.param} className="small muted">{nm(b.belowWins)} stays ahead unless {what} more than $300 per hour, far above your {kind} of {est} per hour.</p>;
-                    }
-                    return b.value != null ? (
-                      <p key={b.param}>
-                        {nm(b.aboveWins)} wins if {what} more than <strong className="mono">{money(b.value)}</strong> per hour; below
-                        that, {nm(b.belowWins)}. Your {kind} from the picks: {est} per hour.
-                      </p>
-                    ) : (
-                      <p key={b.param} className="small muted">{b.param === 'vTime' ? 'Value of time' : 'Darkness'}: no break-even between the top two ({b.reason}).</p>
-                    );
-                  })}
-                  <p className="small muted">Top two homes, other weights at their {ranked.pointKind === 'median' ? 'median, as in What the picks say' : 'posterior mean'}.</p>
-                </div>
-              </div>
-            </>
-          )}
-        </Panel>
-      )}
+      <section className="you-sec" aria-labelledby="you-week">
+        <div className="you-sec-head">
+          <h2 id="you-week">Your week</h2>
+          {editing && <Button small variant="quiet" onClick={() => setEditing(false)}>Done editing</Button>}
+        </div>
+        <WeekCalendar entries={effEntries} placeById={placeById} onEdit={() => setEditing(true)} />
+        <CalendarDrop api={api} places={places} placeById={placeById} entries={entries} setEntries={setEntries} persona={persona} />
+        {editing && (
+          <WeekEditor entries={effEntries} setEntries={setEntries} places={places} placeById={placeById}
+            lateId={lab?.id} movedId={labCentral ? lab?.id : null} />
+        )}
+      </section>
     </div>
   );
 }

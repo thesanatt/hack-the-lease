@@ -58,110 +58,120 @@ async function main() {
       return false;
     }
   };
-  // Switch tabs through the address hash (the same thing the left rail does), then wait for the view.
-  const rail = async (name) => {
-    await page.evaluate((h) => { window.location.hash = h; }, name.toLowerCase());
-    await page.waitForTimeout(1500);
-  };
   const scrollTo = async (text) => {
     try { await page.getByText(text, { exact: false }).first().scrollIntoViewIfNeeded({ timeout: 4000 }); } catch { log('no text', String(text)); }
   };
 
-  const jump = (name) => click(name, { exact: true });
+  const tab = async (name) => {
+    try { await page.getByRole('link', { name, exact: true }).first().click({ timeout: 4000 }); } catch { log('no tab', name); }
+    await page.waitForTimeout(1500);
+  };
+  const key = (k) => page.keyboard.press(k);
 
   log('pitch slide 1');
   await page.goto(`http://localhost:${PORT}/#pitch`);
   await wait(4);
-  await page.keyboard.press('Home');
-  await caption('The problem. "10 minutes from campus" depends on which campus, which mode and what hour. Computed live from the TheRide and U-M timetables.');
+  await key('Home');
+  await caption('The problem. "10 minutes from campus" depends on which campus, which way and what hour. Computed live from the TheRide and U-M timetables.');
   await wait(9);
 
-  log('me: verdict');
-  await rail('Me');
+  log('you: top 3');
+  await tab('You');
   await wait(2);
-  await caption('Me mode. Jordan (fictional) studies engineering on North Campus and has a late lab. Every home is scored on that week, door to door.');
+  await caption('Jordan (fictional) studies engineering on North Campus and has a late lab. Every home is run through that week, door to door.');
   await wait(6);
-  await caption('The verdict card: the best home for this week, with pros and cons in dollars a month against the middle home.');
+  await caption('Your top 3: cost to you a month, hours a week getting around, late nights, and one reason in dollars against a typical home.');
   await wait(7);
-  try { await page.locator('.vd select').selectOption({ label: '7. Georgetown Blvd house, 5 bed' }); } catch { log('no verdict select'); }
-  await caption('The same notes for the cheapest listing. Twice a week there is no way home within Jordan\'s 10 minute walking limit at night.');
-  await wait(8);
 
-  log('me: map playback');
-  await click(/Show on map/);
-  await wait(1.5);
-  await caption('That trip on the map: the bus follows its real route shape, walks follow OpenStreetMap streets. Play runs the clock door to door.');
+  log('you: cheapest rent on the chart');
+  await key('End');
+  await scrollTo('The cheapest rent costs you');
+  await caption('Trade-offs: every home by cost to you and hours getting around. The square marks the cheapest rent, Georgetown Blvd.');
+  await wait(6);
+  try {
+    const r = page.locator('.to-chart svg rect').first();
+    await r.scrollIntoViewIfNeeded({ timeout: 3000 });
+    const bb = await r.boundingBox();
+    await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
+  } catch { log('no cheapest square'); }
+  await wait(1);
+  await key('Home');
+  await wait(1);
+
+  log('you: map playback');
+  await caption('Georgetown: twice a week there is no way home within Jordan\'s 10 minute walking limit at night. Bus 22, then an 11 minute walk.');
   await click(/Play this trip|Step through this trip/);
-  await wait(7.5);
+  await wait(8.5);
 
-  log('me: calendar import');
-  await jump('Your week');
-  await click(/Import a calendar file or paste your schedule/);
-  try { await page.getByLabel(/Use this to build my week/).check({ timeout: 3000 }); } catch { log('no consent box'); }
+  log('you: calendar import');
+  await key('End');
+  await click('Import a calendar', { exact: true });
+  try { await page.getByLabel(/Use my calendar to build my week/).check({ timeout: 3000 }); } catch { log('no consent box'); }
   await caption('A week can come from a calendar file. Nothing is read until the box is ticked, and nothing leaves the browser.');
   await wait(4);
-  await click(/Use the sample file/);
+  await click('Use the sample week', { exact: true });
   await wait(1.5);
-  await caption('The SYNTHETIC sample file: rooms are matched to real campus buildings. One it cannot match is flagged, not guessed.');
+  await caption('The SYNTHETIC sample file: classes are matched to real campus buildings. One it cannot match waits for a place, not a guess.');
   await wait(8);
   await click('Discard', { exact: true });
+  try { await page.locator('dialog[open]').getByRole('button', { name: 'Close' }).click({ timeout: 2000 }); } catch { log('no close'); }
 
-  log('me: picks and ranking');
-  await jump('Picks');
+  log('you: picks');
+  await scrollTo('Teach it what you care about');
   await caption('Which week would you rather live? Each question is the one whose answer teaches the model the most.');
   await wait(6);
-  await click(/Auto-answer until done/);
-  await caption('The answers here come from Jordan\'s demo values. After a few picks the model knows what Jordan\'s time is worth, with a range.');
+  await click(/This one: Washtenaw/);
+  await wait(1);
+  await click('Answer the rest', { exact: true });
+  await caption('Jordan\'s demo values answer the rest. After a few picks the model knows about what Jordan\'s time is worth.');
   await wait(6);
-  await jump('Ranking');
-  await caption('Ranking across 24 possible fall weeks and 200 preference draws: expected regret, chance of being best, and all-in cost per month.');
+
+  log('you: details');
+  await key('Home');
+  try { await page.locator('.you-details > summary').click({ timeout: 3000 }); } catch { log('no details'); }
+  await wait(1);
+  await scrollTo('chance Broadway St house');
+  await caption('Details: Broadway is best in 74% of 24 possible weeks and 200 value draws. The cheapest rent, Georgetown, ranks 8th.');
   await wait(8);
-  await click(/Move late lab to Central/);
-  await caption('What if the late lab moves to Central Campus? The ranking changes, and the screen says by how much.');
+
+  log('you: what if');
+  await click('Late lab on Central', { exact: true });
+  await wait(2);
+  await key('Home');
+  await caption('What if the late lab moves to Central Campus? A new top three, within $7 a month of each other. Broadway falls to ninth.');
   await wait(8);
 
   log('group');
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await rail('Group');
-  await wait(3);
-  await jump('House ranking');
-  await caption('Group mode. Five friends, one house. Each room and rent share is set so nobody would swap, under every private cap.');
+  await tab('Your group');
+  await wait(2);
+  await caption('Five friends, one house. Each room and rent share is set so nobody would swap, under every private cap. A checker confirms it.');
   await wait(8);
-  await jump('Envy matrix');
-  await caption('The certificate: a separate checker confirms nobody would rather have another room at its price.');
-  await wait(6);
-  await jump('Tours');
+  await scrollTo('Tour times');
   await caption('When can all five see the house? Every weekday half-hour is checked against each week and the real buses. Only Friday works.');
-  await wait(9);
-  await caption('Quorum drafts the note for the SAMPLE listing contact, with no names, rents or caps. It never sends anything.');
-  await wait(6);
-  await jump('Two moves');
-  await click(/Lower the cap/);
-  await caption('One member privately lowers her cap. No fair split fits the top house any more, so the group moves. Nobody sees her number.');
+  await wait(8);
+  await caption('Quorum drafts the note with no names, rents or caps. It never sends anything.');
+  await wait(5);
+  await key('Home');
+  await click('Lower a cap', { exact: true });
+  await caption('Priya privately lowers her cap. No fair split fits Broadway any more, so the group moves. Only Priya sees her $25 gap.');
   await wait(9);
 
-  log('operator');
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await rail('Operator');
-  await wait(3);
-  await caption('Operator view. Where to act across all 30 SYNTHETIC homes: who each home fits and which rooms sit furthest from a fair rent.');
+  log('owners');
+  await tab('Owners');
+  await wait(2);
+  await caption('Owners: each room\'s fair rent range from 200 sample groups, against the asking rent. At Church St the back room asks $12 too much.');
   await wait(8);
-  await jump('Room by room');
-  await caption('Typical fair rent for each room of an irregular house, across 200 synthetic groups, next to the asking rents.');
-  await wait(8);
-  await jump('Half bath');
-  await caption('The renovation lever. The bath value is an assumption on the slider. At the same house rent, an upgrade moves money between rooms.');
+  await scrollTo('Add a half bath');
+  await caption('A half bath in the basement moves $32 a month to that room from the others, at the same house rent. The bath value is an assumption.');
   await wait(8);
 
   log('pitch slides 4 and 5');
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await rail('Pitch');
-  await wait(2);
-  await page.keyboard.press('Home');
-  for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
+  await tab('Pitch');
+  await key('Home');
+  for (let i = 0; i < 3; i++) await key('ArrowRight');
   await caption('How it works: our own transit router, question picker and fair-split solver. No LLM and no outside services at runtime.');
   await wait(8);
-  await page.keyboard.press('ArrowRight');
+  await key('ArrowRight');
   await caption('Evidence: the router checked against an independent reference and against r5py, the split against published cases.');
   await wait(8);
   await caption('All homes, rents and people are synthetic. Timetables, streets and campus places are real.');

@@ -1,29 +1,50 @@
-// Calendar import for the Your week panel: drop an .ics file, paste plain lines, or load the SYNTHETIC
-// sample file. Nothing is read until the consent box is ticked, and nothing leaves the browser: the file is
-// read with the browser's own file reader and parsed by engine/ics.js on this page.
+// Calendar import: a compact "Import a calendar" button that opens a panel. The consent box comes first; nothing is
+// read until it is ticked, and nothing leaves the browser (the file is read with the browser's own file reader and
+// parsed by engine/ics.js on this page). The preview is drawn as calendar blocks before anything is applied.
 // Props: api, places, placeById, entries, setEntries, persona
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Pill } from '../../components/index.js';
 import { parseSchedule, toWeekEntries } from '../../../../engine/ics.js';
 import ImportPreview from './calendar/ImportPreview.jsx';
+import './calendar/parts.css';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const SAMPLE_URL = `${import.meta.env.BASE_URL || './'}samples/sample_week.ics`;
-const PASTE_HINT = 'Mon Wed Fri 9:00-10:30 EECS\nEECS 482 lecture, Tue Thu 1:30-3pm, BBB 1670\nLate lab Tue Thu 7pm-11:30pm at the Dude';
+const PASTE_HINT = 'Mon Wed Fri 9:00-10:30 EECS\nLate lab Tue Thu 7pm-11:30pm at the Dude';
+
+function CalIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" focusable="false" style={{ flex: 'none' }}>
+      <rect x="1.5" y="2.5" width="13" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="1.5" y1="6" x2="14.5" y2="6" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="5" y1="1" x2="5" y2="4" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="11" y1="1" x2="11" y2="4" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="4" y="8.5" width="3" height="2.5" fill="currentColor" />
+    </svg>
+  );
+}
 
 export default function CalendarDrop({ places, placeById, entries, setEntries, persona }) {
   const [open, setOpen] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
   const [paste, setPaste] = useState('');
-  const [parsed, setParsed] = useState(null); // { items, skipped, warnings, source }
+  const [parsed, setParsed] = useState(null); // { items, skipped, warnings, source, ics }
   const [include, setInclude] = useState({});
   const [resolve, setResolve] = useState({});
   const [msg, setMsg] = useState(null); // { tone, text }
   const [over, setOver] = useState(false);
   const fileRef = useRef(null);
+  const dlgRef = useRef(null);
 
   // a new persona starts with a clean box
   useEffect(() => { setParsed(null); setPaste(''); setMsg(null); setInclude({}); setResolve({}); }, [persona?.id]);
+
+  useEffect(() => {
+    const d = dlgRef.current;
+    if (!d) return;
+    if (open && !d.open) { try { d.showModal(); } catch { d.setAttribute('open', ''); } }
+    if (!open && d.open) d.close();
+  }, [open]);
 
   const read = (text, source) => {
     const r = parseSchedule(text, places);
@@ -48,7 +69,7 @@ export default function CalendarDrop({ places, placeById, entries, setEntries, p
     try {
       const r = await fetch(SAMPLE_URL, { cache: 'no-store' });
       if (!r.ok) throw new Error(String(r.status));
-      read(await r.text(), 'sample_week.ics (SYNTHETIC)');
+      read(await r.text(), 'the sample week');
     } catch { setMsg({ tone: 'bad', text: 'The sample file is missing from this build.' }); }
   };
 
@@ -73,98 +94,77 @@ export default function CalendarDrop({ places, placeById, entries, setEntries, p
     if (!parsed || !counts?.ready) return;
     const add = build(mode === 'add' ? entries.map((e) => e.id) : []);
     setEntries((es) => (mode === 'add' ? [...es, ...add] : add));
-    const left = counts.unresolved ? ` ${counts.unresolved} without a place ${counts.unresolved === 1 ? 'was' : 'were'} left out.` : '';
-    setMsg({
-      tone: 'good',
-      text: mode === 'add'
-        ? `Added ${add.length} ${add.length === 1 ? 'entry' : 'entries'} to your week.${left} The ranking reruns with them.`
-        : `Your week is now the ${add.length} imported ${add.length === 1 ? 'entry' : 'entries'}.${left} The ranking reruns with them.`,
-    });
-    setParsed(null); setPaste(''); setInclude({}); setResolve({});
+    setParsed(null); setPaste(''); setInclude({}); setResolve({}); setMsg(null);
+    setOpen(false);
   };
 
-  if (!open) {
-    return (
-      <div style={{ marginBottom: 8 }}>
-        <Button variant="quiet" small onClick={() => setOpen(true)}>Import a calendar file or paste your schedule</Button>
-      </div>
-    );
-  }
-
-  const zone = {
-    border: `1px dashed ${over && consent ? 'var(--accent)' : 'var(--ink-2, var(--ink))'}`,
-    background: over && consent ? 'var(--paper)' : 'transparent',
-    padding: '10px 12px', borderRadius: 'var(--r)', opacity: consent ? 1 : 0.55, flex: '1 1 220px', minWidth: 0,
-  };
+  const drop = `mp-drop ${consent ? '' : 'disabled'} ${over && consent ? 'over' : ''}`;
 
   return (
-    <section aria-label="Import a calendar" style={{ border: '1px solid var(--line)', background: 'var(--paper-2)', padding: '10px 12px', marginBottom: 12, borderRadius: 'var(--r)' }}>
-      <div className="row-flex" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-        <span className="caps">Import your week</span>
-        <Button variant="quiet" small onClick={() => setOpen(false)}>Close</Button>
-      </div>
+    <>
+      <button type="button" className="mp-btn" onClick={() => setOpen(true)}>
+        <CalIcon /> Import a calendar
+      </button>
+      <dialog ref={dlgRef} className="mp-import-dlg" aria-labelledby="mp-import-title"
+        onClose={() => setOpen(false)} onCancel={() => setOpen(false)}>
+        {open && (
+          <div className="mp-import">
+            <div className="mp-import-head">
+              <h3 id="mp-import-title" className="mp-name">Import a calendar</h3>
+              <button type="button" className="mp-text-btn" onClick={() => setOpen(false)}>Close</button>
+            </div>
 
-      <label className="small" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8, cursor: 'pointer' }}>
-        <input type="checkbox" checked={consent} onChange={(ev) => { setConsent(ev.target.checked); if (ev.target.checked) setMsg(null); }} style={{ marginTop: 3 }} />
-        <span><strong>Use this to build my week.</strong> It is read in this browser and never sent anywhere.</span>
-      </label>
+            <label className="mp-consent">
+              <input type="checkbox" checked={consent} onChange={(ev) => { setConsent(ev.target.checked); if (ev.target.checked) setMsg(null); }} />
+              <span>
+                Use my calendar to build my week
+                <small>Read in this browser only. Never uploaded or stored.</small>
+              </span>
+            </label>
 
-      <div className="row-flex" style={{ alignItems: 'stretch', gap: 10 }}>
-        <div
-          style={zone}
-          onDragOver={(ev) => { ev.preventDefault(); setOver(true); }}
-          onDragLeave={() => setOver(false)}
-          onDrop={onDrop}
-          aria-label="Drop zone for an .ics calendar file"
-        >
-          <div style={{ fontWeight: 600 }}>Drop an .ics file here</div>
-          <div className="small muted" style={{ marginBottom: 6 }}>
-            An export from Google Calendar, Outlook or Apple Calendar works.
+            <div className={drop} aria-disabled={!consent}
+              onDragOver={(ev) => { ev.preventDefault(); setOver(true); }}
+              onDragLeave={() => setOver(false)} onDrop={onDrop}>
+              <span className="cal-ico"><CalIcon size={34} /></span>
+              <span className="t">Drop an .ics file<small>From Google, Outlook or Apple Calendar</small></span>
+              <button type="button" className="mp-btn" disabled={!consent} onClick={() => fileRef.current?.click()}>Choose a file</button>
+              <button type="button" className="mp-btn" disabled={!consent} onClick={loadSample}>Use the sample week</button>
+              <input ref={fileRef} type="file" accept=".ics,text/calendar" style={{ display: 'none' }}
+                onChange={(ev) => { readFile(ev.target.files?.[0]); ev.target.value = ''; }} />
+            </div>
+
+            {!pasteOpen ? (
+              <div><button type="button" className="mp-text-btn" disabled={!consent} onClick={() => setPasteOpen(true)}>Paste text instead</button></div>
+            ) : (
+              <div className="mp-paste">
+                <label className="mp-gray" htmlFor="mp-paste">One class per line</label>
+                <textarea id="mp-paste" rows={3} value={paste} disabled={!consent} placeholder={PASTE_HINT}
+                  onChange={(ev) => setPaste(ev.target.value)} />
+                <button type="button" className="mp-btn" disabled={!consent || !paste.trim()} onClick={() => read(paste, 'pasted text')}>Read these lines</button>
+              </div>
+            )}
+
+            {msg && <div className={`mp-msg ${msg.tone}`} role="status">{msg.text}</div>}
+
+            {parsed && (
+              <>
+                <div className="mp-prev-head">
+                  <strong>{parsed.items.length} weekly {parsed.items.length === 1 ? 'class' : 'classes'} from {parsed.source}</strong>
+                  <span>Click a block to leave it out</span>
+                </div>
+                <ImportPreview items={parsed.items} skipped={parsed.skipped} places={places} placeById={placeById}
+                  include={include} setInclude={setInclude} resolve={resolve} setResolve={setResolve} />
+                <div className="mp-import-actions">
+                  <button type="button" className="btn primary" disabled={!counts.ready} onClick={() => apply('replace')}>Replace my week</button>
+                  <button type="button" className="mp-text-btn" disabled={!counts.ready} onClick={() => apply('add')}>Add to my week</button>
+                  <button type="button" className="mp-text-btn" onClick={() => { setParsed(null); setMsg(null); }}>Discard</button>
+                  {counts.unresolved > 0 && <span className="mp-gray">{counts.unresolved} without a place {counts.unresolved === 1 ? 'is' : 'are'} left out</span>}
+                </div>
+              </>
+            )}
           </div>
-          <div className="row-flex" style={{ gap: 6 }}>
-            <Button small disabled={!consent} onClick={() => fileRef.current?.click()}>Choose a file</Button>
-            <Button small disabled={!consent} onClick={loadSample}>Use the sample file</Button>
-            <Pill tone="muted" title="A made-up North Campus engineering week with real U-M building names">SYNTHETIC</Pill>
-          </div>
-          <input ref={fileRef} type="file" accept=".ics,text/calendar" style={{ display: 'none' }}
-            onChange={(ev) => { readFile(ev.target.files?.[0]); ev.target.value = ''; }} />
-        </div>
-
-        <div style={{ flex: '1 1 260px', minWidth: 0, opacity: consent ? 1 : 0.55 }}>
-          <label className="small" htmlFor="cal-paste" style={{ fontWeight: 600, display: 'block' }}>Or paste your schedule, one class per line</label>
-          <textarea id="cal-paste" rows={3} value={paste} disabled={!consent} placeholder={PASTE_HINT}
-            onChange={(ev) => setPaste(ev.target.value)}
-            style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 13, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', padding: 6, borderRadius: 'var(--r)', resize: 'vertical' }} />
-          <Button small disabled={!consent || !paste.trim()} onClick={() => read(paste, 'pasted text')}>Read pasted lines</Button>
-        </div>
-      </div>
-
-      {msg && <div className={`note ${msg.tone}`} role="status" style={{ marginTop: 10, marginBottom: 0 }}>{msg.text}</div>}
-
-      {parsed && (
-        <div style={{ marginTop: 10 }}>
-          <div className="small" style={{ marginBottom: 4 }}>
-            <strong>{parsed.items.length} weekly {parsed.items.length === 1 ? 'entry' : 'entries'}</strong> read from {parsed.source}.
-            {' '}Times are Ann Arbor time.{parsed.ics ?' One-time events sit on their weekday.' : ''}
-          </div>
-          <ImportPreview items={parsed.items} skipped={parsed.skipped} places={places} placeById={placeById}
-            include={include} setInclude={setInclude} resolve={resolve} setResolve={setResolve} />
-          <div className="row-flex" style={{ marginTop: 8 }}>
-            <Button variant="primary" small disabled={!counts.ready} onClick={() => apply('replace')}>Replace my week</Button>
-            <Button small disabled={!counts.ready} onClick={() => apply('add')}>Add to my week</Button>
-            <Button variant="quiet" small onClick={() => { setParsed(null); setMsg(null); }}>Discard</Button>
-            <span className="small muted">
-              {counts.ready} ready.
-              {counts.unresolved > 0 && ` ${counts.unresolved} ${counts.unresolved === 1 ? 'needs' : 'need'} a place and ${counts.unresolved === 1 ? 'is' : 'are'} left out until you pick one.`}
-            </span>
-          </div>
-        </div>
-      )}
-
-      <p className="small muted" style={{ marginTop: 8, marginBottom: 0 }}>
-        Nothing leaves this browser. The file is not uploaded or stored. Only the day, time, title and place of each
-        event are used; descriptions and attendees are ignored.
-      </p>
-    </section>
+        )}
+      </dialog>
+    </>
   );
 }

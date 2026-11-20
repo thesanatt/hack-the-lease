@@ -1,35 +1,42 @@
-// Group mode: pick a house, assign rooms and split the rent envy-free for a friend group of five.
-// Engine: fair.solveHouse / fair.privateGap (fair.js), week.js through api.weekFor, model.js.
+// Your group: one house, one room each, a rent split nobody would swap out of, under every private cap.
+// Engine: fair.solveHouse / fair.privateGap (fair.js), week.js through api.weekFor, model.js, tours.js.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Panel, Pill, Label, Stat, Button, Pending, Note, Guard, usd, pct, ms,
-  modOf, homesOf, personasOf, configOf, seeded,
-} from './group/kit.jsx';
+import { Guard, usd, pct, ms, modOf, homesOf, personasOf, configOf, seeded } from './group/kit.jsx';
 import {
   pickGroup, modalRoutine, candidateHouses, solveAllHouses, efRate, capThreshold, favoriteRoom, drawSampleThetas,
 } from './group/logic.js';
-import { MemberCard } from './group/Members.jsx';
-import EnvyMatrix from './group/EnvyMatrix.jsx';
-import JumpBar from '../components/JumpBar.jsx';
+import { MemberRow } from './group/Members.jsx';
+import HouseDiagram, { MiniHouse } from './group/HouseDiagram.jsx';
+import SwapGrid, { swapMargins } from './group/SwapGrid.jsx';
 import TourTimes from './group/TourTimes.jsx';
 import { useConfigVersion } from '../engine/useConfig.js';
+import './group/group.css';
 
 const EF_SPREAD = 0.25; // log-sd of the value draws for the EF rate (assumption; demo members have no posterior)
 
-const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-const DAY_NAME = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+const DAY_NAME = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 const FALLBACK_COLORS = ['#b4441c', '#2f6b8f', '#5d7a2e', '#8a5a9e', '#9a6a00', '#4a443c'];
+const LATE_SHIFT = { place: 'meijer', day: 'sat', start: '16:00', end: '23:30' };
+const shortName = (name) => String(name || '').replace(/\s+house,.*$/i, '').replace(/,.*$/, '');
+const clock = (hm) => { const [h, m] = String(hm).split(':').map(Number); return `${((h + 11) % 12) + 1}:${String(m || 0).padStart(2, '0')} ${h < 12 || h >= 24 ? 'AM' : 'PM'}`; };
 
 export default function GroupView({ api }) {
   return (
-    <div className="qv-view">
-      <div className="qv-head">
-        <h1>Group</h1>
-        <p>One house, one room each, one rent split that nobody would swap out of, under every private cap.</p>
-        <Label>SAMPLE DATA: FICTIONAL members, SYNTHETIC homes and rents</Label>
+    <div className="gv">
+      <div className="gv-head">
+        <h1>Your group</h1>
+        <span className="gv-sub">One house, one room each, a split nobody would swap.</span>
       </div>
-      <Guard name="Group view"><GroupBody api={api} /></Guard>
+      <Guard name="Your group"><GroupBody api={api} /></Guard>
     </div>
+  );
+}
+
+function Check({ ok }) {
+  return ok ? (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="9" fill="#1f6f4a" /><path d="M5 9.4l2.6 2.6L13 6.6" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="none" stroke="#9a1f1f" strokeWidth="2" /><path d="M9 4.8v5.2M9 12.6v.4" stroke="#9a1f1f" strokeWidth="2" strokeLinecap="round" /></svg>
   );
 }
 
@@ -49,9 +56,7 @@ function GroupBody({ api }) {
   const [caps, setCaps] = useState({});              // member id -> cap override (private)
   const [reveal, setReveal] = useState({});          // member id -> private view open
   const [late, setLate] = useState(null);            // { memberId, place, day, start, end }
-  const [lateDraft, setLateDraft] = useState({ memberId: '', place: 'meijer', day: 'sat', start: '16:00', end: '23:30' });
-  const [capMember, setCapMember] = useState('');
-  const [selected, setSelected] = useState(null);    // house id shown in detail
+  const [selected, setSelected] = useState(null);    // house id shown in the hero
   const [weeks, setWeeks] = useState({ status: 'idle', byMember: null, ms: 0, error: null });
   const [lastMove, setLastMove] = useState(null);
   const baseline = useRef(null);
@@ -94,19 +99,40 @@ function GroupBody({ api }) {
     return solveAllHouses({ fair, houses, members, weekByMember: weeks.byMember, model, cfg, caps, sampleThetas });
   }, [fair, model, members, houses, weeks, cfg, caps, hasWeek, sampleThetas]);
 
-  // The first solve with no sensitivity move applied is the baseline the moves are compared against.
+  // The first solve with no move applied is the baseline the moves are compared against.
   useEffect(() => {
     if (solved && !baseline.current && !late && !Object.keys(caps).length) {
       baseline.current = { topId: solved.rows[0]?.home.id, rows: solved.rows };
     }
   }, [solved, late, caps]);
 
-  if (!personas || !homes) {
-    return <Pending what={!personas ? 'personas.json (fictional members)' : 'homes.json (SYNTHETIC homes)'} detail="The data builder writes it to web/public/data/." />;
-  }
-  if (!model) return <Pending what="engine/model.js" />;
-  if (members.length < 2) return <Pending what="The demo group" detail="personas.json needs at least two members with a theta (flag them with group: true)." />;
-  if (!houses.length) return <Note>No house in homes.json has a room for each of the {members.length} members.</Note>;
+  // After the late shift re-runs the weeks: if the shown house leaves that member with no way home, move the hero
+  // to the best house that still gets them home.
+  const lateMember = late?.memberId;
+  const strandedAt = (houseId) => {
+    if (!late) return false;
+    const wr = weeks.byMember?.get(lateMember)?.get(houseId);
+    return (wr?.stranded || []).some((x) => x.day === late.day);
+  };
+  useEffect(() => {
+    // Wait for the weeks re-run with the shift in it (a new byMember map), not the result from before the move.
+    if (lastMove?.kind !== 'late' || lastMove.resolved || weeks.status !== 'done' || !solved || weeks.byMember === lastMove.weeksAt) return;
+    const rs = solved.rows;
+    const fromId = lastMove.fromId || rs[0]?.home.id;
+    let toId = fromId;
+    // Only move to a house that also stays under every cap; otherwise keep the house and mark it.
+    if (strandedAt(fromId)) {
+      const ok = rs.find((r) => r.feasible && !strandedAt(r.home.id));
+      toId = ok ? ok.home.id : null;
+    }
+    if (toId && toId !== fromId) setSelected(toId);
+    setLastMove({ ...lastMove, resolved: true, fromId, toId });
+  }, [lastMove, weeks, solved]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!personas || !homes) return <p className="gv-wait">Loading the group and the houses</p>;
+  if (!model || !fair) return <p className="gv-wait">The rent solver is not available.</p>;
+  if (members.length < 2) return <p className="gv-wait">The demo group needs at least two members.</p>;
+  if (!houses.length) return <p className="gv-wait">No house has a room for each of the {members.length} members.</p>;
 
   const colors = members.map((m, i) => m.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length]);
   const capOf = (m) => (caps[m.id] !== undefined ? caps[m.id] : m.cap ?? null);
@@ -114,7 +140,7 @@ function GroupBody({ api }) {
   const top = rows[0];
   const chosen = rows.find((r) => r.home.id === selected) || top;
 
-  // Default member for the cap move: the one whose cap is closest to binding in the top feasible house.
+  // Default member for the cap move: the one whose cap is closest to binding in the top house that fits.
   const tightest = (() => {
     const r = rows.find((x) => x.feasible) || top;
     const res = r?.res;
@@ -129,9 +155,9 @@ function GroupBody({ api }) {
     return best;
   })();
 
-  // ---- sensitivity move 1: lower one member's cap until the top house has no fitting split ----
+  // Move 1: lower one member's cap until the top house has no fitting split.
   const doCapMove = () => {
-    const id = capMember || tightest;
+    const id = tightest;
     const i = members.findIndex((m) => m.id === id);
     const target = rows.find((r) => r.feasible) || top;
     if (!target || i < 0) return;
@@ -141,409 +167,252 @@ function GroupBody({ api }) {
     const newCap = Math.max(0, Math.floor((need - 1) / 10) * 10 - 20);
     setCaps((c) => ({ ...c, [id]: newCap }));
     setReveal((r) => ({ ...r, [id]: true }));
-    setSelected(null); // the split panel follows the new top house (houses that fit every cap rank first)
+    setSelected(null); // the hero follows the new top house (houses that fit every cap rank first)
     setLastMove({ kind: 'cap', memberId: id, houseId: target.home.id, from: capOf(members[i]), to: newCap });
   };
 
-  // ---- sensitivity move 2: add a late shift to one member and show the stranded trip ----
+  // Move 2: add a late shift for the last member and see whether they still get home.
   const doLateMove = () => {
-    const memberId = lateDraft.memberId || members[members.length - 1].id;
-    setLate({ ...lateDraft, memberId });
+    const memberId = members[members.length - 1].id;
+    setLate({ ...LATE_SHIFT, memberId });
     setSelected(chosen?.home.id || null);
-    setLastMove({ kind: 'late', memberId });
+    setLastMove({ kind: 'late', memberId, fromId: chosen?.home.id || null, weeksAt: weeks.byMember });
   };
 
   const reset = () => { setCaps({}); setLate(null); setLastMove(null); setSelected(null); setReveal({}); };
+  const moved = !!(late || Object.keys(caps).length);
 
-  // Private info per member for the chosen house.
+  // Private info per member for the shown house.
   const privateInfo = (m, i) => {
     const info = { cap: capOf(m), house: chosen?.home.name, feasible: chosen ? chosen.feasible : true };
     if (chosen?.res) info.rent = chosen.res.prices[chosen.res.assignment[i]];
-    // The gap is for the shown house if it does not fit, else (for the member whose cap was lowered) for the house the cap broke.
     let gapRow = chosen && !chosen.feasible ? chosen : null;
     if (!gapRow && lastMove?.kind === 'cap' && lastMove.memberId === m.id && !lastMove.impossible) {
       const broken = rows.find((r) => r.home.id === lastMove.houseId);
       if (broken && !broken.feasible) gapRow = broken;
     }
-    if (gapRow) info.gapHouse = gapRow.home.name;
+    if (gapRow) info.gapHouse = shortName(gapRow.home.name);
     if (gapRow && reveal[m.id] && fair?.privateGap) {
       try { info.gap = fair.privateGap(gapRow.problem, i, { cfg, compensateCommute: !!cfg?.compensateCommute }); } catch { info.gap = NaN; }
     }
     return info;
   };
 
-  const lateMember = late && members.find((m) => m.id === late.memberId);
-  const lateIdx = lateMember ? members.indexOf(lateMember) : -1;
+  const tripsOf = (m) => weeks.byMember?.get(m.id)?.get(chosen?.home.id)?.trips || [];
+  const entriesOf = (m) => modalRoutine(m, late && late.memberId === m.id
+    ? [{ id: 'late-shift', label: 'Late shift', days: [late.day], place: late.place, start: late.start, end: late.end }] : []).week;
+
+  const res = chosen?.res;
+  const swapOk = !!chosen?.check?.ok;
+  const solar = modOf(api, 'solar');
+  const termDates = cfg?.termDates || [];
+  let duskS = null;
+  try { duskS = solar?.dusk && termDates.length ? solar.dusk((termDates[termDates.length - 1] || termDates[0]).date, cfg) : null; } catch { duskS = null; }
+  const lateName = members.find((m) => m.id === lateMember)?.name;
 
   return (
-    <div className="qv-grid">
-      <div className="qv-span-12">
-        <JumpBar items={[
-          { label: 'Members', find: 'The group' }, { label: 'Two moves', find: 'Two moves' },
-          { label: 'House ranking', find: 'House ranking' }, { label: 'The split', find: 'The split' },
-          { label: 'Tours', find: 'Tour it together' }, { label: 'Envy matrix', find: 'Envy matrix' },
-        ]} />
-      </div>
-      <div className="qv-span-12">
-        <Panel kicker="The group" title={`${members.length} members, private caps`} right={<Label>FICTIONAL</Label>}>
-          <div className="qv-members">
+    <>
+      <div className="gv-hero">
+        <div className="gv-card">
+          {!chosen ? (
+            <p className="gv-wait" aria-live="polite">Running every week through every house</p>
+          ) : (
+            <>
+              <div className="gv-hero-top">
+                <div>
+                  <div className="gv-house-name">{shortName(chosen.home.name)}</div>
+                  <div className="gv-checks">
+                    {res && <span className={`gv-check${swapOk ? '' : ' bad'}`}><Check ok={swapOk} />{swapOk ? 'Nobody would swap' : 'Swap check failed'}</span>}
+                    <span className={`gv-check${chosen.feasible ? '' : ' bad'}`}><Check ok={chosen.feasible} />{chosen.feasible ? 'Under every cap' : "Over someone's cap"}</span>
+                    {late && lateName && strandedAt(chosen.home.id) && <span className="gv-check bad"><Check ok={false} />No way home for {lateName}</span>}
+                  </div>
+                </div>
+                <div className="gv-total">
+                  <div className="big">{usd(chosen.home.rent)}<span className="unit">/month</span></div>
+                  <div className="gv-small gv-gray">{chosen.home.rooms.length} rooms, {chosen.home.area}</div>
+                </div>
+              </div>
+              {res ? (
+                <div className="gv-swap-in" key={chosen.home.id}><HouseDiagram home={chosen.home} assignment={res.assignment} prices={res.prices} members={members} colors={colors} usd={usd} /></div>
+              ) : <p className="gv-note">The solver failed on this house: {chosen.error}</p>}
+              <div className="gv-moves">
+                <button type="button" className="gv-btn" onClick={doCapMove} disabled={!top || !!lastMove?.kind && lastMove.kind === 'cap' && !lastMove.error}>Lower a cap</button>
+                <button type="button" className="gv-btn" onClick={doLateMove} disabled={!hasWeek || !!late}>Add a late shift</button>
+                {moved && <button type="button" className="gv-link" onClick={reset}>Undo</button>}
+                <MoveResult move={lastMove} members={members} rows={rows} baseline={baseline.current} weeks={weeks} chosen={chosen} late={late} placeName={placeName} homeName={(id) => shortName(rows.find((r) => r.home.id === id)?.home.name)} />
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="gv-card" aria-label="Members">
+          <div className="gv-members-head">
+            <h2>Members</h2>
+            <span className="gv-lock"><svg width="11" height="13" viewBox="0 0 11 13" aria-hidden="true"><rect x="0.75" y="5.5" width="9.5" height="6.75" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M3 5.5V3.75a2.5 2.5 0 015 0V5.5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>Caps are private</span>
+          </div>
+          <div className="gv-members">
             {members.map((m, i) => (
-              <MemberCard key={m.id} m={m} color={colors[i]} revealed={!!reveal[m.id]}
-                place={homeArea(m, placeName)}
+              <MemberRow key={m.id} m={m} color={colors[i]} revealed={!!reveal[m.id]}
+                trips={tripsOf(m)} entries={entriesOf(m)} dusk={duskS}
                 onToggle={() => setReveal((r) => ({ ...r, [m.id]: !r[m.id] }))}
                 privateInfo={privateInfo(m, i)}
                 onCap={(v) => setCaps((c) => ({ ...c, [m.id]: v }))} />
             ))}
           </div>
-          <p className="qv-small qv-muted" style={{ marginBottom: 0 }}>
-            Caps never leave the solver. Each member sees only their own cap and their own gap. A gap reveals a little
-            about the others' caps in aggregate. Room values are each persona's own demo values, not a shared prior.
-          </p>
-        </Panel>
-      </div>
-
-      <div className="qv-span-12">
-        <Panel kicker="Sensitivity" title="Two moves" right={(late || Object.keys(caps).length) ? <Button tone="quiet" onClick={reset}>Reset to the original group</Button> : null}>
-          {!fair ? <Pending what="engine/fair.js" /> : (
-            <div className="qv-stack">
-              <div className="qv-row">
-                <span>Lower</span>
-                <select aria-label="Member whose cap is lowered" value={capMember || tightest} onChange={(e) => setCapMember(e.target.value)}>
-                  {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                </select>
-                <span>'s cap until {(rows.find((r) => r.feasible) || top)?.home.name || 'the top house'} has no split that fits every cap</span>
-                <Button tone="primary" onClick={doCapMove} disabled={!top}>Lower the cap</Button>
-              </div>
-              <div className="qv-row">
-                <span>Add a late shift for</span>
-                <select aria-label="Member with the late shift" value={lateDraft.memberId || members[members.length - 1].id}
-                  onChange={(e) => setLateDraft((d) => ({ ...d, memberId: e.target.value }))}>
-                  {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                </select>
-                <span>at</span>
-                <select aria-label="Shift place" value={lateDraft.place} onChange={(e) => setLateDraft((d) => ({ ...d, place: e.target.value }))}>
-                  {places.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-                <select aria-label="Shift day" value={lateDraft.day} onChange={(e) => setLateDraft((d) => ({ ...d, day: e.target.value }))}>
-                  {DAYS.map((d) => <option key={d} value={d}>{DAY_NAME[d]}</option>)}
-                </select>
-                <input aria-label="Shift start" type="time" value={lateDraft.start} onChange={(e) => setLateDraft((d) => ({ ...d, start: e.target.value }))} />
-                <span>to</span>
-                <input aria-label="Shift end" type="time" value={lateDraft.end} onChange={(e) => setLateDraft((d) => ({ ...d, end: e.target.value }))} />
-                <Button tone="quiet" onClick={doLateMove} disabled={!hasWeek}>Add the shift</Button>
-              </div>
-              {!hasWeek && <Pending what="engine/week.js" detail="Commutes and the late-shift move need it. Rent splits below still work without it." />}
-              <MoveResult move={lastMove} members={members} rows={rows} baseline={baseline.current} weeks={weeks} />
-            </div>
-          )}
-        </Panel>
-      </div>
-
-      <div className="qv-span-7">
-        <Panel kicker="Which house" title="House ranking" right={solved ? <span className="qv-small qv-muted">{rows.length} houses solved in {ms(solved.totalMs)}</span> : null}>
-          {!fair ? <Pending what="engine/fair.js" detail="House ranking needs the envy-free solver." /> : !solved ? (
-            <p className="qv-muted">{weeks.status === 'running' ? 'Running every member\'s week through every house...' : 'Waiting for week results...'}</p>
-          ) : (
-            <HouseTable rows={rows} chosenId={chosen?.home.id} onPick={setSelected} />
-          )}
-          {solved && (
-            <p className="qv-small qv-muted" style={{ marginBottom: 0 }}>
-              Net cost is a member's rent share, utilities share and commute time in dollars (at their own value of time),
-              minus what their room is worth to them{hasWeek ? '' : ' (commute not included yet)'}. The house with the lowest
-              worst-off net cost wins. Houses with a split under every cap come first.
-              {solved.disagree ? ' Members\' individual top houses differ, so the group disagrees here.' : ' Every member\'s own top house is the same.'}
-              {weeks.status === 'done' ? ` Weeks: ${ms(weeks.ms)}.` : ''}
-            </p>
-          )}
-          {weeks.status === 'error' && <Note tone="bad">Week results failed: {weeks.error}. Commute costs are left out.</Note>}
-        </Panel>
-      </div>
-
-      <div className="qv-span-5">
-        <Panel kicker="The split" title={chosen ? chosen.home.name : 'Chosen house'} right={chosen ? <Pill tone={chosen.feasible ? 'good' : 'bad'}>{chosen.feasible ? 'fits every cap' : 'no split fits every cap'}</Pill> : null}>
-          {!fair ? <Pending what="engine/fair.js" /> : !chosen ? <p className="qv-muted">Solving...</p> : (
-            <SplitTable row={chosen} members={members} colors={colors} />
-          )}
-        </Panel>
-      </div>
-
-      <div className="qv-span-12">
-        <TourTimes api={api} chosen={chosen} members={members} weeks={weeks} cfg={cfg} colors={colors} />
-      </div>
-
-      <div className="qv-span-12">
-        <Panel kicker="Certificate" title="Envy matrix" right={chosen?.check ? <Pill tone={chosen.check.ok ? 'good' : 'bad'}>{chosen.check.ok ? 'checker passed' : 'checker failed'}</Pill> : null}>
-          {!fair ? <Pending what="engine/fair.js" /> : !chosen?.res ? <p className="qv-muted">Solving...</p> : (
-            <Certificate row={chosen} members={members} colors={colors} model={model} cfg={cfg} />
-          )}
-        </Panel>
-      </div>
-
-      {late && (
-        <div className="qv-span-12">
-          <Panel kicker="Late shift" title={`${lateMember?.name || 'Member'}: ${DAY_NAME[late.day]} ${late.start} to ${late.end} at ${placeName(late.place)}`}>
-            <StrandedPanel row={chosen} member={lateMember} idx={lateIdx} weeks={weeks} rows={rows} />
-          </Panel>
         </div>
-      )}
-    </div>
-  );
-}
-
-function homeArea(m, placeName) {
-  const first = (m.week || [])[0];
-  return first ? placeName(first.place) : '';
-}
-
-function HouseTable({ rows, chosenId, onPick }) {
-  return (
-    <div className="qv-scroll">
-      <table className="qv-table">
-        <thead>
-          <tr>
-            <th>#</th><th>House</th><th className="num">Rent /mo</th><th title="Whether a split exists that keeps every member under their private cap">Under caps</th>
-            <th className="num" title="The worst-off member's net monthly cost: rent share, utilities share and commute time in dollars, minus what the room is worth to them">Worst-off /mo</th>
-            <th className="num" title="The same net monthly cost, summed over the group">Group /mo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, k) => (
-            <tr key={r.home.id} className={r.home.id === chosenId ? 'sel' : r.feasible ? '' : 'dim'}
-              onClick={() => onPick(r.home.id)} style={{ cursor: 'pointer' }} title={`Solved in ${ms(r.solveMs)}`}>
-              <td className="qv-mono">{k + 1}</td>
-              <td>
-                <button type="button" className="qv-btn quiet" style={{ padding: 0, border: 'none', background: 'transparent', textAlign: 'left', fontWeight: 600 }}
-                  onClick={(e) => { e.stopPropagation(); onPick(r.home.id); }}>
-                  {r.home.name}
-                </button>
-                <div className="qv-small qv-muted">{r.home.area}, {r.home.rooms.length} rooms</div>
-              </td>
-              <td className="num">{usd(r.home.rent)}</td>
-              <td>{r.error ? <Pill tone="bad">solver error</Pill> : <Pill tone={r.feasible ? 'good' : 'bad'}>{r.feasible ? 'fits' : 'no split fits'}</Pill>}</td>
-              <td className="num">{usd(-r.E)}</td>
-              <td className="num">{usd(-r.W)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-const BATH = { private: 'private bath', half: 'half bath', shared: 'shared bath' };
-const FLOOR = { basement: 'basement', 1: '1st floor', 2: '2nd floor', attic: 'attic' };
-const LIGHT = ['little daylight', 'some daylight', 'bright'];
-
-function SplitTable({ row, members, colors }) {
-  const { res, problem, home } = row;
-  if (!res) return <Note tone="bad">The solver failed on this house: {row.error}</Note>;
-  const assigned = new Set(res.assignment);
-  const common = home.rooms.map((room, j) => ({ room, j })).filter(({ j }) => !assigned.has(j));
-  const sum = res.prices.reduce((s, x) => s + x, 0);
-  return (
-    <>
-      <div className="qv-scroll">
-        <table className="qv-table">
-          <thead><tr><th>Member</th><th>Room</th><th className="num">Rent share</th></tr></thead>
-          <tbody>
-            {members.map((m, i) => {
-              const j = res.assignment[i];
-              const room = home.rooms[j];
-              return (
-                <tr key={m.id}>
-                  <td><span className="qv-swatch" style={{ background: colors[i] }} />{m.name}</td>
-                  <td>{room?.label}<div className="qv-small qv-muted">{room ? `${room.sqft} sq ft, ${BATH[room.bath] || room.bath}, ${FLOOR[room.floor] || room.floor}, ${LIGHT[room.light] ?? `light ${room.light}`}` : ''}</div></td>
-                  <td className="num">{usd(res.prices[j], 2)}</td>
-                </tr>
-              );
-            })}
-            {common.map(({ room, j }) => (
-              <tr key={room.id} className="dim">
-                <td>Common space</td><td>{room.label}</td><td className="num">{usd(res.prices[j], 2)}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr><td colSpan={2}>Total (house rent {usd(problem.rent)})</td><td className="num">{usd(sum, 2)}</td></tr>
-          </tfoot>
-        </table>
       </div>
-      <p className="qv-small qv-muted">
-        Utilities {usd(home.utilities)} a month, split evenly ({usd((home.utilities || 0) / members.length, 2)} each), not part of the rent split.
-        {res.negativePrice ? ' One room has a negative rent: it is paid to be taken, because the envy-free rule forces it.' : ''}
-      </p>
-      {!row.feasible && (
-        <Note tone="bad">
-          No envy-free split of {home.name} fits every private cap. These are the envy-free rents that minimize the worst
-          overrun. Who is over is private: each member sees their own gap in their private view.
-        </Note>
+
+      {rows.length > 0 && (
+        <section className="gv-section" aria-label="Houses compared">
+          <header><h2>Houses compared</h2></header>
+          <div className="gv-houses">
+            {rows.map((r, k) => (
+              <button key={r.home.id} type="button" className="gv-house" aria-pressed={r.home.id === chosen?.home.id}
+                onClick={() => setSelected(r.home.id)} aria-label={`${r.home.name}, ${usd(r.home.rent)} a month, ${r.feasible ? 'works for everyone' : "over someone's cap"}`}>
+                <div className="line"><span className="name">{shortName(r.home.name)}</span><span className="rank">{k + 1}</span></div>
+                {r.res ? <MiniHouse home={r.home} assignment={r.res.assignment} colors={colors} /> : <svg className="mini" aria-hidden="true" />}
+                <div className="line">
+                  <span className="rent">{usd(r.home.rent)}<span className="gv-small gv-gray" style={{ fontWeight: 400 }}>/mo</span></span>
+                  <span className={`gv-status${r.feasible && !strandedAt(r.home.id) ? '' : ' bad'}`}>
+                    {late && strandedAt(r.home.id) ? `No way home for ${lateName}` : r.feasible
+                      ? <><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4l2.6 2.6L10 3.6" fill="none" stroke="#1f6f4a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>Works for everyone</>
+                      : "Over someone's cap"}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <TourTimes api={api} chosen={chosen} members={members} weeks={weeks} cfg={cfg} colors={colors} />
+
+      {chosen && res && (
+        <details className="gv-details">
+          <summary>Details</summary>
+          <div className="gv-details-body">
+            <div>
+              <h2 style={{ fontSize: 15, marginBottom: 4 }}>Swap check</h2>
+              <p className="gv-how" style={{ marginBottom: 10 }}>What each person would lose a month by moving into another room at its rent.</p>
+              {swapOk
+                ? <SwapGrid row={chosen} members={members} colors={colors} usd={usd} />
+                : <p className="gv-note">The independent checker rejected this split: {chosen.check.issues.join('. ')}.</p>}
+              <Certificate row={chosen} members={members} model={model} cfg={cfg} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: 15, marginBottom: 10 }}>House ranking</h2>
+              <HouseTable rows={rows} chosenId={chosen.home.id} onPick={setSelected} />
+              <p className="gv-how" style={{ marginTop: 8 }}>
+                Worst-off is the highest net monthly cost any member pays: rent share, utilities share and commute time
+                in dollars, minus what the room is worth to them. Houses under every cap come first.
+                {solved ? ` ${rows.length} houses solved in ${ms(solved.totalMs)}.` : ''}
+              </p>
+              {late && <Stranded row={chosen} member={members.find((m) => m.id === late.memberId)} weeks={weeks} />}
+            </div>
+            <div className="wide">
+              <p className="gv-how">
+                How we got this: rents are the envy-free split that maximizes the worst-off member (Gal, Mash, Procaccia
+                and Zick 2017), with private caps as in Procaccia, Velez and Yu 2018. An independent checker re-derives
+                every margin, the rent sum and the caps before the check mark shows. Caps never leave the solver; each
+                member sees only their own cap and gap. Room values are each persona's demo values.
+                Utilities {usd(chosen.home.utilities)} a month are split evenly and are not part of the rent split.
+              </p>
+            </div>
+          </div>
+        </details>
       )}
     </>
   );
 }
 
-function Certificate({ row, members, colors, model, cfg }) {
-  const { res, problem, check } = row;
-  const names = members.map((m) => m.name);
-  const envy = res.envy || check.envy;
-  const offDiag = [];
-  for (let i = 0; i < members.length; i++) for (let j = 0; j < members.length; j++) if (i !== j && Number.isFinite(envy?.[i]?.[j])) offDiag.push(envy[i][j]);
-  const minMargin = offDiag.length ? Math.min(...offDiag) : NaN;
-  const robust = res.robustSlack ?? res.slackRobust ?? null;
-  const ef = useMemo(() => {
-    if (Number.isFinite(res.efRate)) return { rate: res.efRate, k: res.efSamples || cfg?.efSamples || 100, spread: EF_SPREAD, source: 'engine' };
-    const r = seeded(11);
-    const out = efRate(problem, res, members.map((m) => m.theta), model, r, { k: cfg?.efSamples ?? 100, spread: EF_SPREAD });
-    return { ...out, source: 'view' };
-  }, [res, problem, members, model, cfg]);
-  const favs = members.map((m, i) => favoriteRoom(problem.members[i].values));
-  const distinctFav = new Set(favs).size;
-
-  if (!check.ok) {
-    return (
-      <Note tone="bad">
-        The independent checker rejected this split, so no matrix is shown as passing. {check.issues.join('. ')}.
-      </Note>
-    );
+function MoveResult({ move, members, rows, baseline, weeks, chosen, late, placeName, homeName }) {
+  if (!move) return null;
+  const m = members.find((x) => x.id === move.memberId);
+  let text = null;
+  if (move.error) text = `The cap move failed: ${move.error}`;
+  else if (move.kind === 'cap') {
+    const row = rows.find((r) => r.home.id === move.houseId);
+    const name = shortName(row?.home.name) || 'The top house';
+    if (move.impossible) text = `No cap for ${m?.name} rules out ${name}.`;
+    else if (row && !row.feasible) {
+      const next = rows.find((r) => r.feasible);
+      text = `${m?.name}'s lower cap rules out ${name}. ${next ? `The group moves to ${shortName(next.home.name)}.` : 'No house fits every cap now.'}`;
+    } else text = `${name} still fits every cap.`;
+  } else if (move.kind === 'late') {
+    if (weeks.status === 'running' || !move.resolved) text = `Re-running ${m?.name}'s week in every house`;
+    else {
+      const shift = late ? `${m?.name}'s ${clock(late.end)} ${DAY_NAME[late.day]} shift` : `${m?.name}'s late shift`;
+      const from = homeName(move.fromId);
+      if (!move.toId) text = `${shift} has no way home from ${from} or any house under every cap.`;
+      else if (move.toId !== move.fromId) text = `${shift} has no way home from ${from}, so ${homeName(move.toId)} is now the pick.`;
+      else text = `${m?.name} still gets home from ${from} after the ${late ? `${clock(late.end)} ` : ''}shift.`;
+    }
   }
+  return <p className="gv-move-result" aria-live="polite">{text}</p>;
+}
+
+function HouseTable({ rows, chosenId, onPick }) {
   return (
-    <div className="qv-stack">
-      <p style={{ margin: 0 }}>
-        Each entry is how many dollars a month that row's member would lose by swapping into the column member's room at
-        that room's rent, by the row member's own room values. All entries are at least zero, so nobody would swap.
-      </p>
-      <EnvyMatrix names={names} envy={envy} colors={colors} />
-      <div className="qv-stats">
-        <Stat label="smallest margin in this split" value={usd(minMargin, 2)} />
-        <Stat label={`envy-free rate over ${ef.k} value draws`} value={pct(ef.rate)} note={ef.source === 'engine' ? 'measured by the solver' : 'measured in this view'} />
-        <Stat label="members whose favorite room differs" value={`${distinctFav} distinct favorites`} />
-      </div>
-      {minMargin < 0.5 && ef.rate < 0.5 && (
-        <p className="qv-small" style={{ margin: 0 }}>
-          The maximin split sets some margins to $0 to raise the worst-off member, so most value draws break at least
-          one of them.
-        </p>
-      )}
-      {Number.isFinite(robust) && robust > 1 && (
-        <p style={{ margin: 0 }}>
-          The envy-free split of this house with the widest margins tolerates room value errors up to <b className="qv-mono">{usd(robust)}</b> per
-          member in total and stays envy-free (Peters, Procaccia and Zhu 2022, Proposition 3.1).
-        </p>
-      )}
-      <p className="qv-small qv-muted" style={{ margin: 0 }}>
-        Rents are the envy-free split that maximizes the worst-off member (Gal, Mash, Procaccia and Zick 2017), with caps
-        as in Procaccia, Velez and Yu 2018. The checker in this view re-derived every margin, the rent sum
-        ({usd(check.sumErr, 6)} off) and the caps from the inputs before showing this matrix.
-        {` EF rate: demo members have one set of values each, so the ${ef.k} draws perturb each value with log-sd ${ef.spread} (assumption) and keep these prices fixed.`}
-        {res.efficientAssignments ? ` Efficient room assignments checked: ${res.efficientAssignments}.` : ''}
-      </p>
+    <table className="gv-table">
+      <thead>
+        <tr><th>#</th><th>House</th><th className="num">Rent</th><th>Caps</th><th className="num">Worst-off</th></tr>
+      </thead>
+      <tbody>
+        {rows.map((r, k) => (
+          <tr key={r.home.id} className={r.home.id === chosenId ? 'sel' : ''} onClick={() => onPick(r.home.id)}>
+            <td className="gv-num">{k + 1}</td>
+            <td>{shortName(r.home.name)}</td>
+            <td className="num">{usd(r.home.rent)}</td>
+            <td className={r.feasible ? 'gv-good-t' : 'gv-bad-t'}>{r.error ? 'solver error' : r.feasible ? 'fits' : 'over'}</td>
+            <td className="num">{usd(-r.E)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Certificate({ row, members, model, cfg }) {
+  const { res, problem } = row;
+  const margins = swapMargins(problem, res).flat().filter((v) => v != null && Number.isFinite(v));
+  const minMargin = margins.length ? Math.min(...margins) : NaN;
+  const ef = useMemo(() => {
+    if (Number.isFinite(res.efRate)) return { rate: res.efRate, k: res.efSamples || cfg?.efSamples || 100 };
+    return efRate(problem, res, members.map((m) => m.theta), model, seeded(11), { k: cfg?.efSamples ?? 100, spread: EF_SPREAD });
+  }, [res, problem, members, model, cfg]);
+  const favs = new Set(members.map((m, i) => favoriteRoom(problem.members[i].values))).size;
+  return (
+    <div className="gv-stats">
+      <div><div className="v">{usd(minMargin, 2)}</div><div className="l">smallest margin</div></div>
+      <div><div className="v">{pct(ef.rate)}</div><div className="l">still swap-free over {ef.k} value draws</div></div>
+      <div><div className="v">{favs}</div><div className="l">different favorite rooms</div></div>
     </div>
   );
 }
 
-function MoveResult({ move, members, rows, baseline }) {
-  if (!move) return null;
-  const m = members.find((x) => x.id === move.memberId);
-  if (move.error) return <Note tone="bad">The cap move failed: {move.error}</Note>;
-  if (move.kind === 'cap') {
-    const row = rows.find((r) => r.home.id === move.houseId);
-    if (move.impossible) return <Note>No cap for {m?.name} makes {row?.home.name || 'this house'} infeasible: their envy-free rent can go to $0.</Note>;
-    const nextFeasible = rows.find((r) => r.feasible);
-    const name = row?.home.name || 'The top house';
-    return (
-      <Note tone="warn">
-        {row && !row.feasible ? `${name} no longer has a split under every cap.` : `${name} still has a split under every cap.`}
-        {row && !row.feasible && (nextFeasible
-          ? ` The group moves to ${nextFeasible.home.name}.`
-          : ' No house has a split under every cap now.')}
-        {' '}The new cap and the gap are only in {m?.name}'s private view.
-      </Note>
-    );
-  }
-  if (move.kind === 'late') {
-    const before = baseline?.topId && baseline.rows.find((r) => r.home.id === baseline.topId);
-    const now = rows[0];
-    return (
-      <Note tone="warn">
-        Late shift added for {m?.name}. Top house {before && now && before.home.id !== now.home.id
-          ? `changed from ${before.home.name} to ${now.home.name}.`
-          : `stays ${now?.home.name || 'the same'}: the shift costs ${m?.name} time in every house, but not enough to change the order.`}
-        {' '}The stranded trip is shown below.
-      </Note>
-    );
-  }
-  return null;
-}
-
-function fmtClock(t) {
-  if (t == null) return '';
-  if (typeof t === 'string') return t;
-  if (!Number.isFinite(t)) return '';
-  const h = Math.floor(t / 3600), mi = Math.floor((t % 3600) / 60);
-  return `${String(h % 24).padStart(2, '0')}:${String(mi).padStart(2, '0')}${h >= 24 ? ' (next day)' : ''}`;
-}
-function fmtOption(o) {
-  if (o == null) return '';
-  if (typeof o === 'string') return o;
-  const min = o.min ?? (o.sec != null ? o.sec / 60 : null);
-  const parts = [`${o.mode || 'fastest'}${min != null ? ` ${Math.round(min)} min door to door` : ''}`];
-  if (Number.isFinite(o.walkMin) && o.mode !== 'walk') parts.push(`${Math.round(o.walkMin)} min of it walking`);
-  if (Array.isArray(o.routes) && o.routes.length) parts.push(`route ${[...new Set(o.routes.map((r) => (typeof r === 'object' ? r.short ?? r.name ?? r.id : r)))].join(', ')}`);
-  return parts.join(', ');
-}
-
-function StrandedPanel({ row, member, idx, weeks, rows }) {
-  if (weeks.status === 'running') return <p className="qv-muted">Re-running {member?.name}'s week in every house...</p>;
-  if (!weeks.byMember || !member) return <Pending what="engine/week.js" detail="The late shift needs week results." />;
-  const byHome = weeks.byMember.get(member.id);
-  const houseRows = rows.map((r) => ({ r, wr: byHome?.get(r.home.id) }));
-  const here = row && byHome?.get(row.home.id);
-  const strandedHere = here?.stranded || [];
-  const countStranded = houseRows.filter(({ wr }) => wr?.stranded?.length).length;
+function Stranded({ row, member, weeks }) {
+  const wr = member && weeks.byMember?.get(member.id)?.get(row?.home.id);
+  const list = wr?.stranded || [];
+  if (!member || !wr) return null;
   return (
-    <div className="qv-stack">
-      {here ? (
-        strandedHere.length ? (
-          <div className="qv-scroll">
-            <table className="qv-table">
-              <thead><tr><th>Day</th><th>Trip</th><th>Time</th><th className="num">Walking it needs</th><th className="num">Walk cap</th><th>Fastest option, not allowed</th></tr></thead>
-              <tbody>
-                {strandedHere.map((s, k) => (
-                  <tr key={k}>
-                    <td>{DAY_NAME[s.day] || s.day}</td>
-                    <td>{s.kind === 'leaveAt' ? `Home from ${s.label}` : s.kind === 'arriveBy' ? `To ${s.label}` : s.label}</td>
-                    <td className="qv-mono">{fmtClock(s.time)}</td>
-                    <td className="num">{Number.isFinite(s.needed) ? `${Math.round(s.needed)} min` : 'no route'}</td>
-                    <td className="num">{Number.isFinite(s.capMin) ? `${Math.round(s.capMin)} min` : ''}</td>
-                    <td>{fmtOption(s.bestOption) || 'none found'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : <Note tone="good">From {row.home.name}, {member.name} still has an allowed way home after the shift.</Note>
-      ) : <p className="qv-muted">No week result for this house.</p>}
-      <p className="qv-small qv-muted" style={{ margin: 0 }}>
-        Stranded means no allowed option: transit has stopped and the walk is over {member.name}'s late walking cap
-        ({member.modes?.maxLateWalkMin ?? 'n/a'} min after {member.modes?.lateHour || 'the late hour'}). The trip still counts the fastest
-        disallowed option's minutes. {countStranded} of {rows.length} houses leave {member.name} stranded on this shift.
-        TheRide FlexRide or a ride-hail can cover this trip in practice; the model does not count them.
-      </p>
-      <div className="qv-scroll">
-        <table className="qv-table">
-          <thead><tr><th>House</th><th className="num">{member.name}'s weekly min</th><th className="num">Stranded trips</th><th className="num">{member.name}'s utility</th></tr></thead>
+    <div style={{ marginTop: 16 }}>
+      <h2 style={{ fontSize: 15, marginBottom: 6 }}>{member.name}'s late shift</h2>
+      {list.length ? (
+        <table className="gv-table">
+          <thead><tr><th>Trip</th><th>Time</th><th className="num">Walk needed</th><th className="num">Late walk cap</th></tr></thead>
           <tbody>
-            {houseRows.map(({ r, wr }) => (
-              <tr key={r.home.id} className={r.home.id === row?.home.id ? 'sel' : ''}>
-                <td>{r.home.name}</td>
-                <td className="num">{wr ? Math.round(wr.weeklyMin) : 'n/a'}</td>
-                <td className="num">{wr ? wr.stranded?.length ?? 0 : 'n/a'}</td>
-                <td className="num">{usd(r.U?.[idx])}</td>
+            {list.map((s, k) => (
+              <tr key={k}>
+                <td>{s.kind === 'leaveAt' ? `Home from ${s.label}` : `To ${s.label}`}, {DAY_NAME[s.day]?.slice(0, 3)}</td>
+                <td className="gv-num">{s.time}</td>
+                <td className="num">{Number.isFinite(s.needed) ? `${Math.round(s.needed)} min` : 'no route'}</td>
+                <td className="num">{Number.isFinite(s.capMin) ? `${Math.round(s.capMin)} min` : ''}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      ) : <p className="gv-how">From {shortName(row.home.name)}, {member.name} still has an allowed way home.</p>}
+      <p className="gv-how" style={{ marginTop: 6 }}>No allowed way home means buses have stopped and the walk is over {member.name}'s late walking limit. A ride-hail is not counted.</p>
     </div>
   );
 }

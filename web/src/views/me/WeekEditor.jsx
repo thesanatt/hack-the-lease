@@ -1,4 +1,5 @@
-// The student's week: toggle an entry, change its place or times, add a job.
+// The detailed editor for the week (shown on Edit): toggle an entry, change its place or times, add a job.
+// The ranking samples fall weeks from each entry's chance.
 // Props: entries, setEntries, places, placeById, lateId (id of the late entry, marked), movedId (entry moved by the toggle)
 import { Button, Pill } from '../../components/index.js';
 import { DAYS, DAY_LABEL, newJob } from './routine.js';
@@ -71,10 +72,7 @@ export default function WeekEditor({ entries, setEntries, places, placeById, lat
       </div>
       <div className="row-flex" style={{ marginTop: 8 }}>
         <Button small onClick={addJob}>Add a job</Button>
-        <span className="small muted">
-          Chance is how likely the entry is next fall. The fall schedule is not final when you sign, so the ranking
-          samples weeks from these chances.
-        </span>
+        <span className="small muted">Chance: how likely each entry is next fall.</span>
       </div>
     </div>
   );

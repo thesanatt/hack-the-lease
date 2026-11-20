@@ -1,86 +1,145 @@
-// The pitch slides: problem, what a student sees, what a group gets, how it works, evidence, the business as a
-// hypothesis, and an optional next-steps slide. Every number is computed live by the engine (slides 1 to 3) or
-// read from web/public/data/evidence/*.json (slides 4 and 5). Nothing numeric is typed in here except labels and
-// the published method names. Each slide has presenter notes (press N).
+// The pitch slides. Each slide is one picture and one sentence. Every number is computed live by the engine
+// (slides 1 to 3, see data.js) or read from web/public/data/evidence/*.json (slide 5). Nothing numeric is typed
+// in here except labels and the published method names. The detail lives in the presenter notes (press N).
 import { useEffect, useMemo, useState } from 'react';
 import { campusExample, studentExample, groupExample, evidenceFigures, DATE_LABEL, TIMES, DEFAULT_HOME } from './data.js';
+import { DiffHistogram, RegretCurves, CheckGrid, r5Diffs, regretSeries, C } from '../evidence/charts.jsx';
 
 const int = (x) => (Number.isFinite(x) ? Math.round(x).toLocaleString('en-US') : '-');
 const usd = (x) => (Number.isFinite(x) ? `$${Math.round(x).toLocaleString('en-US')}` : '-');
-const pct = (x, d = 1) => (Number.isFinite(x) ? `${(x * 100).toFixed(d)}%` : '-');
 const one = (x) => (Number.isFinite(x) ? x.toFixed(1) : '-');
 const clock = (sec) => {
   if (!Number.isFinite(sec)) return '';
   const t = Math.round(sec / 60), h24 = Math.floor(t / 60) % 24, m = t % 60;
   return `${((h24 + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h24 < 12 ? 'AM' : 'PM'}`;
 };
-const Missing = ({ what }) => <span className="pd-muted">{what} has not been run on this build.</span>;
+const hex = (c) => (!c ? C.ink : c.startsWith('#') ? c : `#${c}`);
 
-// 1. The problem, in the case writer's own example.
+function Slide({ title, children, foot, aside }) {
+  return (
+    <>
+      <div className="pd-headrow">
+        <h1 className="pd-title">{title}</h1>
+        {aside}
+      </div>
+      <div className="pd-visual">{children}</div>
+      {foot && <p className="pd-foot">{foot}</p>}
+    </>
+  );
+}
+const Wait = ({ what }) => <p className="pd-wait">{what}</p>;
+
+// 1. The problem: one home, three campuses, walk or bus, two hours.
 function Problem({ api }) {
   const homes = api.data.homes;
   const [homeId, setHomeId] = useState(() => (api.data.homeById?.has(DEFAULT_HOME) ? DEFAULT_HOME : homes[0]?.id));
   const ex = useMemo(() => { try { return campusExample(api, homeId); } catch (e) { console.warn(e); return null; } }, [api, homeId, api.version]);
-  const cells = ex ? ex.rows.flatMap((r) => [r.walk, ...r.bus]).filter(Number.isFinite) : [];
-  const lo = cells.length ? Math.min(...cells) : null, hi = cells.length ? Math.max(...cells) : null;
+  const picker = (
+    <label className="pd-picker">
+      <span className="pd-sr">Home</span>
+      <select value={homeId} onChange={(e) => { setHomeId(e.target.value); e.target.blur(); /* arrows go back to the slides */ }}>
+        {homes.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+      </select>
+    </label>
+  );
   return (
-    <>
-      <div className="pd-kicker">The problem</div>
-      <h1 className="pd-title">"10 minutes from campus."<br />Which campus? Walk or bus? What hour?</h1>
-      {ex ? (
-        <>
-          <div className="pd-row">
-            <p className="pd-sub">
-              One listing, {ex.home?.name} <span className="pd-tag syn">SYNTHETIC</span>. Minutes home from three campus
-              buildings on {DATE_LABEL}: {lo} to {hi}.
-            </p>
-            <label className="pd-small">
-              Home{' '}
-              <select className="pd-pick" value={homeId} onChange={(e) => { setHomeId(e.target.value); e.target.blur(); /* arrows go back to the slides */ }}>
-                {homes.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
-              </select>
-            </label>
-          </div>
-          <table className="pd-tt">
-            <thead>
-              <tr>
-                <th scope="col">Leave from</th>
-                <th scope="col">Walk</th>
-                <th scope="col">Bus, leave at {TIMES[0].label}</th>
-                <th scope="col" className="pd-col-late">Bus, leave at {TIMES[1].label}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ex.rows.map((r) => (
-                <tr key={r.id}>
-                  <th scope="row">{r.campus}<span>{r.place}</span></th>
-                  <td className={r.walk == null ? 'na' : ''}>{r.walk ?? 'no route'}{r.walk != null && <small>min</small>}</td>
-                  {r.bus.map((b, i) => (
-                    <td key={i} className={b == null ? 'na' : i === 1 ? 'late' : ''}>
-                      {b ?? 'no bus'}{b != null && <small>min</small>}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="pd-body">
-            And the lease is signed months before the fall schedule is final. Ann Arbor's ORD-24-03 lets a landlord
-            sign next year's tenant 210 days into the current lease.
-          </p>
-        </>
-      ) : <p className="pd-body pd-muted">The router did not return a result for this home.</p>}
-      <p className="pd-src pd-spread">
-        Computed now, in this browser, by the Quorum router on the real TheRide and U-M timetables ({DATE_LABEL})
-        and OpenStreetMap streets. Bus minutes run from leaving the building to the front door, wait at the stop
-        included. Walk at 1.3 m/s.{ex?.duskS ? ` Civil dusk that day: ${clock(ex.duskS)}, so the 11:30 PM walk is in the dark.` : ''}{' '}
-        The home and its rent are SYNTHETIC; the street is real.
-      </p>
-    </>
+    <Slide
+      title={'"10 minutes from campus." Which campus, which way, what hour?'}
+      aside={picker}
+      foot={`Sample listing on real streets. Live on the TheRide and U-M timetables for ${DATE_LABEL}.${ex?.duskS ? ` Dark after ${clock(ex.duskS)}.` : ''}`}
+    >
+      {ex ? <TripChart ex={ex} /> : <Wait what="The router did not return a result for this home." />}
+    </Slide>
   );
 }
 
-// 2. What one student sees.
+function TripChart({ ex }) {
+  const lanes = [];
+  ex.rows.forEach((r) => {
+    lanes.push({ row: r, kind: 'walk', min: r.walk, legs: null });
+    TIMES.forEach((t, i) => lanes.push({ row: r, kind: i === 1 ? 'late' : 'day', min: r.bus[i], legs: r.legs?.[i] || null, label: t.label, t0: t.s }));
+  });
+  const vals = lanes.map((l) => l.min).filter(Number.isFinite);
+  const firstRide = lanes.flatMap((l) => l.legs || []).find((l) => l.type === 'ride');
+  const rideColor = firstRide ? hex(firstRide.color) : C.mid;
+  const maxMin = Math.max(10, Math.ceil(Math.max(...vals, 0) / 10) * 10);
+  const W = 1200, LW = 250, X0 = LW + 90, X1 = W - 110, laneH = 36, groupGap = 22, top = 34;
+  const X = (m) => X0 + (m / maxMin) * (X1 - X0);
+  const H = top + ex.rows.length * (3 * laneH + groupGap) + 6;
+  const ticks = []; for (let m = 0; m <= maxMin; m += 10) ticks.push(m);
+  return (
+    <div className="pd-tripwrap">
+    <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img"
+      aria-label={`Minutes home from three campus buildings to ${ex.home?.name}: ${ex.rows.map((r) => `${r.campus}, walk ${r.walk ?? 'none'}, bus at ${TIMES[0].label} ${r.bus[0] ?? 'none'}, bus at ${TIMES[1].label} ${r.bus[1] ?? 'none'}`).join('; ')}.`}>
+      {ticks.map((m) => (
+        <g key={m}>
+          <line x1={X(m)} x2={X(m)} y1={top - 8} y2={H - 4} stroke={C.line} strokeWidth="1" />
+          <text x={X(m)} y={top - 14} textAnchor="middle" className="pd-tick">{m === maxMin ? `${m} min` : m}</text>
+        </g>
+      ))}
+      {ex.rows.map((r, gi) => {
+        const gy = top + gi * (3 * laneH + groupGap);
+        return (
+          <g key={r.id}>
+            <text x={0} y={gy + laneH * 1.5 - 4} className="pd-lane-h">{r.campus}</text>
+            <text x={0} y={gy + laneH * 1.5 + 18} className="pd-lane-s">{r.place}</text>
+            {[0, 1, 2].map((k) => {
+              const ln = lanes[gi * 3 + k];
+              const y = gy + k * laneH + laneH / 2;
+              const name = ln.kind === 'walk' ? 'Walk' : `Bus, ${ln.label}`;
+              return (
+                <g key={k}>
+                  {ln.kind === 'late' && Number.isFinite(ln.min) && <rect x={X(0)} y={y - laneH / 2 + 3} width={X(ln.min) - X(0)} height={laneH - 6} rx="4" fill="#D3D8EC" />}
+                  <text x={X0 - 14} y={y + 5} textAnchor="end" className="pd-lane-k">{name}</text>
+                  {!Number.isFinite(ln.min) ? (
+                    <text x={X0} y={y + 5} className="pd-lane-k">{ln.kind === 'walk' ? 'no route' : 'no bus'}</text>
+                  ) : ln.kind === 'walk' || !ln.legs ? (
+                    <line x1={X(0)} x2={X(ln.min)} y1={y} y2={y} stroke={ln.kind === 'walk' ? C.ink : C.mid} strokeWidth={ln.kind === 'walk' ? 2.5 : 6} strokeDasharray={ln.kind === 'walk' ? '6 5' : undefined} strokeLinecap="round" />
+                  ) : <Legs legs={ln.legs} t0={ln.t0} X={X} y={y} />}
+                  {Number.isFinite(ln.min) && (
+                    <text x={X(ln.min) + 12} y={y + 7} className="pd-lane-v">{ln.min}<tspan className="pd-lane-u"> min</tspan></text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+    </svg>
+    <div className="pd-key" aria-hidden="true">
+      <span><svg width="28" height="10"><line x1="1" x2="27" y1="5" y2="5" stroke={C.ink} strokeWidth="2.5" strokeDasharray="6 5" /></svg>Walk</span>
+      <span><svg width="28" height="10"><line x1="1" x2="27" y1="5" y2="5" stroke={C.light} strokeWidth="2" /></svg>Wait at the stop</span>
+      <span><svg width="28" height="10"><rect x="1" y="0" width="26" height="10" rx="3" fill={rideColor} /></svg>Bus, in its route color</span>
+      <span><svg width="28" height="14"><rect x="0" y="0" width="28" height="14" rx="4" fill="#D3D8EC" /></svg>After dark</span>
+    </div>
+    </div>
+  );
+}
+
+function Legs({ legs, t0, X, y }) {
+  const m = (s) => (s - t0) / 60;
+  return (
+    <g>
+      {legs.map((l, i) => {
+        const a = X(m(l.dep)), b = X(m(l.arr));
+        if (!(b > a)) return null;
+        if (l.type === 'ride') {
+          return (
+            <g key={i}>
+              <rect x={a} y={y - 5} width={b - a} height={10} rx="3" fill={hex(l.color)} />
+              {b - a > 26 && <text x={(a + b) / 2} y={y - 10} textAnchor="middle" className="pd-route-t">{l.route}</text>}
+            </g>
+          );
+        }
+        if (l.type === 'wait') return <line key={i} x1={a} x2={b} y1={y} y2={y} stroke={C.light} strokeWidth="2" />;
+        return <line key={i} x1={a} x2={b} y1={y} y2={y} stroke={C.ink} strokeWidth="2.5" strokeDasharray="6 5" />;
+      })}
+    </g>
+  );
+}
+
+// 2. What one student sees: every home, rent against hours a month, colored by fit for Jordan's week.
+const FIT = ['#D9CBA8', '#B5BE94', '#87A57F', '#55896A', '#1F6F4A'];
 function Student({ api }) {
   const [st, setSt] = useState({ status: 'running' });
   useEffect(() => {
@@ -92,55 +151,108 @@ function Student({ api }) {
   }, [api, api.version]);
   const r = st.r;
   const same = r && r.best.home.id === r.cheapest.home.id;
-  const Col = ({ x, tag }) => (
-    <div className="pd-vs-col">
-      <div className="pd-vs-tag">{tag}</div>
-      <h3>{x.home.name}</h3>
-      <p className="pd-small">{x.room?.label ? `${x.room.label}, ` : ''}ranks {x.rank} of {r.n} for this week</p>
-      <dl className="pd-figs">
-        <div><dt>Rent</dt><dd>{usd(x.rent)}<small>/mo</small></dd></div>
-        <div><dt>In motion</dt><dd>{int(x.hours)}<small>h/mo</small></dd></div>
-        <div><dt>Walking in the dark</dt><dd>{one(x.darkHours)}<small>h/mo</small></dd></div>
-        <div><dt>Trips with no ride</dt><dd>{int(x.stranded)}<small>/wk</small></dd></div>
-      </dl>
-    </div>
-  );
   return (
-    <>
-      <div className="pd-kicker">What a student sees</div>
-      <h1 className="pd-title">The cheapest rent is not the cheapest home.</h1>
-      {st.status === 'running' && <p className="pd-body pd-muted">Running the week through every home now...</p>}
-      {(st.status === 'missing' || st.status === 'error') && <p className="pd-body pd-muted">The week or ranking module is not in this build.</p>}
+    <Slide
+      title="The cheapest rent is not the cheapest home."
+      foot={r ? `${r.persona.name}'s week, a sample student, run through all ${r.n} sample listings on the real timetables.` : null}
+    >
+      {st.status === 'running' && <Wait what="Running the week through every home now." />}
+      {(st.status === 'missing' || st.status === 'error') && <Wait what="The week or ranking module is not in this build." />}
       {st.status === 'done' && r && (
-        <>
-          <p className="pd-sub">
-            {r.persona.name} <span className="pd-tag syn">FICTIONAL</span>, {r.persona.program}. The same week run through
-            all {r.n} homes <span className="pd-tag syn">SYNTHETIC</span>, every trip on the real bus timetables.
-          </p>
-          {same ? (
-            <div className="pd-vs one"><Col x={r.best} tag="Lowest rent and best for this week" /></div>
-          ) : (
-            <div className="pd-vs">
-              <Col x={r.cheapest} tag="Lowest rent" />
-              <div className="pd-vs-gap">
-                <span className="pd-gap-num">{usd(r.gap)}</span>
-                <span className="pd-gap-txt">a month better for {r.persona.name}, counting time, dark walks, trips with no ride and the room</span>
-              </div>
-              <Col x={r.best} tag={`Best for ${r.persona.name}'s week`} />
+        <div className="pd-two">
+          <div>
+            <RentScatter r={r} />
+            <div className="pd-pair">
+              <PairKey x={r.cheapest} ring={C.ink} tag="Lowest rent" />
+              {!same && <PairKey x={r.best} ring={C.green} tag={`Best for ${r.persona.name}`} />}
             </div>
-          )}
-        </>
+          </div>
+          <div className="pd-hero">
+            {same ? (
+              <><div className="pd-hero-v">Same home</div><div className="pd-hero-l">The lowest rent is also the best home for this week.</div></>
+            ) : (
+              <>
+                <div className="pd-hero-v">{usd(r.gap)}<span> a month</span></div>
+                <div className="pd-hero-l">better for {r.persona.name} than the lowest rent, once time, dark walks and trips with no ride count</div>
+              </>
+            )}
+          </div>
+        </div>
       )}
-      <p className="pd-src pd-spread">
-        Computed now, in this browser: the most likely week (entries with a chance of at least one half), every trip
-        routed door to door. Values are {r?.persona.name || 'the persona'}'s demo values, the ones the Me tab uses to
-        answer picks automatically. In the Me tab a real student sets them with about {api.config?.picksMax ?? 6} either-or picks.
-      </p>
-    </>
+    </Slide>
   );
 }
 
-// 3. What a group gets.
+function PairKey({ x, ring, tag }) {
+  return (
+    <div className="pd-pairkey">
+      <svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke={ring} strokeWidth="2.5" /></svg>
+      <div>
+        <b>{tag}</b> <span className="pd-gray">{x.home.name}</span>
+        <div className="pd-pair-n"><span>{usd(x.rent)}<small>/mo</small></span><span>{int(x.hours)}<small> h/mo</small></span><span>{int(x.stranded)}<small> trips a week with no ride</small></span></div>
+      </div>
+    </div>
+  );
+}
+
+function RentScatter({ r }) {
+  const [hover, setHover] = useState(null);
+  const rows = r.rows || [r.cheapest, r.best];
+  const W = 760, H = 390, L = 56, R = 16, T = 34, B = 46;
+  const xs = rows.map((d) => d.rent), ys = rows.map((d) => d.hours);
+  const x0 = Math.floor(Math.min(...xs) / 100) * 100, x1 = Math.ceil(Math.max(...xs) / 100) * 100;
+  const y1 = Math.ceil(Math.max(...ys) / 10) * 10;
+  const X = (v) => L + ((v - x0) / (x1 - x0 || 1)) * (W - L - R);
+  const Y = (v) => T + (1 - v / (y1 || 1)) * (H - T - B);
+  const xStep = (x1 - x0) > 800 ? 200 : 100;
+  const xt = []; for (let v = x0; v <= x1; v += xStep) xt.push(v);
+  const yt = []; for (let v = 0; v <= y1; v += y1 > 40 ? 20 : 10) yt.push(v);
+  const n = rows.length;
+  const fill = (d) => FIT[Math.min(FIT.length - 1, Math.floor(((n - d.rank) / Math.max(1, n - 1)) * FIT.length))];
+  const special = (d) => d.home.id === r.best.home.id ? C.green : d.home.id === r.cheapest.home.id ? C.ink : null;
+  const sorted = [...rows].sort((a, b) => (special(a) ? 1 : 0) - (special(b) ? 1 : 0));
+  const hv = hover && rows.find((d) => d.home.id === hover);
+  return (
+    <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img"
+      aria-label={`${n} homes by rent and hours a month getting around. Lowest rent ${r.cheapest.home.name}, ${usd(r.cheapest.rent)}. Best for this week ${r.best.home.name}, ${usd(r.best.rent)}.`}>
+      {yt.map((v) => (
+        <g key={v}>
+          <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke={v === 0 ? C.ink : C.line} strokeWidth="1" />
+          <text x={L - 8} y={Y(v) + 4} textAnchor="end" className="pd-tick">{v}</text>
+        </g>
+      ))}
+      {xt.map((v) => <text key={v} x={X(v)} y={H - B + 18} textAnchor="middle" className="pd-tick">${v.toLocaleString('en-US')}</text>)}
+      <text x={(L + W - R) / 2} y={H - 6} textAnchor="middle" className="pd-axis">Rent a month</text>
+      <text x={L - 40} y={12} className="pd-axis">Hours a month getting around</text>
+      <g transform={`translate(${W - R - 236}, 0)`}>
+        <text x={0} y={12} className="pd-axis">Worse fit</text>
+        {FIT.map((c, i) => <circle key={c} cx={84 + i * 18} cy={7} r="6" fill={c} />)}
+        <text x={84 + FIT.length * 18} y={12} className="pd-axis">Better</text>
+      </g>
+      {sorted.map((d) => {
+        const s = special(d);
+        return (
+          <g key={d.home.id} onMouseEnter={() => setHover(d.home.id)} onMouseLeave={() => setHover(null)}>
+            <circle cx={X(d.rent)} cy={Y(d.hours)} r="14" fill="transparent" />
+            <circle cx={X(d.rent)} cy={Y(d.hours)} r={s ? 8 : 6.5} fill={fill(d)} stroke="#fff" strokeWidth="2" />
+            {s && <circle cx={X(d.rent)} cy={Y(d.hours)} r="13" fill="none" stroke={s} strokeWidth="2.5" />}
+          </g>
+        );
+      })}
+      {hv && (() => {
+        const label = `${hv.home.name}: ${usd(hv.rent)}, ${int(hv.hours)} h, rank ${hv.rank}`;
+        const w = label.length * 7.4 + 18;
+        const x = Math.max(L, Math.min(W - R - w, X(hv.rent) - w / 2));
+        const y = Y(hv.hours) - 44 < T ? Y(hv.hours) + 20 : Y(hv.hours) - 44;
+        return <g pointerEvents="none"><rect x={x} y={y} width={w} height={26} rx="4" fill="#fff" stroke={C.line} /><text x={x + 9} y={y + 17} className="pd-tip">{label}</text></g>;
+      })()}
+    </svg>
+  );
+}
+
+// 3. What a group gets: the house, floor by floor, each room with its person and rent.
+const FLOOR_ORDER = ['attic', '4', '3', '2', '1', 'basement'];
+const FLOOR_NAME = { attic: 'Attic', 4: '4th floor', 3: '3rd floor', 2: '2nd floor', 1: '1st floor', basement: 'Basement' };
 function Group({ api }) {
   const [g, setG] = useState({ status: 'running' });
   useEffect(() => {
@@ -153,210 +265,205 @@ function Group({ api }) {
   const r = g.r;
   const total = r ? r.split.reduce((a, s) => a + (Number.isFinite(s.price) ? s.price : 0), 0) : null;
   return (
-    <>
-      <div className="pd-kicker">What a group gets</div>
-      <h1 className="pd-title">One house, one room each, a split nobody wants to swap.</h1>
-      {g.status === 'running' && <p className="pd-body pd-muted">Solving the demo group now...</p>}
-      {(g.status === 'missing' || g.status === 'error') && <p className="pd-body pd-muted">The group solver is not in this build.</p>}
+    <Slide
+      title="One house, one room each, a split nobody wants to swap."
+      foot={r ? `Five sample friends, top of ${r.houses} sample houses, solved now in this browser${Number.isFinite(r.ms) ? ` in ${int(r.ms)} ms` : ''}. Caps stay private.` : null}
+    >
+      {g.status === 'running' && <Wait what="Solving the group now." />}
+      {(g.status === 'missing' || g.status === 'error') && <Wait what="The group solver is not in this build." />}
       {g.status === 'done' && r && (
-        <div className="pd-grid2">
-          <div>
-            <p className="pd-sub">
-              Demo group of {r.split.length} <span className="pd-tag syn">FICTIONAL</span>. Top of {r.houses} houses <span className="pd-tag syn">SYNTHETIC</span>:
-              {' '}<b>{r.house.name}</b>.
-            </p>
-            <table className="pd-split-tt">
-              <thead><tr><th scope="col">Friend</th><th scope="col">Room</th><th scope="col" className="r">Rent a month</th></tr></thead>
-              <tbody>
-                {r.split.map((s) => (
-                  <tr key={s.name}>
-                    <th scope="row"><i style={{ background: s.color || 'var(--ink)' }} />{s.name}</th>
-                    <td>{s.room || '-'}</td>
-                    <td className="r">{usd(s.price)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot><tr><th scope="row" colSpan={2}>Total{Number.isFinite(r.house.rent) && Math.round(total) === Math.round(r.house.rent) ? ', equal to the house rent' : ''}</th><td className="r">{usd(total)}</td></tr></tfoot>
-            </table>
-          </div>
-          <div className="pd-checks">
-            <div className="pd-check">
-              <span className="pd-check-k">Envy</span>
-              <span className="pd-check-v">{r.checked === true ? 'none' : r.checked === false ? 'check failed' : 'not checked'}</span>
-              <span className="pd-small">At these prices no friend prefers another friend's room. A separate checker re-tests it.</span>
-            </div>
-            <div className="pd-check">
-              <span className="pd-check-k">Caps</span>
-              <span className="pd-check-v">{r.feasible ? 'all met' : 'not all met'}</span>
-              <span className="pd-small">Each friend's cap is private. The others never see it.</span>
-            </div>
+        <div className="pd-two">
+          <HouseDiagram r={r} />
+          <div className="pd-hero">
+            <div className="pd-hero-v">{usd(total)}<span> a month</span></div>
+            <div className="pd-hero-l">{r.house.name}{Number.isFinite(r.house.rent) && Math.round(total) === Math.round(r.house.rent) ? ', every dollar of the rent covered' : ''}</div>
+            <ul className="pd-checks">
+              <li className={r.checked === true ? 'ok' : ''}><Tick ok={r.checked === true} />{r.checked === true ? 'Nobody would swap' : r.checked === false ? 'Swap check failed' : 'Not checked'}</li>
+              <li className={r.feasible ? 'ok' : ''}><Tick ok={!!r.feasible} />{r.feasible ? 'Every cap met' : 'Not every cap met'}</li>
+            </ul>
             {r.capMove && (
-              <div className="pd-check move">
-                <span className="pd-check-k">If {r.capMove.name}'s cap drops ${r.capMove.delta}</span>
-                <span className="pd-small">
-                  {r.capMove.topAfter?.id === r.house.id
-                    ? `${r.house.name} stays on top.`
-                    : `${r.house.name} ${r.capMove.oldTopFeasible ? 'drops' : 'no longer fits every cap'}, and the group moves to ${r.capMove.topAfter?.name}.`}
-                </span>
-              </div>
+              <p className="pd-gray pd-capmove">
+                If {r.capMove.name}'s cap drops ${r.capMove.delta}: {r.capMove.topAfter?.id === r.house.id ? `${r.house.name} stays on top.` : `the group moves to ${r.capMove.topAfter?.name}.`}
+              </p>
             )}
           </div>
         </div>
       )}
-      <p className="pd-src pd-spread">
-        Solved now, in this browser, by the same code as the Group tab{r && Number.isFinite(r.ms) ? `, all ${r.houses} houses in ${int(r.ms)} ms` : ''}.
-        Envy-free maximin rents (Gal, Mash, Procaccia, Zick 2017) with private caps (Procaccia, Velez, Yu 2018).
-      </p>
-    </>
+    </Slide>
   );
 }
 
-// 4. How it works, drawn as a route line: each stage is a stop.
+const Tick = ({ ok }) => (
+  <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+    <circle cx="11" cy="11" r="10" fill={ok ? C.green : C.light} />
+    {ok ? <path d="M6.5 11.5 L9.6 14.5 L15.5 8" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M7 11 H15" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />}
+  </svg>
+);
+
+function HouseDiagram({ r }) {
+  const placed = r.split.map((s) => ({ ...s, floor: String(s.roomInfo?.floor ?? '1'), sqft: s.roomInfo?.sqft || 120 }));
+  const floors = FLOOR_ORDER.filter((f) => placed.some((p) => p.floor === f));
+  placed.forEach((p) => { if (!floors.includes(p.floor)) floors.push(p.floor); });
+  const W = 760, L = 112, R = 8, roof = 46, fh = 92, gap = 0;
+  const H = roof + floors.length * (fh + gap) + 4;
+  const inner = W - L - R;
+  const maxFloor = Math.max(...floors.map((f) => placed.filter((p) => p.floor === f).reduce((a, p) => a + p.sqft, 0)));
+  return (
+    <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img"
+      aria-label={`${r.house.name}: ${r.split.map((s) => `${s.name}, ${s.room}, ${usd(s.price)}`).join('; ')}.`}>
+      <path d={`M${L - 10},${roof} L${L + inner / 2},4 L${W - R + 10 - 10},${roof}`} fill="none" stroke={C.ink} strokeWidth="2" strokeLinejoin="round" />
+      {floors.map((f, fi) => {
+        const y = roof + fi * (fh + gap);
+        const rooms = placed.filter((p) => p.floor === f);
+        const sum = rooms.reduce((a, p) => a + p.sqft, 0);
+        const span = inner * (sum / maxFloor);
+        const x0 = L + (inner - span) / 2;
+        let x = x0;
+        return (
+          <g key={f}>
+            <text x={0} y={y + fh / 2 + 5} className="pd-lane-k">{FLOOR_NAME[f] || `Floor ${f}`}</text>
+            {f === 'basement' && <line x1={L - 10} x2={W - R} y1={y} y2={y} stroke={C.gray} strokeWidth="1" />}
+            {rooms.map((p) => {
+              const w = span * (p.sqft / sum);
+              const rx = x; x += w;
+              return (
+                <g key={p.name}>
+                  <rect x={rx + 3} y={y + 3} width={w - 6} height={fh - 6} rx="8" fill="#fff" stroke={C.line} />
+                  <rect x={rx + 3} y={y + 3} width={w - 6} height="8" rx="4" fill={p.color || C.ink} />
+                  <text x={rx + 16} y={y + 36} className="pd-room-n">{p.name}</text>
+                  <text x={rx + 16} y={y + 64} className="pd-room-v">{usd(p.price)}</text>
+                  {w > 190 && <text x={rx + w - 14} y={y + 64} textAnchor="end" className="pd-room-s">{p.room}</text>}
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// 4. How it works, drawn as a route line: each stage is a stop, ending in two terminals.
 function HowItWorks({ api, ev }) {
   const f = ev ? evidenceFigures(ev) : {};
   const c = api.config || {};
   const stops = [
-    { k: 'Timetables and streets', t: 'TheRide and U-M bus timetables, week of Nov 30 2026. OpenStreetMap walking streets.', m: 'GTFS, OSM', real: true },
-    { k: 'Router', t: 'Fastest door-to-door trip by bus and foot. One scan reaches every home at once.', m: `Connection Scan (Dibbelt et al. 2017)${f.msPerScan ? `, ${f.msPerScan} ms a scan` : ''}` },
-    { k: 'Your week', t: 'Every trip of your week from every home. Walk, wait, ride and minutes after dusk.', m: 'Dusk from NOAA solar equations' },
-    { k: 'Picks', t: `About ${c.picksMax ?? 6} either-or questions, each the one that teaches the model the most.`, m: 'BALD (Houlsby et al. 2011), particle filter' },
-    { k: 'Ranking', t: `Homes by expected regret in $ a month, over ${c.scenarios ?? '-'} possible fall weeks and ${c.posteriorDraws ?? '-'} draws of your values.`, m: 'Monte Carlo', end: true },
-    { k: 'Fair split', t: 'Rooms and rents nobody envies, best for the worst-off friend, under private caps.', m: 'Envy-free maximin LP', end: true },
+    { k: 'Timetables, streets', m: 'TheRide, U-M, OpenStreetMap', real: true },
+    { k: 'Router', m: `Connection Scan${f.msPerScan ? `, ${f.msPerScan} ms` : ''}` },
+    { k: 'Your week', m: 'Every trip, from every home' },
+    { k: 'Picks', m: `About ${c.picksMax ?? 6} questions` },
   ];
+  const ends = [
+    { k: 'Your best home', m: 'Lowest regret, $ a month' },
+    { k: 'Fair split', m: 'Envy-free, private caps' },
+  ];
+  const W = 1200, H = 360, y = 150, xs = [60, 360, 620, 860], fx = 1000, ey = [70, 250];
   return (
-    <>
-      <div className="pd-kicker">How it works</div>
-      <h1 className="pd-title">Six stops, all in the browser, offline.</h1>
-      <ol className="pd-route" aria-label="Pipeline">
+    <Slide title="Six stops, all in the browser, offline." foot="No API keys and no language model. Every number traces back to a timetable row or a linear program.">
+      <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Pipeline: ${stops.map((s) => s.k).join(', ')}, then ${ends.map((e) => e.k).join(' and ')}.`}>
+        <line x1={xs[0]} x2={xs[3]} y1={y} y2={y} stroke={C.green} strokeWidth="8" strokeLinecap="round" />
+        {ey.map((e) => <path key={e} d={`M${xs[3]},${y} C${xs[3] + 110},${y} ${fx - 110},${e} ${fx},${e}`} fill="none" stroke={C.green} strokeWidth="8" strokeLinecap="round" />)}
         {stops.map((s, i) => (
-          <li key={s.k} className={`${s.real ? 'real' : ''} ${s.end ? 'end' : ''}`}>
-            <span className="pd-stop" aria-hidden="true">{i + 1}</span>
-            <h4>{s.k}</h4>
-            <p>{s.t}</p>
-            <p className="m">{s.real ? <span className="pd-tag real">REAL DATA</span> : s.m}</p>
-          </li>
+          <g key={s.k}>
+            <circle cx={xs[i]} cy={y} r="15" fill={s.real ? C.ink : '#fff'} stroke={C.ink} strokeWidth="4" />
+            <text x={xs[i]} y={y + 50} textAnchor={i === 0 ? 'start' : 'middle'} dx={i === 0 ? -14 : 0} className="pd-stop-k">{s.k}</text>
+            <text x={xs[i]} y={y + 76} textAnchor={i === 0 ? 'start' : 'middle'} dx={i === 0 ? -14 : 0} className="pd-stop-m">{s.m}</text>
+          </g>
         ))}
-      </ol>
-      <p className="pd-body pd-spread">No API keys and no language model. Every number traces back to a bus trip, a timetable row or a linear program.</p>
-      <p className="pd-src">Router, week, picks, ranking and fair split are our own code in engine/*.js (plain JavaScript, no runtime dependencies). React and MapLibre GL JS draw the app.</p>
-    </>
+        {ends.map((e, i) => (
+          <g key={e.k}>
+            <rect x={fx - 16} y={ey[i] - 16} width="32" height="32" rx="8" fill="#fff" stroke={C.ink} strokeWidth="4" />
+            <text x={fx + 32} y={ey[i] - 2} className="pd-stop-k">{e.k}</text>
+            <text x={fx + 32} y={ey[i] + 24} className="pd-stop-m">{e.m}</text>
+          </g>
+        ))}
+        <text x={xs[0] - 14} y={y - 40} className="pd-stop-m">Real data</text>
+      </svg>
+    </Slide>
   );
 }
 
-// 5. Evidence, read from the evidence files.
+// 5. Evidence: three checks, each a small chart and one number.
 function Evidence({ ev }) {
-  if (!ev) return <><div className="pd-kicker">Evidence</div><h1 className="pd-title">Reading the evidence files...</h1></>;
+  if (!ev) return <Slide title="Each model checked against something independent."><Wait what="Reading the evidence files." /></Slide>;
   const f = evidenceFigures(ev);
+  const h = r5Diffs(ev.r5);
+  const series = regretSeries(ev.recovery)?.filter((x) => x.policy !== 'fixed');
   return (
-    <>
-      <div className="pd-kicker">Evidence</div>
-      <h1 className="pd-title">Each model checked against something independent.</h1>
-      <div className="pd-ev">
+    <Slide title="Each model checked against something independent." foot="Read live from the test files. Details in the How we know tab.">
+      <div className="pd-three">
         <section>
-          <h3>The router</h3>
-          {f.trips ? (
-            <div className={`pd-big ${f.trips.pass ? 'ok' : ''}`}>
-              {int(f.trips.equal)}<span className="of"> of {int(f.trips.total)}</span>
-              <small>stop-to-stop trips equal to the second, against a separate Python router written from the raw timetables ({f.trips.date}).</small>
-            </div>
-          ) : <Missing what="router.json" />}
-          <ul>
-            {f.arrivals && <li>{int(f.arrivals.equal)} of {int(f.arrivals.total)} stop arrivals equal.</li>}
-            {f.r5 ? (
-              <li>
-                Against r5py {f.r5.version} (Conveyal R5), {int(f.r5.pairs)} trips: median gap {one(f.r5.median)} min,
-                {' '}{pct(f.r5.within2)} within 2 min of the {int(f.r5.both)} both can make. R5 waits at least 60 s before
-                each boarding by design.
-              </li>
-            ) : <li><Missing what="r5.json" /></li>}
-          </ul>
+          {f.trips ? <div className="pd-ev-v">{int(f.trips.equal)}<span> of {int(f.trips.total)}</span></div> : <Wait what="router.json not run." />}
+          <div className="pd-ev-l">trips equal to the second against a separate router</div>
+          {h && <div className="pd-ev-chart"><DiffHistogram data={h} compact height={190} /><div className="pd-ev-c">Against R5: minutes apart, green within 2</div></div>}
         </section>
         <section>
-          <h3>The fair split</h3>
-          {f.lp ? (
-            <div className={`pd-big ${f.lp.envyFree === f.lp.instances ? 'ok' : ''}`}>
-              {int(f.lp.envyFree)}<span className="of"> of {int(f.lp.instances)}</span>
-              <small>random houses of 2 to 6 people: envy-free, rents add up, and a separate checker agrees.</small>
-            </div>
-          ) : <Missing what="lp.json" />}
-          {f.lp && (
-            <ul>
-              <li>Hand cases {f.lp.published.map((p) => p.k).join(', ')}, including the infeasible-cap example of Procaccia, Velez and Yu (2018): {f.lp.published.every((p) => p.pass) ? 'all pass' : 'not all pass'}.</li>
-              {Number.isFinite(f.lp.p50ms5) && <li>Median solve, five-person house: {f.lp.p50ms5} ms.</li>}
-            </ul>
-          )}
+          {f.rec?.main ? <div className="pd-ev-v">{usd(-f.rec.main.diff.mean)}<span> a month</span></div> : <Wait what="recovery.json not run." />}
+          <div className="pd-ev-l">less lost to the wrong home than random questions</div>
+          {series && <div className="pd-ev-chart"><RegretCurves series={series} compact height={190} /><div className="pd-ev-c">After each question: <b className="pd-green">ours</b> vs random</div></div>}
         </section>
         <section>
-          <h3>The picks</h3>
-          {f.rec?.main ? (
-            <div className="pd-big ok">
-              {usd(-f.rec.main.diff.mean)}<span className="of"> a month</span>
-              <small>less regret than random questions, on students whose values sit far from our prior (95% interval {usd(-f.rec.main.diff.hi)} to {usd(-f.rec.main.diff.lo)}).</small>
-            </div>
-          ) : <Missing what="recovery.json" />}
-          {f.rec && (
-            <ul>
-              <li>{int(f.rec.trials)} SYNTHETIC students per setting, {f.rec.picks} picks each. Top home found {pct(f.rec.main?.top1Bald, 0)} of the time, against {pct(f.rec.main?.top1Random, 0)} with random questions.</li>
-              <li>
-                Lower regret than random in {f.rec.randomWins} of {f.rec.randomSettings} settings. Against a fixed list of good
-                questions on the same hard students: lower in {f.rec.fixedOffLower}, higher
-                in {f.rec.fixedOffHigher}, no clear difference in {f.rec.fixedOffSettings - f.rec.fixedOffLower - f.rec.fixedOffHigher} of {f.rec.fixedOffSettings}.
-              </li>
-            </ul>
-          )}
+          {f.lp ? <div className="pd-ev-v">{int(Math.min(f.lp.envyFree, f.lp.checkerOk))}<span> of {int(f.lp.instances)}</span></div> : <Wait what="lp.json not run." />}
+          <div className="pd-ev-l">random houses split with nobody wanting to swap</div>
+          {ev.lp && <div className="pd-ev-chart"><CheckGrid lp={ev.lp} cols={20} cell={3} gap={1} showLabels={false} /><div className="pd-ev-c">One square per house</div></div>}
         </section>
       </div>
-      <p className="pd-src pd-spread">Read live from web/public/data/evidence/router.json, r5.json, lp.json and recovery.json. Full tables in the Evidence tab.</p>
-    </>
+    </Slide>
   );
 }
 
 // 6. The business, as a hypothesis.
-function Business() {
+function Business({ api }) {
+  const W = 1200, H = 300;
+  const colors = (api?.data?.personas || []).map((p) => p.color).filter(Boolean).slice(0, 5);
   return (
-    <>
-      <div className="pd-kicker">The business <span className="pd-tag hyp">HYPOTHESIS, NOT TESTED</span></div>
-      <h1 className="pd-title">The group is the user. The operator would pay.</h1>
-      <table className="pd-biz">
-        <thead><tr><th scope="col">Who</th><th scope="col">What they get</th><th scope="col">Pays?</th><th scope="col">How we would test it</th></tr></thead>
-        <tbody>
-          <tr>
-            <th scope="row">Groups of friends</th>
-            <td>A house, a room each and a split everyone can accept, before anyone signs.</td>
-            <td className="pay">Free</td>
-            <td>Do groups that use it agree faster than groups that do not?</td>
-          </tr>
-          <tr>
-            <th scope="row">Operators of one-of-a-kind houses</th>
-            <td>Groups that arrive agreed, and a fair rent per odd room. That is the Operator tab.</td>
-            <td className="pay">Would pay, we think</td>
-            <td>One operator, one leasing season: time to sign and empty rooms, with and without it.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p className="pd-small pd-spread">
-        No market size, price or revenue figure here. We have not measured one. Synthetic today: homes, rooms, rents
-        and the Operator population <span className="pd-tag syn">SYNTHETIC</span>, the students <span className="pd-tag syn">FICTIONAL</span>.
-        Real: TheRide and U-M timetables, OpenStreetMap streets and places, daylight.
-      </p>
-    </>
+    <Slide title="The group is the user. The operator would pay." aside={<span className="pd-chip">Hypothesis, not tested</span>}
+      foot="No market size, price or revenue figure: we have not measured one.">
+      <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Groups of friends use it free and arrive agreed; operators of one-of-a-kind houses would pay, we think.">
+        <defs><marker id="pd-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill={C.ink} /></marker></defs>
+        <g>
+          <rect x="20" y="40" width="380" height="170" rx="8" fill="#fff" stroke={C.line} />
+          {colors.map((c, i) => <circle key={c} cx={64 + i * 34} cy="86" r="13" fill={c} stroke="#fff" strokeWidth="2" />)}
+          <text x="50" y="146" className="pd-node-k">Groups of friends</text>
+          <text x="50" y="180" className="pd-node-m">Free</text>
+        </g>
+        <line x1="420" x2="776" y1="125" y2="125" stroke={C.ink} strokeWidth="3" markerEnd="url(#pd-arrow)" />
+        <text x="598" y="106" textAnchor="middle" className="pd-stop-m">arrive agreed, with a fair rent per room</text>
+        <g>
+          <rect x="800" y="40" width="380" height="170" rx="8" fill="#fff" stroke={C.ink} strokeWidth="2" />
+          <path d="M836,98 L866,72 L896,98 L896,104 L836,104 Z M842,104 L842,132 L890,132 L890,104" fill="none" stroke={C.ink} strokeWidth="2.5" strokeLinejoin="round" />
+          <text x="830" y="166" className="pd-node-k">Operators of odd houses</text>
+          <text x="830" y="196" className="pd-node-m">Would pay, we think</text>
+        </g>
+        <text x="50" y="262" className="pd-stop-m">Test: do groups that use it agree faster?</text>
+        <text x="830" y="262" className="pd-stop-m">Test: one operator, one leasing season</text>
+      </svg>
+    </Slide>
   );
 }
 
-// 7. Next (optional).
+// 7. Next (optional): the line, extended with dashed stops not built yet.
 function Next() {
+  const stops = ['Real listings', 'Real students', 'Fall timetables', 'Night, weather', 'Stop limits'];
+  const W = 1200, H = 260, y = 110, x0 = 60, step = 212;
   return (
-    <>
-      <div className="pd-kicker">What we would do next</div>
-      <h1 className="pd-title">Make it true for a real house and a real group.</h1>
-      <ul className="pd-list">
-        <li><b>Real listings.</b> The engine reads any listing file. Start with one operator's houses and rooms.</li>
-        <li><b>Real students.</b> Check that six picks match what students say they value. Picks like these tend to understate the value of time (Small 2012).</li>
-        <li><b>Fall timetables.</b> Today one December week stands in for both terms. Daylight is already computed per term date.</li>
-        <li><b>Late night and weather.</b> FlexRide is on demand and not in the timetables. Walking is 1.3 m/s for everyone, with no hills or snow.</li>
-        <li><b>Mid-trip stop limits.</b> A stop in the middle of a trip where the bus only drops off or only picks up is not modeled yet. First and last stops already are.</li>
-      </ul>
-    </>
+    <Slide title="Make it true for a real house and a real group.">
+      <svg className="pd-svg" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Next: ${stops.join(', ')}.`}>
+        <line x1={x0} x2={x0 + 60} y1={y} y2={y} stroke={C.green} strokeWidth="8" strokeLinecap="round" />
+        <line x1={x0 + 60} x2={x0 + 170 + (stops.length - 1) * step} y1={y} y2={y} stroke={C.green} strokeWidth="4" strokeDasharray="10 9" />
+        <circle cx={x0} cy={y} r="15" fill={C.ink} />
+        <text x={x0 - 14} y={y - 34} className="pd-stop-m">Today</text>
+        {stops.map((s, i) => {
+          const x = x0 + 170 + i * step;
+          return (
+            <g key={s}>
+              <circle cx={x} cy={y} r="14" fill="#fff" stroke={C.ink} strokeWidth="3" strokeDasharray="5 4" />
+              <text x={x} y={y + 52} textAnchor="middle" className="pd-stop-k">{s}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </Slide>
   );
 }
 
@@ -365,55 +472,61 @@ export const SLIDES = [
     id: 'problem', title: 'The problem', Comp: Problem,
     notes: [
       'Read the title. This is the example from the case sheet.',
-      'Point at the table: same home, three campuses, two hours. The numbers are computed live, not typed in.',
-      'The late column is the bus at 11:30 PM. Fewer buses, so longer waits, and the walk is in the dark.',
-      'Second problem: in Ann Arbor you sign months before you know your fall schedule.',
-      'If asked: you can switch the home in the menu above the table.',
+      'Point at the lines: same home, three campuses, walk or bus, 2:00 PM or 11:30 PM. The minutes are computed live, not typed in.',
+      'Bus lines are drawn in each route\'s real color. Dashed is walking, gray is waiting at the stop. The navy band is a trip after dark.',
+      'The 11:30 PM bus: fewer buses, so longer waits, and the walk is in the dark.',
+      'Second problem: in Ann Arbor you sign months before you know your fall schedule. Ann Arbor\'s ORD-24-03 lets a landlord sign next year\'s tenant 210 days into the current lease.',
+      'Bus minutes run from leaving the building to the front door, wait at the stop included. Walking is 1.3 m/s on OpenStreetMap streets.',
+      'If asked: you can switch the home in the menu at the top right.',
     ],
   },
   {
     id: 'student', title: 'What a student sees', Comp: Student,
     notes: [
       'One fictional student, Jordan, a North Campus engineer with a late lab.',
-      'Left: the listing with the lowest rent. Right: the home worth the most to Jordan once the whole week is counted.',
-      'Read the dollar gap in the middle. It is computed now from the real timetables, not typed in.',
+      'Each dot is a home: rent across, hours a month getting around up. Darker green fits Jordan\'s week better.',
+      'Black ring: the listing with the lowest rent. Green ring: the home worth the most to Jordan once the whole week is counted.',
+      'Read the dollar gap on the right. It is computed now from the real timetables, not typed in.',
       'Say this out loud: most of the gap is the cheap home\'s trips with no ride home, priced at Jordan\'s demo value per stranded trip. A real student sets that value with the picks.',
-      'Then switch to the Me tab and show the picks and the ranking.',
+      'Then switch to the You tab and show the picks and the ranking.',
     ],
   },
   {
     id: 'group', title: 'What a group gets', Comp: Group,
     notes: [
       'Five fictional friends. Each enters a week and a private cap.',
-      'Read the split: one room each, rents add up to the house rent, and nobody would rather swap.',
-      'Read the cap line: one friend lowers a private cap a little and the whole group moves house.',
-      'Then switch to the Group tab.',
+      'Read the house: one room each, floor by floor, rooms drawn to size. The rents add up to the house rent, and nobody would rather swap.',
+      'Read the cap line: one friend lowers a private cap a little and the whole group may move house.',
+      'Method: envy-free maximin rents (Gal, Mash, Procaccia, Zick 2017) with private caps (Procaccia, Velez, Yu 2018).',
+      'Then switch to the Your group tab.',
     ],
   },
   {
     id: 'how', title: 'How it works', Comp: HowItWorks,
     notes: [
-      'Read the line left to right like a bus route: real timetables and streets, our router, the week, the picks, then the two outputs, the ranking and the fair split.',
-      'Router: Connection Scan Algorithm, a published method for timetable routing.',
-      'Picks: each question is chosen to teach the model the most. That is the AI part. No language model, on purpose: it runs offline and every number can be traced.',
-      'Fair split: the envy-free rent method behind Spliddit, with private caps.',
+      'Read the line left to right like a bus route: real timetables and streets, our router, the week, the picks, then the two outputs, the best home and the fair split.',
+      'Router: Connection Scan Algorithm (Dibbelt et al. 2017), a published method for timetable routing.',
+      'Your week: every trip of your week from every home. Walk, wait, ride and minutes after dusk, with dusk from the NOAA solar equations.',
+      'Picks: each question is chosen to teach the model the most (BALD, Houlsby et al. 2011, with a particle filter). That is the AI part. No language model, on purpose: it runs offline and every number can be traced.',
+      'Ranking: expected regret in $ a month over many possible fall weeks and many draws of your values (Monte Carlo).',
+      'Fair split: the envy-free rent method behind Spliddit, with private caps, solved as a linear program.',
     ],
   },
   {
     id: 'evidence', title: 'Evidence', Comp: Evidence,
     notes: [
       'Router: a second router, written separately in Python, gets the same answer on every trip.',
-      'R5 is a widely used transit engine. It differs by design, so small gaps are expected.',
+      'R5 is a widely used transit engine. It differs by design (it waits at least 60 s before each boarding), so small gaps are expected.',
       'Fair split: thousands of random houses, every split envy-free and checked by separate code. Read the number off the slide.',
-      'Picks: tested on SYNTHETIC students. Read the regret number and the comparison with a fixed list exactly as the slide states it, including any setting where we did not win.',
+      'Picks: tested on SYNTHETIC students. Read the regret number exactly as the slide states it. The How we know tab shows every setting, including the fixed list of questions.',
     ],
   },
   {
     id: 'business', title: 'The business', Comp: Business,
     notes: [
       'Say "hypothesis" out loud. We have not tested it with an operator.',
-      'Groups use it free. The operator of irregular houses gets agreed groups and a fair rent per room.',
-      'Read the last column: each row ends in a test we have not run yet.',
+      'Groups use it free. The operator of irregular houses gets agreed groups and a fair rent per room. That is the Owners tab.',
+      'Each side ends in a test we have not run yet: do groups agree faster, and one operator over one leasing season, time to sign and empty rooms.',
       'Be clear about what is synthetic: homes, rents, rooms, people. Timetables, streets and places are real.',
     ],
   },
@@ -421,7 +534,11 @@ export const SLIDES = [
     id: 'next', title: 'Next', Comp: Next,
     notes: [
       'Optional. Use it only if there is time, or in Q&A.',
-      'Each item is a known limit we already state in the app.',
+      'Real listings: the engine reads any listing file. Start with one operator\'s houses and rooms.',
+      'Real students: check that six picks match what students say they value. Picks like these tend to understate the value of time (Small 2012).',
+      'Fall timetables: today one December week stands in for both terms. Daylight is already computed per term date.',
+      'Late night and weather: FlexRide is on demand and not in the timetables. Walking is 1.3 m/s for everyone, with no hills or snow.',
+      'Mid-trip stop limits: a stop in the middle of a trip where the bus only drops off or only picks up is not modeled yet. First and last stops already are.',
     ],
   },
 ];

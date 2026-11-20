@@ -33,11 +33,11 @@ export default function Ranking({ api, rank, baseline, limit = 12, selected, onS
         <thead>
           <tr>
             <th className="num">#</th>
-            <th title="Under each home: its biggest plus or minus against the middle home, dollars per month at your median values">Home, best room, biggest plus or minus</th>
+            <th title="Under each home: its biggest plus or minus against the middle home, dollars per month at your median values">Home</th>
             <th className="num" title="Mean over fall weeks and preference draws of how much worse this home is than the best one, $/month">Expected regret</th>
-            <th title="50 equally likely outcomes of monthly regret; dots at 0 mean this home was the best">Regret, 50 equally likely outcomes ($0 to {money(max)})</th>
-            <th className="num" title="Share of (week, preference) draws where this home is best">P(best)</th>
-            <th className="num" title="Rent plus the money value of travel time, darkness and stranded trips, less the room's value; 80% range">All-in cost /mo</th>
+            <th title="50 equally likely outcomes of monthly regret; dots at 0 mean this home was the best">50 likely outcomes, $0 to {money(max)}</th>
+            <th className="num" title="Share of (week, preference) draws where this home is best">Chance best</th>
+            <th className="num" title="Rent plus the money value of travel time, darkness and stranded trips, less the room's value; 80% range">Cost to you /mo</th>
             {baseline && <th className="num">Before</th>}
           </tr>
         </thead>
@@ -53,7 +53,7 @@ export default function Ranking({ api, rank, baseline, limit = 12, selected, onS
                   <Why note={notes?.get(r.homeId)} />
                 </td>
                 <td className="num">{money(r.expRegret)}</td>
-                <td><DotPlot dots={r.dots} max={max} width={240} height={30} color={i === 0 ? 'var(--accent)' : 'var(--ink)'} title={`Regret outcomes for ${name(r.homeId)}`} /></td>
+                <td><DotPlot dots={r.dots} max={max} width={240} height={30} color={i === 0 ? '#1F6F4A' : '#1A1A1A'} title={`Regret outcomes for ${name(r.homeId)}`} /></td>
                 <td className="num">{pct(r.pBest)}</td>
                 <td className="num">{money(-r.meanU)} <span className="muted small">({money(-r.hi)} to {money(-r.lo)})</span></td>
                 {baseline && (

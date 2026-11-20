@@ -44,12 +44,12 @@ fall week before signing (expected value of perfect information), in dollars a m
 The app uses the posterior median as its one point estimate everywhere, the same number "What the picks say"
 shows.
 
-**Maximin envy-free split and the envy matrix.** First give rooms to people so the group's total value is as high
+**Maximin envy-free split and the swap check.** First give rooms to people so the group's total value is as high
 as possible. Then set rents so they add up to the house rent exactly, nobody would rather have someone else's
 room at that room's rent, and the worst-off person is as well off as possible. That is one linear program,
-solved by our own simplex code (Gal, Mash, Procaccia and Zick 2017, the method behind Spliddit). Each envy matrix
-cell is how many dollars a month the row person would lose by swapping into the column person's room. All cells
-at zero or above means envy-free. A separate checker recomputes every cell before the matrix is shown.
+solved by our own simplex code (Gal, Mash, Procaccia and Zick 2017, the method behind Spliddit). Each cell of the
+**Swap check** grid (Your group, Details) is how many dollars a month the row person would lose by swapping into the column person's room. All cells
+at zero or above means envy-free. A separate checker recomputes every cell before the "Nobody would swap" check shows.
 
 **Private caps.** Each member types a cap only the solver sees. Caps are extra limits in the same LP (Procaccia,
 Velez and Yu 2018). If no envy-free split fits every cap, Quorum finds the split with the smallest worst overrun,
@@ -70,14 +70,15 @@ p10, p50 and p90 across those groups is its fair share. A renovation re-solves t
 | Jordan's late trip | Georgetown Blvd 19 min with 13.5 min walking (over the 10 min cap); Broadway St 18 min with 6.3 min walking | script section 1 |
 | Pitch slide 1 | Plymouth Rd apartment (North Campus): from Beyster 11 min at 2 PM, 24 at 11:30 PM; from the UgLi 31 and 39; range 11 to 53 min | script section 0 |
 | Jordan before any pick | Broadway St $38 regret, P(best) 71%; value of knowing $18/mo; break-even $75/h vs median $14.9/h | script section 2a |
+| Your top 3, before any pick | Broadway St $1,351/mo cost to you, $923 rent, 4.4 h/wk, 2 late nights, "Lower rent +$178/mo vs a typical home"; Catherine St $1,414; East Ann St $1,470 | script section 10 |
 | Jordan's ranking after 3 picks | Broadway St $36 regret, P(best) 74%; value of knowing $31/mo; break-even $75/h vs median $15.2/h | script section 2b |
 | Filter baseline | Cheapest North Campus home, Georgetown Blvd ($821 from), ranks #8 of 30 for Jordan: $269 regret, $233/mo worse than Broadway; P(best) 9.4% | script section 2c |
-| Lab moved to Central | Broadway falls #1 to #9; top three Lawrence St $52, Church St $54, Lincoln Ave $58 (spread $6); leader P(best) 28%; value of knowing $34/mo | script section 3a |
+| Lab moved to Central | Broadway falls #1 to #9; top three Lawrence St $52, Church St $54, Lincoln Ave $58 (spread $6); leader P(best) 28%; value of knowing $34/mo; top 3 cards $1,411 / $1,414 / $1,418 cost to you | script sections 3a and 10 |
 | Group split, Broadway St, $4,150 | $773 / $883 / $859 / $779 / $854; 4 of 20 envy margins exactly $0; envy-free in 2% of value draws | script section 4 |
 | Priya's cap move | $875 to $830 makes Broadway infeasible; group moves to Georgetown Blvd ($3,950); her private gap $25 | script section 4b |
-| Operator asking vs fair | South Forest Ave: Primary with bath asks $1,100 vs typical fair $1,161 ($61 low); Basement asks $965 vs $928 ($37 high) | script section 5 |
-| Operator half bath | Basement room +$30/mo fair share at the same house rent; +$32/mo group value; slider at $30 gives +$15, at $120 gives +$57 | script section 5 |
-| Tests | 64 engine tests pass (`npm test`), 15 view tests pass (`cd web && npm test`) | run Fri Nov 20 |
+| Owners asking vs fair | Church St house ($4,650), the house Owners opens on: 1 of 5 rooms priced off; Back room asks $910 against a fair range of $859 to $898, so "$12 over"; 339 of 2,000 sample students pick it first | script section 5 |
+| Owners half bath | Basement room +$32/mo typical fair rent at the same house rent (Attic -$6, Front -$6, Back $0, Parlor -$18); +$40/mo group value; slider at $30 gives +$17, at $120 gives +$65 | script section 5 |
+| Tests | 98 engine tests pass (`npm test`), 27 view tests pass (`cd web && npm test`) | run Fri Nov 20 |
 
 ## Hard questions, short honest answers
 
@@ -108,9 +109,9 @@ an hour down to $6.9 to $25.3. The cost of a trip with no ride went from a media
 knowing the schedule went from $18 to $31 a month. In the recovery test, these questions give $19.4 a month
 lower regret than random questions on the off-prior set.
 
-**"The pill says 1.00, the ranking says 74%. Which is it?"** Both, on different questions. 1.00 is on Jordan's
-single most likely week, which is what the stop rule checks. 74% is across all 24 possible weeks and 200 draws of
-Jordan's values. The pill prints both in one line.
+**"The picks say Enough to rank, but Details says 74%. Which is it?"** Both, on different questions. The stop
+rule checks Jordan's single most likely week, where Broadway is best with probability 1.00. Details shows 74%,
+across all 24 possible weeks and 200 draws of Jordan's values.
 
 **"Has a real student done the picks? Did you test with users?"** No. There has been no user testing and no
 formal interviews. We have not timed a real person on the picks. In the demo, pick 1 is answered by hand and the
@@ -120,9 +121,9 @@ rest by Jordan's fictional values. You may speak from your own housing search, i
 posterior assumes, so it checks the inference and the question picker, not real people. Real students are the
 next test. It also shows one weak spot: when the true cost of a dark walk sits far above our prior, the 80%
 interval covers it only 8 to 9% of the time after 6 picks (81% when truths come from the prior). That is why the
-app tags that weight "mostly prior".
+picks section shows at most three learned values, the ones the picks narrowed most, and leaves the rest out.
 
-**"How does a student enter their own week?"** In **Your week** on Me: toggle an entry, change its days, times and
+**"How does a student enter their own week?"** In **Your week** on You: click **Edit**, then toggle an entry, change its days, times and
 place, or add a job. Or import a calendar file or paste schedule lines (see below). Places are a fixed list of 31
 real Ann Arbor places, not a free address box. We have not timed it.
 
@@ -236,7 +237,7 @@ bath at $921. The ranking always picks each student's best room at its asking re
 
 ## The new pieces, short answers
 
-**"Where do the pros and cons on the verdict card come from?"** From the same utility the ranking uses
+**"Where do the pros and cons come from (the one line on each top 3 card, and Why and Watch out in Details)?"** From the same utility the ranking uses
 (`engine/explain.js` on top of `engine/model.js`). For each home we take its best room and the student's most
 likely week, with every value at the median of what the picks say. That monthly value splits into seven dollar
 pieces: rent, travel time, time outside after dark, trips with no way that fits, bathroom, size and daylight. The
@@ -244,7 +245,8 @@ pieces add up to the utility exactly; a test checks it for every home and person
 the middle home, the per-piece median over all 30 homes. The biggest gains are "Why it fits", the biggest costs
 are "Watch out for". Trip lines name a real trip from the timetable. The runner-up line is exact because utility
 is linear in each value. Limit: the card uses one week at median values, while the ranking averages 24 weeks and
-200 value draws. When they disagree, the card says so (section 7).
+200 value draws. When they disagree, Details says so (section 7). Each top 3 card shows one of these pieces, never
+the same kind as a card above it (section 10).
 
 **"What does the calendar import read, and where does it go?"** Nothing is read until the student ticks the
 consent box. Then it reads an .ics file or pasted lines in this browser, in `engine/ics.js`. It keeps only the
@@ -267,8 +269,8 @@ half-hour from 9:00 to 19:00. A slot counts only if every member is free, can re
 were by walking, bike (only for those who bike) or the real buses within their walking limits, and can get to
 their next entry on time. Slots are scored by group travel minutes plus a penalty for tight connections; different
 days come first. For Broadway, 5 of 100 half-hours work, all on Friday (section 9). Quorum drafts a plain note with
-the house, the group size and the times, and no names, rents or caps. It never sends anything. The listing contact
-is SAMPLE; the group copies the note and sends it themselves.
+the house, the group size and the times, and no names, rents or caps. It never sends anything ("Quorum sends nothing."); the group copies the note
+and sends it themselves.
 
 **"Why not just ask a chatbot?"** A chatbot can talk about bus routes, but it does not run the timetable. Quorum
 routes every trip in the week, for every home, for each of 24 possible fall weeks, on the real TheRide and U-M

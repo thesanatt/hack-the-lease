@@ -1,15 +1,17 @@
-// Button.
+// Button. One primary per screen; everything else reads as a quiet text button.
 // Props:
-//   variant  'default' | 'primary' (timetable red) | 'quiet' (underlined text)
+//   variant  'default' (text button with a soft hover) | 'primary' (filled green) | 'quiet' (underlined gray text)
+//   tone     same as variant (older callers)
 //   small    bool
 //   pressed  bool or undefined; when set the button is a toggle (aria-pressed)
 //   onClick, disabled, title, type ('button' by default), children
-// Seg: a row of joined toggle buttons. Props: options [{value, label, title?}], value, onChange(value), small.
-export default function Button({ variant = 'default', small = false, pressed, onClick, disabled, title, type = 'button', children }) {
+// Seg: joined toggles on one soft track. Props: options [{value, label, title?}], value, onChange(value), small, label.
+export default function Button({ variant, tone, small = false, pressed, onClick, disabled, title, type = 'button', children }) {
+  const v = variant || tone || 'default';
   return (
     <button
       type={type}
-      className={`btn ${variant === 'default' ? '' : variant} ${small ? 'small' : ''}`}
+      className={`btn${v === 'default' ? '' : ` ${v}`}${small ? ' small' : ''}`}
       aria-pressed={pressed === undefined ? undefined : !!pressed}
       onClick={onClick}
       disabled={disabled}

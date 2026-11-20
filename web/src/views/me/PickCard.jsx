@@ -1,76 +1,111 @@
-// "Which week would you rather live?" Two real homes, each with its room, rent and this student's week there.
+// "Which week would you rather live?" Two real homes side by side, each with its week ribbon and three numbers,
+// and a "This one" button under each. Progress shows as dots.
 // Props: api, pair ({i, j, ig, mu, s2}), options (flat option list), weekMap, routineWeek, nPicks, stop ({stop, text}),
 //        canAuto (persona has demo theta), onAnswer(choice 'A'|'B'|'skip'), onAuto(), onAutoAll(), last (last pick summary),
-//        busy
+//        busy, personaName (optional, names the demo auto-answer button), dusk (optional, seconds; evening band on the ribbons)
 import { useEffect, useState } from 'react';
-import { Button, Pill, WeekStrip } from '../../components/index.js';
-import { hm, money } from './format.js';
+import { WeekStrip } from '../../components/index.js';
+import { money } from './format.js';
 import { darkOf } from './HomeList.jsx';
+import './calendar/parts.css';
 
-function Option({ api, tag, opt, week, routineWeek }) {
-  const home = api.data.homeById.get(opt.homeId);
-  const r = opt.room;
-  const bath = { private: 'private bath', half: 'half bath', shared: 'shared bath' }[r.bath] || r.bath;
-  const light = ['little daylight', 'some daylight', 'bright'][r.light] ?? '';
+// Nights with a trip that has no allowed ride or walks after dark. Counted from the week's own trips.
+export function lateNights(week) {
+  if (!week) return 0;
+  const days = new Set();
+  for (const t of week.trips || []) if (t.stranded || (t.darkMin || 0) > 0.5) days.add(t.day);
+  return days.size;
+}
+
+const hours = (min) => (min == null || !Number.isFinite(min) ? '--' : (min / 60).toFixed(1));
+
+// A number with its unit; the two cards sit side by side, so the numbers compare directly.
+function Num({ text, unit, flag, title }) {
   return (
-    <div className="opt">
-      <div className="caps muted">Week {tag}</div>
-      <h3>{home?.name}</h3>
-      <div className="small muted">{home?.area}. {r.label}: {r.sqft} sq ft, {bath}, {light}</div>
-      <dl>
-        <dt>Rent with utilities</dt><dd>{money(opt.rent)}/mo</dd>
-        <dt>Door to door</dt><dd>{hm(week?.weeklyMin)}/wk</dd>
-        <dt>Walking or waiting</dt><dd>{hm((week?.walkMin || 0) + (week?.waitMin || 0))}/wk</dd>
-        <dt>After dark</dt><dd>{Math.round(darkOf(week, api.config))} min/wk</dd>
-        <dt>Trips with no ride</dt><dd style={{ color: week?.stranded?.length ? 'var(--bad)' : undefined }}>{week?.stranded?.length ?? 0}/wk</dd>
-      </dl>
-      {week && <WeekStrip compact width={360} trips={week.trips} entries={routineWeek} />}
+    <div className="mp-num" title={title}>
+      <span className="v">{text}</span>
+      <span className="u">{unit}{flag && <span className="mp-flag"> {flag}</span>}</span>
     </div>
   );
 }
 
-export default function PickCard({ api, pair, options, weekMap, routineWeek, nPicks, stop, canAuto, onAnswer, onAuto, onAutoAll, last, busy }) {
+function Option({ api, opt, other, week, otherWeek, routineWeek, onPick, busy, tag, dusk }) {
+  const home = api.data.homeById.get(opt.homeId);
+  const r = opt.room;
+  const bath = { private: 'private bath', half: 'half bath', shared: 'shared bath' }[r.bath] || r.bath;
+  const nA = lateNights(week), nB = lateNights(otherWeek);
+  const tA = week?.weeklyMin ?? 0, tB = otherWeek?.weeklyMin ?? 0;
+  const dark = Math.round(darkOf(week, api.config));
+  return (
+    <div className="mp-opt">
+      <div className="mp-opt-card">
+        <div>
+          <h3 className="mp-name">{home?.name}</h3>
+          <div className="room">{r.label}, {r.sqft} sq ft, {bath}</div>
+        </div>
+        {week && <WeekStrip compact width={460} trips={week.trips} entries={routineWeek} dusk={dusk ?? undefined} />}
+        <div className="mp-nums">
+          <Num worse={opt.rent > other.rent + 0.5} text={money(opt.rent)} unit="a month, rent + utilities"
+            title="Asking rent plus an equal share of utilities" />
+          <Num worse={tA > tB + 3} text={hours(tA)} unit="hours a week getting around"
+            title="Door to door, every trip in the week" />
+          <Num worse={nA > nB} text={String(nA)} flag={week?.stranded?.length > 0 ? 'with no ride' : null}
+            unit={nA === 1 ? 'late night' : 'late nights'}
+            title={`Nights with no ride or walking in the dark. ${dark} min a week after dark${week?.stranded?.length ? `, ${week.stranded.length} trips with no ride` : ''}.`} />
+        </div>
+      </div>
+      <button type="button" className="mp-this" onClick={onPick} disabled={busy}
+        aria-label={`This one: ${home?.name}, week ${tag}`}>This one</button>
+    </div>
+  );
+}
+
+export default function PickCard({ api, pair, options, weekMap, routineWeek, nPicks, stop, canAuto, onAnswer, onAuto, onAutoAll, busy, personaName, dusk }) {
   const A = pair ? options[pair.i] : null, B = pair ? options[pair.j] : null;
-  const closeness = pair ? (Math.abs(pair.mu) < 0.5 ? 'You look close to 50/50 on this one' : 'The model leans one way here') : '';
-  const unknown = pair ? (pair.s2 > 1 ? 'along a trade-off the model knows little about' : 'along a trade-off it already knows fairly well') : '';
+  const max = api.config?.picksMax || 6;
   // Once the stop rule fires, the next question stays folded until asked for, so a stray click cannot answer it.
   const [more, setMore] = useState(false);
   useEffect(() => { setMore(false); }, [nPicks, stop?.stop]);
   const folded = !!stop?.stop && !more;
+  const done = !!stop?.stop;
+  const who = personaName ? `Answer for ${personaName}` : 'Answer for me (demo)';
+  const dots = Array.from({ length: Math.max(max, nPicks) }, (_, k) => k < nPicks);
+
   return (
     <div>
-      <div className="row-flex" style={{ marginBottom: 8 }}>
-        <Pill tone={stop?.stop ? 'good' : 'ink'}>{nPicks} picks</Pill>
-        <span className="small">{stop?.text}{stop?.stop ? ' You can stop here; more picks are optional.' : ''}</span>
+      <div className="mp-pick-top">
+        <span className={`mp-dots ${done ? 'done' : ''}`} role="img" aria-label={`${nPicks} of ${max} picks${done ? ', enough to rank' : ''}`}>
+          {dots.map((on, k) => <i key={k} className={on ? 'on' : ''} />)}
+          {done && <span className="txt">Enough to rank</span>}
+        </span>
       </div>
       {folded && pair && A && B ? (
-        <Button variant="quiet" onClick={() => setMore(true)} disabled={busy}>Ask another question (optional)</Button>
+        <button type="button" className="mp-text-btn" onClick={() => setMore(true)} disabled={busy}>Ask one more</button>
       ) : pair && A && B ? (
         <>
-          <div className="pick">
-            <Option api={api} tag="A" opt={A} week={weekMap.get(A.homeId)} routineWeek={routineWeek} />
-            <Option api={api} tag="B" opt={B} week={weekMap.get(B.homeId)} routineWeek={routineWeek} />
+          <div className="mp-pair" key={`${pair.i}-${pair.j}-${nPicks}`}>
+            <Option api={api} tag="A" opt={A} other={B} week={weekMap.get(A.homeId)} otherWeek={weekMap.get(B.homeId)}
+              routineWeek={routineWeek} busy={busy} dusk={dusk} onPick={() => onAnswer('A')} />
+            <Option api={api} tag="B" opt={B} other={A} week={weekMap.get(B.homeId)} otherWeek={weekMap.get(A.homeId)}
+              routineWeek={routineWeek} busy={busy} dusk={dusk} onPick={() => onAnswer('B')} />
           </div>
-          <div className="row-flex" style={{ marginTop: 10 }}>
-            <Button variant="primary" onClick={() => onAnswer('A')} disabled={busy}>I would rather live week A</Button>
-            <Button variant="primary" onClick={() => onAnswer('B')} disabled={busy}>Week B</Button>
-            <Button onClick={() => onAnswer('skip')} disabled={busy}>Too close to call</Button>
+          <div className="mp-pick-more">
+            <button type="button" className="mp-text-btn" onClick={() => onAnswer('skip')} disabled={busy}>Too close to call</button>
             {canAuto && (
               <>
-                <Button onClick={onAuto} disabled={busy} title="Answers with the persona's demo values (a logit draw), for the demo">Auto-answer</Button>
-                <Button variant="quiet" onClick={onAutoAll} disabled={busy || stop?.stop}>Auto-answer until done</Button>
+                <button type="button" className="mp-text-btn" onClick={onAuto} disabled={busy}
+                  title="Answers with this persona's demo values, for the demo">{who}</button>
+                {!done && (
+                  <button type="button" className="mp-text-btn" onClick={onAutoAll} disabled={busy}
+                    title="Keeps answering with the demo values until the picks are enough">Answer the rest</button>
+                )}
               </>
             )}
           </div>
-          <p className="small muted" style={{ marginTop: 6 }}>
-            Each question is the one whose answer teaches the model the most ({pair.ig.toFixed(3)} nats). {closeness},
-            {' '}{unknown}. Rent, room and the whole week are shown, so the answer prices your time in dollars.
-          </p>
         </>
       ) : (
-        <p className="small muted">No question is left to ask with these homes.</p>
+        <p className="mp-gray">No question is left to ask with these homes.</p>
       )}
-      {last && <p className="small">Last answer: {last}</p>}
     </div>
   );
 }

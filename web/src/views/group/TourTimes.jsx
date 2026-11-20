@@ -1,133 +1,127 @@
-// "Tour it together": half-hour tour times when every member can get to the chosen house and back to their
-// next class on the real timetables, plus a plain-text draft to the listing contact. Engine: engine/tours.js.
+// Tour times: a Mon to Fri by 9 AM to 7 PM grid of half-hours. Green where all members are free and can get to the
+// chosen house and back to their next class on the real timetables; the three best are numbered. Engine: engine/tours.js.
 // Only names, weeks and walking limits go to the engine. Caps and rents are never read here.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Panel, Pill, Label, Button, Pending, Note, modOf } from './kit.jsx';
+import { modOf } from './kit.jsx';
 import { modalRoutine } from './logic.js';
-import { DAY_SHORT, DAY_LONG, clock12, memberLine, dayReason } from './tours/format.js';
+import { DAY_SHORT, clock12 } from './tours/format.js';
 import './tours/tours.css';
 
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
+const FROM = 9 * 3600, TO = 19 * 3600, STEP = 1800;
+const toSec = (s) => { const [h, m] = String(s).split(':').map(Number); return h * 3600 + (m || 0) * 60; };
 
 export default function TourTimes({ api, chosen, members, weeks, cfg, colors }) {
   const tours = modOf(api, 'tours');
   const planner = api?.planner;
   const house = chosen?.home || null;
   const places = api?.data?.places || [];
-  const placeName = useMemo(() => {
-    const byId = api?.data?.placeById || new Map(places.map((p) => [p.id, p]));
-    return (id) => (id === house?.id ? house?.name : byId.get(id)?.label || id);
-  }, [api, places, house]);
 
   // Only id, name and the most likely week (with walking limits) leave this component.
   const people = useMemo(
     () => (members || []).map((m) => ({ id: m.id, name: m.name, routine: modalRoutine(m) })),
     [members],
   );
-  const [state, setState] = useState({ status: 'idle', result: null, error: null, houseId: null });
+  const [state, setState] = useState({ status: 'idle', picks: null, all: null, error: null, houseId: null });
 
   useEffect(() => {
     if (!tours?.findTourSlots || !planner || !house || !people.length) return undefined;
     let live = true;
     setState((s) => ({ ...s, status: 'running' }));
-    // Defer one tick so the split renders first; the search is one timetable scan per free half-hour.
     const id = setTimeout(() => {
       try {
-        const result = tours.findTourSlots(planner, { house, members: people, places, cfg });
-        if (live) setState({ status: 'done', result, error: null, houseId: house.id });
+        const picks = tours.findTourSlots(planner, { house, members: people, places, cfg });
+        const all = tours.findTourSlots(planner, { house, members: people, places, cfg, opts: { top: 1000, gapMin: 0 } });
+        if (live) setState({ status: 'done', picks, all, error: null, houseId: house.id });
       } catch (e) {
-        if (live) setState({ status: 'error', result: null, error: String(e.message || e), houseId: house.id });
+        if (live) setState({ status: 'error', picks: null, all: null, error: String(e.message || e), houseId: house.id });
       }
     }, 0);
     return () => { live = false; clearTimeout(id); };
   }, [tours, planner, house, people, places, cfg]);
 
-  const kicker = 'Tour it together';
-  if (!tours) return <Panel kicker={kicker} title="Tour times"><Pending what="engine/tours.js" /></Panel>;
-  if (!house) return <Panel kicker={kicker} title="Tour times"><p className="qv-muted">Pick a house above first.</p></Panel>;
-
-  const r = state.houseId === house.id ? state.result : null;
   const n = people.length;
-  const names = Object.fromEntries(people.map((p) => [p.id, p.name]));
-  const colorOf = Object.fromEntries((members || []).map((m, i) => [m.id, colors?.[i]]));
-  const right = r
-    ? <Pill tone={r.slots.length ? 'good' : 'bad'}>{r.feasibleSlots} of {r.checked} weekday half-hours work</Pill>
-    : null;
+  const fresh = state.houseId === house?.id;
+  const r = fresh ? state.picks : null;
+  const all = fresh ? state.all : null;
 
   return (
-    <Panel kicker={kicker} title={`When all ${n} can see ${house.name}`} right={right}>
-      {state.status === 'error' && state.houseId === house.id && <Note tone="bad">Tour search failed: {state.error}</Note>}
-      {!r ? (
-        <p className="qv-muted" aria-live="polite">Checking every weekday half-hour from 9:00 am to 7:00 pm against {n} weeks...</p>
-      ) : (
-        <div className="qt-grid">
-          <div className="qt-main">
-            {r.slots.length ? (
-              <div className="qv-scroll">
-                <table className="qv-table qt-table">
-                  <thead>
-                    <tr><th>Time</th><th>How each person gets there, and where they go next</th><th className="num">Group travel</th></tr>
-                  </thead>
-                  <tbody>
-                    {r.slots.map((s) => (
-                      <tr key={`${s.day}-${s.start}`}>
-                        <td className="qt-when">
-                          <div className="qt-day">{DAY_SHORT[s.day]}</div>
-                          <div className="qv-mono">{clock12(s.start)}</div>
-                          <div className="qv-mono qv-muted qv-small">to {clock12(s.end)}</div>
-                        </td>
-                        <td>
-                          <ul className="qt-lines">
-                            {s.members.map((m) => (
-                              <li key={m.id}>
-                                <span className="qv-swatch" style={{ background: colorOf[m.id] || 'var(--muted)' }} />
-                                <b>{m.name}</b> {memberLine(m, placeName)}
-                              </li>
-                            ))}
-                          </ul>
-                        </td>
-                        <td className="num">
-                          {s.travelMin} min
-                          {s.penaltyMin > 0 && <div className="qv-small qv-muted">+{s.penaltyMin} tight</div>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+    <section className="gv-section" aria-label="Tour times">
+      <header>
+        <h2>Tour times</h2>
+        {r && <span className="gv-small gv-gray">{r.feasibleSlots} of {r.checked} half-hours work for all {n}</span>}
+      </header>
+      <div className="gv-card">
+        {!tours ? <p className="gv-gray">Tour search is not available.</p>
+          : !house ? <p className="gv-gray">Pick a house first.</p>
+          : state.status === 'error' && fresh ? <p className="gv-note">Tour search failed: {state.error}</p>
+          : !r ? <p className="gv-wait" aria-live="polite">Checking every weekday half-hour against {n} weeks</p>
+          : (
+            <div className="gv-tours">
+              <div>
+                <TourGrid people={people} picks={r.slots} works={all?.slots || r.slots} />
+                <div className="gv-legend">
+                  <span><i className="gv-sw" style={{ background: '#1f6f4a' }} />Best</span>
+                  <span><i className="gv-sw" style={{ background: '#9cc4a4' }} />Works for all {n}</span>
+                  <span><i className="gv-sw" style={{ background: '#fff', border: '1px dashed #b9b3a7' }} />Free, no way there in time</span>
+                  <span><i className="gv-sw" style={{ background: '#efe8da' }} />Someone has class</span>
+                </div>
               </div>
-            ) : null}
-            {r.slots.some((s) => s.sameDay) && (
-              <Note tone="warn">
-                Only {r.daysWithSlot.map((d) => DAY_LONG[d]).join(' and ')} {r.daysWithSlot.length === 1 ? 'has' : 'have'} a time
-                for all {n}, so the other {r.slots.filter((s) => s.sameDay).length === 1 ? 'time is' : 'times are'} on the same day,
-                at least {tours.TOUR_DEFAULTS?.gapMin ?? 60} minutes apart.
-              </Note>
-            )}
-            {r.slots.length ? null : (
-              <Note tone="bad">No weekday half-hour from 9:00 am to 7:00 pm works for all {n} at {house.name}.</Note>
-            )}
-            <table className="qv-table qt-days" aria-label="Why each weekday does or does not work">
-              <tbody>
-                {WEEKDAYS.map((d) => (
-                  <tr key={d} className={r.byDay?.[d]?.feasible ? '' : 'dim'}>
-                    <td className="qt-day">{DAY_LONG[d]}</td>
-                    <td>{dayReason(r.byDay?.[d], names, n)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="qv-small qv-muted" style={{ margin: 0 }}>
-              From each person's most likely week (entries with a chance of 0.5 or more). A trip starts where they were just
-              before the tour; on a day with nothing before it, at their first stop that day, or their usual place on a free day.
-              Each trip is the fastest of walking, biking for those who bike, and the TheRide and U-M buses for the modeled week,
-              under each person's walking limit. Score: group travel minutes plus {tours.TOUR_DEFAULTS?.tightWeight ?? 2} minutes for every minute a connection has
-              under {tours.TOUR_DEFAULTS?.tightMin ?? 10} minutes to spare. Different days come first. Search took {Math.round(r.ms)} ms.
-            </p>
-          </div>
-          <Draft house={house} n={n} slots={r.slots} tours={tours} />
-        </div>
-      )}
-    </Panel>
+              <Draft house={house} n={n} slots={r.slots} tours={tours} />
+            </div>
+          )}
+      </div>
+    </section>
+  );
+}
+
+function TourGrid({ people, picks, works }) {
+  const cols = (TO - FROM) / STEP;
+  const labelW = 44, cw = 30, ch = 30, g = 2, top = 20;
+  const width = labelW + cols * (cw + g);
+  const height = top + WEEKDAYS.length * (ch + g);
+  const key = (d, s) => `${d}|${s}`;
+  const ok = new Set(works.map((x) => key(x.day, x.start)));
+  const pickNo = new Map(picks.map((x, k) => [key(x.day, x.start), k + 1]));
+  const busyNames = (d, s) => people.filter((p) => (p.routine.week || []).some((e) => (e.days || []).includes(d)
+    && toSec(e.start) < s + STEP && toSec(e.end) > s)).map((p) => p.name);
+  const hours = [];
+  for (let h = 9; h <= 19; h += 2) hours.push(h);
+  return (
+    <svg className="gv-tourgrid" viewBox={`0 0 ${width} ${height}`} role="img"
+      aria-label={`Weekday tour grid. ${works.length} half-hours work for everyone. Best: ${picks.map((x) => `${DAY_SHORT[x.day]} ${clock12(x.start)}`).join(', ')}.`}>
+      {hours.map((h) => {
+        const x = labelW + ((h * 3600 - FROM) / STEP) * (cw + g) - (h === 19 ? g : 0);
+        return <text key={h} x={x} y={12} textAnchor={h === 19 ? 'end' : 'start'}>{`${((h + 11) % 12) + 1} ${h < 12 ? 'AM' : 'PM'}`}</text>;
+      })}
+      {WEEKDAYS.map((d, r) => {
+        const y = top + r * (ch + g);
+        return (
+          <g key={d}>
+            <text className="day" x={0} y={y + ch / 2 + 4}>{DAY_SHORT[d]}</text>
+            {Array.from({ length: cols }, (_, c) => {
+              const s = FROM + c * STEP;
+              const x = labelW + c * (cw + g);
+              const k = key(d, s);
+              const no = pickNo.get(k);
+              const busy = ok.has(k) ? [] : busyNames(d, s);
+              const fill = no ? '#1f6f4a' : ok.has(k) ? '#9cc4a4' : busy.length ? '#efe8da' : '#ffffff';
+              const tip = ok.has(k) ? `${DAY_SHORT[d]} ${clock12(s)}: works for everyone${no ? `, best time ${no}` : ''}`
+                : busy.length ? `${DAY_SHORT[d]} ${clock12(s)}: ${busy.join(', ')} ${busy.length > 1 ? 'have' : 'has'} class`
+                : `${DAY_SHORT[d]} ${clock12(s)}: all free, but someone cannot get there and back in time`;
+              return (
+                <g key={c}>
+                  <title>{tip}</title>
+                  <rect x={x + 0.5} y={y + 0.5} width={cw - 1} height={ch - 1} rx="3" fill={fill}
+                    stroke={!ok.has(k) && !busy.length ? '#b9b3a7' : 'none'} strokeDasharray="3 2" />
+                  {no && <text className="pick-n" x={x + cw / 2} y={y + ch / 2 + 4} textAnchor="middle">{no}</text>}
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -151,34 +145,31 @@ function Draft({ house, n, slots, tours }) {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
-        setStatus('Copied. Paste it into your own email or message.');
+        setStatus('Copied');
         return;
       }
     } catch { /* fall through to the select-text fallback */ }
-    setStatus(selectAll() ? 'Copied. Paste it into your own email or message.' : 'Text selected. Press Ctrl+C to copy it.');
+    setStatus(selectAll() ? 'Copied' : 'Selected. Press Ctrl+C.');
   };
 
+  if (!slots.length) return <p className="gv-gray">No weekday time works for all {n} at {house.name}.</p>;
   return (
-    <div className="qt-draft">
-      <div className="qt-draft-head">
-        <div className="qv-kicker">Draft to the listing contact</div>
-        <Label>SAMPLE contact</Label>
+    <div className="gv-draft">
+      <ol className="gv-picks">
+        {slots.map((s, k) => (
+          <li key={`${s.day}-${s.start}`}>
+            <span className="n">{k + 1}</span>
+            <span className="when">{DAY_SHORT[s.day]} {clock12(s.start)}</span>
+            <span className="gv-small gv-gray">{s.travelMin} min of travel for the group</span>
+          </li>
+        ))}
+      </ol>
+      <textarea ref={ref} readOnly value={text} rows={Math.min(18, text.split('\n').length + 3)}
+        aria-label="Draft message to the listing contact" onFocus={(e) => e.target.select()} />
+      <div className="gv-draft-actions">
+        <button type="button" className="gv-btn primary" onClick={copy}>Copy message</button>
+        <span className="gv-small gv-gray" role="status" aria-live="polite">{status || 'Quorum sends nothing.'}</span>
       </div>
-      {slots.length ? (
-        <>
-          <div className="qt-to qv-small"><span className="qv-muted">To:</span> listing contact for {house.name}</div>
-          <textarea ref={ref} className="qt-text" readOnly value={text} rows={Math.min(18, text.split('\n').length + 5)}
-            aria-label="Draft message to the listing contact" onFocus={(e) => e.target.select()} />
-          <div className="qv-row">
-            <Button tone="primary" onClick={copy}>Copy message</Button>
-            <span className="qv-small" role="status" aria-live="polite">{status}</span>
-          </div>
-          <p className="qv-small qv-muted" style={{ margin: 0 }}>
-            The draft has the group size, the house and the times. It has no names, rents or caps.
-          </p>
-        </>
-      ) : <p className="qv-muted qv-small">No time to propose yet.</p>}
-      <Note>Quorum does not send anything. The listing contact is SAMPLE.</Note>
     </div>
   );
 }
