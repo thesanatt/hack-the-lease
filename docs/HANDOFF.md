@@ -3,11 +3,16 @@
 For Zeren, Ruibin, and the Claude Code session either of you runs in this repo. Read this file first, then
 docs/DEMO.md (the 5 minute script) and docs/QA.md (judge questions).
 
-## The state at handoff (Fri Nov 20 2026, 11:30 AM)
+## The state at handoff (Fri Nov 20 2026, 4:30 PM)
 
-- main is the presentable version. It is deployed at https://quorum-a2.vercel.app (no sign-in).
-- 129 engine tests and 47 web tests pass. A scripted run follows docs/DEMO.md click by click and matched every
-  quoted number at 1280x720 and 1600x900.
+- The final demo build is the branch `final-pitch` (pull request "Final demo build" into main, not merged).
+  main is the earlier build deployed at https://quorum-a2.vercel.app (no sign-in).
+- Top bar: Home, My profile, Browse, Saved, Roommates; Next semester, How we know, Pitch and Assumptions are under
+  More. Night theme (ink, cream, gold) from web/src/styles/tokens.css.
+- 144 engine tests and 53 web tests pass. A scripted run follows docs/DEMO.md click by click and matched every
+  quoted number at 1280x720 with 80% zoom.
+- Send (tour email through Resend) appears only when RESEND_API_KEY is set in the repo-root .env; otherwise the
+  landlord panel is Copy and Open in my email, and nothing is sent. Robin's local assistant (Ollama) is optional.
 - The backup video (docs/backup/quorum_demo_backup.mp4, 3:01) shows the 10:50 AM flow. It does not show the Fit
   scores or the newer sample students.
 - Printable student cards for the judges: docs/cards/student_cards.pdf (QR codes open the live site as that student).
@@ -54,7 +59,7 @@ signs months before part of that week is known.
    reach-out draft with the student's real trip time. Copy, or Email it (opens the student's own mail app).
    Why: sublets are scattered across Facebook groups and chats. We do not scrape them: Facebook's terms forbid
    automated collection, the groups are members-only, and posts carry other students' personal data. The student
-   pastes what they can already see. Quorum never sends anything.
+   pastes what they can already see. Nothing is sent unless the student presses Send.
 
 5. Your group: a split nobody would swap (tab "Your group").
    What: one house, one room each, rents set so no one would trade rooms, under each person's private cap.
@@ -74,8 +79,9 @@ Owners and How we know are for judges' questions: per-room fair rent for owners,
   sample labeled sample.
 - Decisions over browsing: every screen ends in "live here" or "find this out first", not a list of listings.
 - Honesty as a feature: we show uncertainty (ranges, "under $1", "summer only") instead of hiding it.
-- No language model at runtime: everything is computed and explainable; nothing invents facts. The reach-out draft
-  is a template on purpose.
+- No language model in the ranking or any number: everything is computed and explainable; nothing invents facts.
+  The reach-out draft is a template on purpose. The only model is Robin's optional local assistant (Ollama on the
+  laptop), which proposes profile edits for the student to accept and can re-order roommate matches.
 - Privacy: no scraping, no profiling, nothing uploaded. Calendar files and registrar files are read in the browser.
 - We rejected, with reasons: scraping Facebook (terms, privacy), profiling judges from LinkedIn (consent; replaced by
   fictional student cards), auto-sending email (replaced by Email it), fetching listing links (terms, blocked in the
@@ -87,7 +93,7 @@ Owners and How we know are for judges' questions: per-room fair rent for owners,
    switch. The team asked for this; it is specified, not built.
 2. Re-record the backup video for the current flow: cd scripts/record && npm install && npx playwright install
    chromium && node record.mjs (needs web/dist built first).
-3. Zeren's tour booking agent: build it on its own branch; merge only after the checks below pass.
+3. Zeren's tour booking agent: done (Book this time -> drafted email -> Send, on final-pitch).
 
 ## How to work on it safely
 

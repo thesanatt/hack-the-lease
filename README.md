@@ -1,9 +1,75 @@
 # Quorum
 
+**Pick a home for the week you will actually live: real bus timetables, your classes, your budget, your late nights.**
+Built for Hack the Lease (University of Michigan), Nov 19 to 20, 2026.
+
+![Quorum Home: "Finding an apartment should be effortless"](docs/img/home.jpg)
+
+## The 5-minute demo
+
+Full click-by-click script with every number: [`docs/DEMO.md`](docs/DEMO.md).
+
+1. **Home**: "10 minutes from campus": 11 min to North at 2 PM, 39 min to Central at 11:30 PM, same listing.
+2. **My profile**: drop a (fictional) resume. Classes, job and late nights are read in the browser; contact info is dropped.
+3. **Browse**: every home labeled for that week.
+4. **Saved**: the best of your saved homes, why, and how sure (best in 57% of possible weeks).
+5. **Change one thing**: add a budget and "no late walks"; the answer moves to 82%.
+6. **Roommates**: fictional students who like the same home, ranked by compatibility; then the fair rent split.
+7. **Book a tour -> Send**: a time between classes (no tours over Thanksgiving break), a drafted email, Send.
+8. **More > Next semester** and **More > Pitch** (evidence) to close.
+
+## Run it
+
+```
+git clone https://github.com/thesanatt/hack-the-lease.git
+cd hack-the-lease
+node web/dist/serve.mjs        # then open http://localhost:4173
+```
+
+No install, no keys, works offline (Node 18+). Live, older build: https://quorum-a2.vercel.app (the `main` branch).
+Optional: put `RESEND_API_KEY` in a repo-root `.env` to turn on **Send**; without it there is no Send button and
+nothing is sent. Optional: Ollama for Robin's local assistant (see below); without it the app works as is.
+
+## Feature -> code -> tests
+
+| Feature | Where it lives | Tests |
+|---|---|---|
+| Transit router (Connection Scan on TheRide + U-M GTFS, walking on OSM streets) | `engine/transit.js`, `engine/graph.js`, `engine/week.js` | `test/transit.test.mjs`, `test/week.test.mjs` |
+| Ranking across possible weeks (expected regret, "best in N% of weeks") | `engine/decide.js`, `web/src/student/rank.js` | `test/decide.test.mjs` |
+| Preference learning ("which week would you rather live?") | `engine/prefs.js` | `test/prefs.test.mjs` |
+| Fair rent split (envy-free, under private caps) | `engine/fair.js`, `web/src/views/GroupView.jsx` | `test/fair.test.mjs`, `web/src/views/group/views.test.mjs` |
+| Next semester (price of not knowing, EVPI) | `engine/catalog.js`, `web/src/views/next/` | `test/catalog.test.mjs`, `web/src/views/next/compute.test.mjs` |
+| Profile reader (resume, schedule, text, .ics; drops emails and phones) | `engine/profile.js`, `engine/ics.js`, `engine/grid.js` | `test/profile.test.mjs`, `test/ics.test.mjs`, `test/grid.test.mjs` |
+| Tours (open slots on the real buses, Thanksgiving break skipped, .ics) | `engine/tours.js`, `web/src/student/tours.js`, `TourPanel.jsx` | `test/tours.test.mjs`, `web/src/student/tours.test.mjs` |
+| Places (campus buildings and aliases) | `web/public/data/places.json`, `engine/profile.js` | `test/profile.test.mjs` |
+| Roommates (sharing, compatibility matcher, consent) | `web/src/views/RoommateView.jsx`, `web/src/student/share.js`, `Interested.jsx`, `Consent.jsx` | none yet (UI); `web/src/student/listing.test.mjs` covers its listing reader |
+| Send (tour email through Resend, off without a key) | `web/api.mjs`, `api/`, `web/src/student/send.js` | `test/send.test.mjs`, `web/src/student/tours.test.mjs` |
+| Home page (numbers computed live, not typed) | `web/src/views/HomeView.jsx` | covered by the demo walk in `docs/DEMO.md` |
+
+Run them: `npm test` (144 engine tests) and `cd web && npm test` (53 web tests).
+
+## Data: what is real, what is made up
+
+- **Real**: TheRide and U-M bus timetables (GTFS, Nov 2026), OpenStreetMap streets, campus places, sunset times.
+- **SYNTHETIC**: all homes, rooms, rents and listing details. **FICTIONAL**: every person, including the sample
+  resume (Alex Rivera), the group, and every roommate match. The class catalog is a sample (real course numbers,
+  made-up sections). Sources and attributions are at the end of this file and in `docs/DATA.md`.
+
+## What it does not do (limitations)
+
+- No scraping and no real listings: students paste posts they can already see.
+- The ranking and every number use no AI. The optional local assistant (Ollama) only proposes profile edits
+  and re-orders matches; with it off, everything works the same.
+- One modeled week of December timetables stands in for the whole lease. Bus delays are not modeled.
+- Send uses Resend's test sender: it can only email the account owner until a domain is verified.
+- Roommate profiles stay in this browser; there is no server or account system.
+
+## More detail
+
 Quorum helps University of Michigan students choose where to live from the week they will actually live.
 Built for Hack the Lease, Nov 19 to 20, 2026.
 
-- **Saved, My profile, Browse** (the first three tabs): a student drops a resume or writes a few lines;
+- **Home, My profile, Browse, Saved, Roommates** (the top bar; Next semester, How we know and Pitch are under More): a student drops a resume or writes a few lines;
   `engine/profile.js` reads their week, limits, budget and values in the browser; Browse labels every home's fit
   and Saved ranks the hearted homes for that week, one sentence and two numbers per home.
 - **Me** (now at `#me`, off the top bar): one student's week (classes, lab, job, gym) runs through every candidate home on the real TheRide and
@@ -16,7 +82,8 @@ Built for Hack the Lease, Nov 19 to 20, 2026.
 - **Evidence**: how each model was checked, with the data sources.
 
 All homes, rooms and rents are SYNTHETIC. All people are FICTIONAL personas. The bus timetables, streets and
-places are real. Everything runs offline in the browser, with no API keys and no network calls.
+places are real. Everything runs offline in the browser. The only network calls are optional: Send (with a
+Resend key) and the local assistant (Ollama on this laptop).
 
 ## Run it on a clean laptop, no internet
 
@@ -135,5 +202,6 @@ raw GTFS and OSM downloads in `data/raw/`, which are not in the repo, and Java 2
 - Personas and the operator population: FICTIONAL and SYNTHETIC.
 - Methods are cited in `docs/SYSTEM_DESIGN.md` section 9 and in the Evidence view.
 
-Fonts: IBM Plex Sans, IBM Plex Mono and Source Serif 4, bundled through @fontsource. Libraries: React 18,
+Fonts: IBM Plex Sans, IBM Plex Mono and Source Serif 4, bundled through @fontsource; Instrument Serif (OFL),
+self-hosted in `web/public/fonts`. Home photo: Yusuf P on Pexels (Pexels License). Libraries: React 18,
 MapLibre GL JS 4, Vite 5.

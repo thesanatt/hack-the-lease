@@ -85,7 +85,7 @@ p10, p50 and p90 across those groups is its fair share. A renovation re-solves t
 | Next semester, compute | Ranking and the bars about 0.25 s; settling only filters and re-ranks, under 0.1 s, and routes nothing new | script section 11 |
 | Listings, demo posts for Jordan | Sample posts 1 and 2: Hill St near Church St $1,319/mo cost to you (summer only), Catherine St $1,284/mo (winter only, spot guessed along the street); best sample home Broadway St $1,351. Winter 2027: "Catherine St costs you $67 a month less than the best sample home." Fall 2027: "None of your pasted posts covers Fall 2027." | script sections 12 and 12b |
 | Listings, parser on the 7 sample posts | Every post parsed (rent, dates, beds, utilities, furnished); 6 cards after the duplicate merges; one post with no street asks for a pin; about 25 ms for the first post (it builds the street index), then under 11 ms each in node | script section 12 |
-| Tests | 129 engine tests pass (`node --test "test/*.test.mjs"`, 22 of them for the post reader), 36 view tests pass (`cd web && npm test`) | run Fri Nov 20 |
+| Tests | 144 engine tests pass (`node --test "test/*.test.mjs"`), 53 web tests pass (`cd web && npm test`) | run Fri Nov 20, 4:30 PM, branch final-pitch |
 
 ## Hard questions, short honest answers
 
@@ -306,8 +306,8 @@ half-hour from 9:00 to 19:00. A slot counts only if every member is free, can re
 were by walking, bike (only for those who bike) or the real buses within their walking limits, and can get to
 their next entry on time. Slots are scored by group travel minutes plus a penalty for tight connections; different
 days come first. For Broadway, 5 of 100 half-hours work, all on Friday (section 9). Quorum drafts a plain note with
-the house, the group size and the times, and no names, rents or caps. It never sends anything ("Quorum sends nothing."); the group copies the note
-and sends it themselves.
+the house, the group size and the times, and no names, rents or caps. Nothing is sent unless someone presses Send; the group can also copy the note
+and send it themselves.
 
 **"Why not just ask a chatbot?"** A chatbot can talk about bus routes, but it does not run the timetable. Quorum
 routes every trip in the week, for every home, for each of 24 possible fall weeks, on the real TheRide and U-M
@@ -408,7 +408,7 @@ month comes after Nov 20 2026.
 **"Why no AI for the draft?"** The draft is a template. It is predictable, works offline and never invents a
 fact: it uses only the post's rent, dates and street, the student's first name if typed, and facts Quorum
 computed (the trip time from that spot, the first tour slot that fits the week). It stays under 90 words, and
-Quorum never sends it; there is a Copy button. A local model could polish the wording later, on the same facts.
+Nothing is sent unless the student presses Send (only shown when the server has an email key); there is a Copy button. A local model could polish the wording later, on the same facts.
 
 **"Is the $67 real?"** It is the same "cost to you" as the You tab, for Jordan's week, on sample post 2 against
 the best sample home. The post is made up, and its spot is a guess along Catherine St, so it shows how the
