@@ -25,6 +25,8 @@ are real. The top bar always shows the **Sample data** chip, and the Next year t
 
 ## Before you go on (5 minutes before the slot)
 
+0. With good Wi-Fi you can skip step 1 and open https://quorum-a2.vercel.app instead (same app, hosted). Keep
+   the local run ready as the fallback.
 1. Start the app: in a terminal, from the repo folder (the one that holds `web/` and `engine/`),
    `node web/dist/serve.mjs`. It prints `http://localhost:4173`. No Node? `cd web/dist` then
    `python -m http.server 4173`.
