@@ -1,8 +1,9 @@
 // Picking a tour time for one liked home, on My profile above the calendar. The three best open slots are
 // listed; every open slot is also on the calendar. Choosing one shows the trips there and on; booking puts it
 // on the calendar, with a calendar file and a message to the landlord. Homes and contacts are samples.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/index.js';
+import { canSend, sendEmail, mailtoHref } from './send.js';
 import { go, short } from './parts.jsx';
 import { nextDate, dateLabel, clock12, tripText, tourIcs, download, landlordMessage } from './tours.js';
 
@@ -11,7 +12,18 @@ export function ContactPanel({ api, home, profile, tour, onClose }) {
   const [text, setText] = useState(() => landlordMessage({ home, details: d, profile, tour }));
   const [copied, setCopied] = useState(false);
   const c = d?.contact;
-  const subject = `Your listing: ${short(home.name)}`;
+  const [subject, setSubject] = useState(() => `Your listing: ${short(home.name)}`);
+  // Send by email only when the server has a key; otherwise this panel is exactly as before.
+  const [sendOn, setSendOn] = useState(false);
+  const [to, setTo] = useState(() => { try { return sessionStorage.getItem('quorum.sendTo') || ''; } catch { return ''; } });
+  const [sent, setSent] = useState({ state: 'edit', note: '' }); // edit | sending | sent | error
+  useEffect(() => { let live = true; canSend().then((v) => { if (live) setSendOn(v); }); return () => { live = false; }; }, []);
+  const editTo = (v) => { setTo(v); setSent({ state: 'edit', note: '' }); try { sessionStorage.setItem('quorum.sendTo', v); } catch { /* memory only */ } };
+  const send = async () => {
+    setSent({ state: 'sending', note: '' });
+    const r = await sendEmail({ to, subject, body: text });
+    setSent(r.ok ? { state: 'sent', note: 'Sent.' } : { state: 'error', note: r.note });
+  };
   const copy = async () => { try { await navigator.clipboard.writeText(text); setCopied(true); } catch { setCopied(false); } };
   return (
     <div className="ct" onClick={(e) => e.stopPropagation()}>
@@ -22,12 +34,31 @@ export function ContactPanel({ api, home, profile, tour, onClose }) {
         </div>
         {onClose && <button type="button" className="pf-x" onClick={onClose}>Close</button>}
       </div>
-      <textarea className="ct-text" value={text} onChange={(e) => setText(e.target.value)} aria-label="Message to the landlord" />
-      <div className="ct-acts">
-        <Button variant="primary" small onClick={copy}>{copied ? 'Copied' : 'Copy message'}</Button>
-        {c && <a className="btn small" href={`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}>Open in my email</a>}
-        <span className="st-sub">Quorum sends nothing. Sample contact, not a real landlord.</span>
-      </div>
+      {sendOn && (
+        <div className="ct-send">
+          <input className="ct-in" type="email" placeholder="To: email address" value={to} disabled={sent.state === 'sending'}
+            onChange={(e) => editTo(e.target.value)} aria-label="To" />
+          <input className="ct-in" type="text" value={subject} disabled={sent.state === 'sending'}
+            onChange={(e) => { setSubject(e.target.value); if (sent.state === 'sent') setSent({ state: 'edit', note: '' }); }} aria-label="Subject" />
+        </div>
+      )}
+      <textarea className="ct-text" value={text} onChange={(e) => { setText(e.target.value); if (sent.state === 'sent') setSent({ state: 'edit', note: '' }); }} aria-label="Message to the landlord" />
+      {sendOn ? (
+        <div className="ct-acts">
+          <Button variant="primary" small disabled={!to.trim() || sent.state === 'sending' || sent.state === 'sent'} onClick={send}>
+            {sent.state === 'sending' ? 'Sending...' : sent.state === 'sent' ? 'Sent ✓' : 'Send'}
+          </Button>
+          <Button small onClick={copy}>{copied ? 'Copied' : 'Copy message'}</Button>
+          {sent.state === 'error' && <a className="btn small" href={mailtoHref({ to: to || c?.email || '', subject, body: text })}>Open in my mail app</a>}
+          <span className="st-sub" role="status">{sent.note || 'Nothing is sent until you press Send. Sample contact, not a real landlord.'}</span>
+        </div>
+      ) : (
+        <div className="ct-acts">
+          <Button variant="primary" small onClick={copy}>{copied ? 'Copied' : 'Copy message'}</Button>
+          {c && <a className="btn small" href={`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}>Open in my email</a>}
+          <span className="st-sub">Quorum sends nothing. Sample contact, not a real landlord.</span>
+        </div>
+      )}
     </div>
   );
 }

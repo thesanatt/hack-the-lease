@@ -223,3 +223,5 @@
 .pf-src { padding: 0; margin: 0; }
 .pf-src li { min-width: 0; }
 .pf-src li .pf-x { flex: none; }
+.ct-send { display: grid; gap: 6px; margin-top: 8px; }
+.ct-in { width: 100%; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 14px; background: var(--card); }

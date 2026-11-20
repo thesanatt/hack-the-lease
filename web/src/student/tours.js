@@ -1,6 +1,7 @@
 // Tours for one student and one liked home: open 30 minute slots (engine/tours.js on the real timetables:
 // free, can get there from where they are just before, and on to their next entry in time), the date the slot
-// falls on next, a calendar file for it, and the message to the landlord. Quorum sends nothing.
+// falls on next, a calendar file for it, and the message to the landlord. Quorum sends nothing unless the
+// student presses Send (only shown when the server has an email key, see web/api.mjs).
 import { useEffect, useState } from 'react';
 
 const TKEY = 'quorum.tours.v1';
@@ -26,15 +27,17 @@ export function useTours() {
 
 const DAY_IX = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
 const LONG = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
-// Thanksgiving Day and the day after, 2026: no tours offered on them.
-const SKIP = new Set(['2026-11-26', '2026-11-27']);
+// U-M breaks, inclusive ISO dates: no tours offered, the slot rolls to the same weekday the week after.
+// Thanksgiving break 2026 is Wed Nov 25 to Sun Nov 29.
+export const BREAKS = [{ name: 'Thanksgiving break', from: '2026-11-25', to: '2026-11-29' }];
+const inBreak = (d) => { const s = iso(d); return BREAKS.some((b) => s >= b.from && s <= b.to); };
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 // The next date (after today) that falls on this weekday.
 export function nextDate(day, today = new Date()) {
   const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
   for (let i = 0; i < 21; i++) {
-    if (d.getDay() === DAY_IX[day] && !SKIP.has(iso(d))) return d;
+    if (d.getDay() === DAY_IX[day] && !inBreak(d)) return d;
     d.setDate(d.getDate() + 1);
   }
   return d;

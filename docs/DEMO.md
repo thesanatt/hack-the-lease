@@ -20,7 +20,11 @@ The speed line under Saved is measured live; read it off the screen.
    **Catherine St house**, **East Ann St house**, **Church St house**, **Georgetown Blvd house**. Browse shows nine
    homes a page; East Ann is on page 2 (page tabs at the bottom). The button top right reads **Saved (5)**.
 4. Warm up Next semester as in the previous script (click it, wait for **$31 a month**).
-5. Click **Pitch**, press **Home** for slide 1. Zoom 80% (Ctrl and minus), F11 for full screen.
+5. Only for the Send line in the tour step (needs the keys in the repo-root `.env`; without them there is no To
+   field and no Send, and the panel works as before): on any Saved card click **Contact landlord**, type your
+   own email in **To**, click **Close**. The tab keeps it, so To is filled on stage. Share the browser window
+   only; To shows the address.
+6. Click **Pitch**, press **Home** for slide 1. Zoom 80% (Ctrl and minus), F11 for full screen.
 
 Order of clicks: Pitch, My profile, Browse, Saved, My profile, Saved, Next semester, Your group, Pitch.
 
@@ -100,13 +104,16 @@ things you asked for" with **Includes** and **Does not include**. The Saved rank
 and room size are checked on the cards, not priced.
 
 Optional (about 25 s): on Saved card 1 click **Schedule a tour**. My profile opens with **Tour Broadway St
-house**: best times Monday Nov 23, Wednesday Nov 25 and Friday Dec 4, all 2:00 PM, and every open half hour in
-green on **My calendar**. Click **1**: "Leave EECS Building at 1:37 PM, bus CS then WS, there at 1:56 PM. Then bus
-65 to Beyster Building, there at 2:59 PM." Click **Book this time**. Back on Saved, **Contact landlord** shows the
-drafted message with the tour time.
+house**: best times Monday Nov 23, Wednesday Dec 2 and Friday Dec 4, all 2:00 PM (no tours over U-M Thanksgiving
+break, Wed Nov 25 to Sun Nov 29; those days roll to the next week), and every open half hour in green on **My
+calendar**. Click **1**: "Leave EECS Building at 1:37 PM, bus CS then WS, there at 1:56 PM. Then bus 65 to Beyster
+Building, there at 2:59 PM." Click **Book this time**. Click **Back to Saved**: card 1 shows **Tour Monday, Nov 23,
+2:00 PM**. Click **Contact landlord**: **To** (filled before you went on), **Subject** "Your listing: Broadway St
+house", and the drafted message ending "Could I tour it on Monday, Nov 23 at 2:00 PM? Another time works too."
+Click **Send**: the button reads **Sent ✓**. If it shows an error instead, click **Open in my mail app**.
 
 > She can tour it Monday at 2, between classes: the planner checked the buses there and back to her 3 PM
-> lecture. One click books it and drafts the message to the landlord. Quorum sends nothing.
+> lecture. One click books it and drafts the message to the landlord. Nothing is sent until she presses Send.
 
 ## 6. Next semester (3:00 to 3:40), cut first if long
 
@@ -124,4 +131,5 @@ Pitch, **End**, Left arrow twice (Evidence slide). Same words as `docs/DEMO_PREV
 | Try a sample student does nothing for 3 s | Paste into **Or write anything**: `I study Computer Science. Research assistant at the Ford Robotics Building Tue and Thu 1pm to 5pm, $18/hr. Barista in Kerrytown Saturdays 9am-2pm. Study late at the Duderstadt Center most nights 8pm to 11:30pm.` then **Add to my profile** (no classes, so the numbers differ from this page) |
 | Saved shows "Ranking them for your week..." for over 5 s | Keep talking; read step 4 numbers from this page |
 | Map is blank or says it needs WebGL | Go on; every number is in the cards |
+| Send shows an error | Click **Open in my mail app**: the same message opens in the mail app, then go on |
 | Wrong homes saved | Bottom of Saved: **Clear saved homes**, then heart the five in Browse |
