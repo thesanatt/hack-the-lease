@@ -58,7 +58,7 @@ ${list}
 Return JSON only: {"lines": ["..."], "notes": ["short plain sentences about anything skipped or uncertain, and any housing-relevant preferences the student stated, e.g. budget or bikes"]}`;
 }
 
-async function extract(body) {
+export async function extract(body) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return [501, { error: 'No GEMINI_API_KEY on the server.' }];
   const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
@@ -92,7 +92,7 @@ export function parseModelJson(raw) {
   return { lines, notes };
 }
 
-async function sendMail(body) {
+export async function sendMail(body) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return [501, { error: 'No RESEND_API_KEY on the server.' }];
   const to = String(body.to || '').trim();
