@@ -132,7 +132,7 @@ test('common U-M names and abbreviations match', () => {
 });
 
 test('unknown or ambiguous locations are not guessed', () => {
-  for (const loc of ['1013 Dow', 'Mason Hall', 'Zoom', '', 'Chrysler Center']) assert.equal(matchPlace(loc, places).place, null, loc);
+  for (const loc of ['1013 Dow', 'Lorch Hall', 'Zoom', '', 'Chrysler Center']) assert.equal(matchPlace(loc, places).place, null, loc);
   const amb = matchPlace('Angell or Chem', places);
   assert.equal(amb.place, null);
   assert.deepEqual(amb.candidates.sort(), ['angell', 'chem']);
@@ -148,7 +148,7 @@ test('pasted lines: days, times and places', () => {
     'Mon-Fri 8am-9am gym @ CCRB',
     'Gym Saturday 11-12:30pm NCRB',
     'Lab Tu Th 7pm-11:30pm Duderstadt Center',
-    'MWF 10-11 Mason Hall',
+    'MWF 10-11 Lorch Hall',
     'this line has no time',
     'Wed 3pm-4pm',
   ].join('\n'), places);
@@ -169,7 +169,7 @@ test('pasted lines: days, times and places', () => {
   assert.deepEqual(by.Lab.days, ['tue', 'thu']);
   assert.equal(by.Lab.end, '23:30');
   assert.equal(by.Lab.place, 'dude');
-  assert.equal(by['Mason Hall'].place, null);
+  assert.equal(by['Lorch Hall'].place, null);
   assert.equal(r.skipped.length, 1);
   assert.match(r.skipped[0].reason, /time range/);
   const noPlace = r.items.find((i) => i.start === '15:00');
@@ -183,14 +183,14 @@ test('parseSchedule picks the right parser', () => {
 });
 
 test('toWeekEntries gives unique ids, drops unmatched, takes resolved places', () => {
-  const { items } = parseLines('Mon 9-10 EECS\nTue 9-10 Mason Hall\nWed 9-10 Chem', places);
+  const { items } = parseLines('Mon 9-10 EECS\nTue 9-10 Lorch Hall\nWed 9-10 Chem', places);
   const plain = toWeekEntries(items, ['cal1', 'j1']);
   assert.deepEqual(plain.map((e) => e.id), ['cal2', 'cal3']);
   assert.ok(plain.every((e) => e.p === 1 && e.on && e.added && placeIds.has(e.place)));
   const mason = items.find((i) => i.place === null);
   const resolved = toWeekEntries(items, [], new Map([[mason.key, 'angell']]));
   assert.equal(resolved.length, 3);
-  assert.equal(resolved.find((e) => e.label === 'Mason Hall').place, 'angell');
+  assert.equal(resolved.find((e) => e.label === 'Lorch Hall').place, 'angell');
   const some = toWeekEntries(items, [], new Map(), new Set([items[0].key]));
   assert.equal(some.length, 1);
 });

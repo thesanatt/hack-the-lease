@@ -263,3 +263,56 @@
 .sv-fact.big b { color: var(--gold); text-shadow: 0 0 24px rgba(227, 176, 75, 0.35); }
 .st-head h1 { font-family: 'Instrument Serif', var(--font-display); font-style: italic; font-weight: 400; font-size: 40px; letter-spacing: 0; }
 .st-card, .sv-card { border-color: var(--line); }
+.as-out { margin-top: 6px; background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: 14px; display: grid; gap: 6px; }
+.as-out ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.pf-chip button { border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; font-weight: 700; padding: 0 0 0 4px; opacity: 0.6; }
+.pf-chip button:hover { opacity: 1; }
+
+/* roommate profiles */
+.rm-card { display: grid; gap: 10px; }
+.rm-head { display: flex; gap: 10px; align-items: center; }
+.rm-av { width: 34px; height: 34px; border-radius: 999px; color: #fff; display: inline-grid; place-items: center; font-weight: 700; flex: none; }
+.rm-bio { font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+.rm-switches { display: grid; gap: 6px; font-size: 14px; }
+.rm-switches label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.rm-field { display: grid; gap: 4px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.rm-field input, .rm-field textarea { border: 1px solid var(--line-2); border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 14px; color: var(--text); background: var(--card); }
+.rm-field textarea { min-height: 70px; resize: vertical; }
+.in-list { display: grid; gap: 6px; margin-top: 10px; }
+.in-row { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--card); }
+.in-top { display: grid; grid-template-columns: 20px 34px minmax(0, 1fr) 150px auto; gap: 10px; align-items: center; cursor: pointer; }
+.in-rank { font-weight: 700; color: var(--muted); }
+.in-who { display: grid; min-width: 0; }
+.in-who .st-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.in-score { position: relative; height: 22px; background: var(--paper-2); border-radius: 6px; overflow: hidden; }
+.in-score i { position: absolute; inset: 0 auto 0 0; background: var(--accent-soft); }
+.in-score span { position: relative; font-size: 12px; font-weight: 600; padding: 0 8px; line-height: 22px; color: var(--accent); }
+.in-why { font-size: 13px; color: var(--ink-2); margin: 4px 0 0 64px; }
+.in-open { margin-top: 10px; display: grid; gap: 10px; }
+.in-parts { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: 13px; }
+.in-parts span { display: inline-block; width: 46px; font-family: var(--font-mono); color: var(--muted); }
+
+/* consent */
+.cs-back { position: fixed; inset: 0; background: rgba(26, 26, 26, 0.45); display: grid; place-items: center; z-index: 50; padding: 20px; }
+.cs-card { background: var(--card); border-radius: 14px; padding: 24px; max-width: 480px; width: 100%; display: grid; gap: 12px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); }
+.cs-card h2 { font-size: 20px; font-weight: 600; }
+.cs-card p { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.cs-items { list-style: none; padding: 10px 12px; margin: 0; background: var(--paper-2); border-radius: 8px; font-size: 14px; display: grid; gap: 4px; }
+.cs-acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* Roommates tab: the matcher on the night theme */
+.rm-match { margin-bottom: var(--s5); }
+.rm-match-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rm-match-head h2, .pf-sec h2 { display: flex; align-items: center; gap: 8px; }
+.rm-match-head .ic, .pf-sec h2 .ic { color: var(--gold); }
+.rm-homes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.rm-home { min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; color: var(--cream); font: inherit; font-size: 14px; cursor: pointer; }
+.rm-home:hover, .rm-home:focus-visible { border-color: var(--gold); background: var(--gold-glow); outline: none; }
+.rm-home.on { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 600; }
+.rm-match .ct { background: transparent; border-color: var(--line); }
+.rm-empty { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--muted); }
+.in-score span { color: var(--cream); }
+.in-score i { background: var(--gold-glow); }
+.rm-next { margin-top: var(--s6); padding: var(--s5) 0; border-top: 1px solid var(--rule-gold); display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.rm-next p { margin: 0; font-family: 'Instrument Serif', var(--font-display); font-size: 30px; color: var(--cream); }
+.rm-next em { font-style: italic; }

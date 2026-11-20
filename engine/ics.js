@@ -39,7 +39,11 @@ export const PLACE_ALIASES = [
   { id: 'league', names: ['michigan league', 'the league'], codes: [] },
   { id: 'hill', names: ['hill auditorium', 'hill aud'], codes: [] },
   { id: 'law', names: ['hutchins hall', 'law quad', 'law school'], codes: [] },
-  { id: 'ccrb', names: ['central campus recreation', 'central campus rec', 'hadley center', 'ccrb'], codes: ['CCRB'] },
+  { id: 'weiser', names: ['weiser hall', 'weiser', 'dennison building', 'dennison'], codes: ['WEIS', 'DENN'] },
+  { id: 'easthall', names: ['east hall'], codes: ['EH'] },
+  { id: 'mason', names: ['mason hall'], codes: ['MH'] },
+  { id: 'mlb', names: ['modern languages building', 'modern languages', 'mlb'], codes: ['MLB'] },
+  { id: 'ccrb', names: ['central campus recreation', 'central campus rec', 'hadley athletic center', 'hadley center', 'hadley', 'ccrb'], codes: ['CCRB'] },
   // South Campus
   { id: 'imsb', names: ['intramural sports building', 'intramural building', 'im building', 'imsb'], codes: ['IMSB', 'IM'] },
   { id: 'stadium', names: ['michigan stadium', 'the big house', 'big house'], codes: [] },

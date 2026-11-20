@@ -44,6 +44,30 @@ Clone over Wi-Fi beforehand; after that nothing needs the network.
 
 The demo script is `docs/DEMO.md`. The judge Q&A cheat sheet is `docs/QA.md`.
 
+## Optional: the local AI box (Tell Quorum)
+
+On My profile, **Tell Quorum** takes changes in your own words ("club meeting Thursday 2 to 3 at the Union",
+"drop MATH 216", "book a tour of Broadway Monday at 2"). It uses a language model running in Ollama on this
+laptop; nothing leaves the laptop. Without Ollama the box falls back to the rule-based reader.
+
+1. Install Ollama from ollama.com and start it.
+2. `ollama pull llama3.2:3b` (about 2 GB, once, needs internet).
+3. Run the app from this laptop (`node web/dist/serve.mjs`, open http://localhost:4173). The box shows
+   "Local AI: llama3.2:3b" when it is connected.
+
+If the box says "Local AI off" while Ollama runs, allow the app's address and restart Ollama: on Windows
+`setx OLLAMA_ORIGINS "*"`, on macOS `launchctl setenv OLLAMA_ORIGINS "*"`. The model only proposes changes; the
+app checks every day, time, building, calendar row and tour slot before applying it, and each answer has Undo.
+
+**Stress test the local AI** (Ollama running): `npm run stress:ai` (or `node scripts/assistant_stress.mjs llama3.2:1b`).
+It sends 30 realistic student requests (wishes, events, edits, tours, nonsense) through the real model with the
+app's own instructions and checks, and prints what it understood, what the app skipped, and a score.
+
+How it is split: the model reads free text (Tell Quorum, resumes, notes) into calendar edits and wishes; each wish
+is a test on a listing field (`walk_min_to:<place>`, `laundry_free`, `lease_months`...; `web/src/student/listing.js`),
+checked against the data on every Browse card. Calendar files and schedule screenshots stay with the exact readers.
+The built-in sample student is always read by the rules, so the demo numbers do not move.
+
 ## Check every demo number
 
 ```

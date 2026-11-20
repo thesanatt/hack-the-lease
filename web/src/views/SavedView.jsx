@@ -9,6 +9,8 @@ import { useRanking, verdict, money, hoursText, fromPrice } from '../student/ran
 import { Heart, FitPill, go, short } from '../student/parts.jsx';
 import ListingDetails from '../student/ListingDetails.jsx';
 import { ContactPanel } from '../student/TourPanel.jsx';
+import Interested from '../student/Interested.jsx';
+import { useShare, sampleStudents } from '../student/share.js';
 import { useTours, dateLabel, clock12 } from '../student/tours.js';
 import '../student/student.css';
 
@@ -56,6 +58,9 @@ export default function SavedView({ api }) {
   const { homeById, placeById } = api.data;
   const [sel, setSel] = useState(null);
   const [contactId, setContactId] = useState(null);
+  const [othersId, setOthersId] = useState(null);
+  const Sh = useShare();
+  const others = useMemo(() => sampleStudents(api), [api]);
   const T = useTours();
   const budget = P.profile?.budget ?? null;
 
@@ -152,7 +157,11 @@ export default function SavedView({ api }) {
                       </>
                     ) : <Button variant="primary" small onClick={() => go(`profile?tour=${it.home.id}`)}>Schedule a tour</Button>}
                     <Button small pressed={contactId === it.home.id} onClick={() => setContactId(contactId === it.home.id ? null : it.home.id)}>Contact landlord</Button>
+                    <Button small pressed={othersId === it.home.id} onClick={() => setOthersId(othersId === it.home.id ? null : it.home.id)}>
+                      Others interested ({others.filter((x) => x.likes.includes(it.home.id)).length})
+                    </Button>
                   </div>
+                  {othersId === it.home.id && <Interested api={api} home={it.home} profile={P.profile} share={Sh.s} savedIds={S.ids} />}
                   {contactId === it.home.id && (
                     <ContactPanel api={api} home={it.home} profile={P.profile} tour={T.forHome(it.home.id)} onClose={() => setContactId(null)} />
                   )}

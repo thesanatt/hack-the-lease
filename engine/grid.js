@@ -5,7 +5,7 @@
 //   bottom edges are the start and end. The text inside each block is read separately by the caller.
 //
 //   findGrid(img, words) -> { days: [{ day, cx, x0, x1 }], top, minuteAt(y), rowPx } | null
-//   findBlocks(img, grid) -> [{ day, x0, y0, x1, y1, start, end }]   (start/end "HH:MM", snapped to 5 minutes)
+//   findBlocks(img, grid) -> [{ day, x0, y0, x1, y1, start, end }]   (start/end "HH:MM", snapped to 15 minutes)
 //   blockLines(blocks) -> ["EECS 280 LEC MoWe 12:00PM - 1:30PM", ...]  (after the caller sets block.text)
 // img: { width, height, data } with RGBA bytes (canvas ImageData in the browser, pngjs in tests).
 // words: [{ text, x0, y0, x1, y1 }] from the text recognizer, in the same pixel space.
@@ -20,7 +20,7 @@ const sat = ([r, g, b]) => Math.max(r, g, b) - Math.min(r, g, b);
 
 // "6am", "12pm", "1lam" (11am read with an l), "9 AM", "13:00"
 export function hourOf(text) {
-  const t = String(text).toLowerCase().replace(/[il|]/g, '1').replace(/o/g, '0').replace(/\s+/g, '');
+  const t = String(text).toLowerCase().replace(/[il|]/g, '1').replace(/o/g, '0').replace(/^s(?=\s*[ap])/, '5').replace(/\s+/g, '');
   let m = /^(\d{1,2})(?::00)?(am|pm|a|p)$/.exec(t);
   if (m) { let h = Number(m[1]) % 12; if (m[2][0] === 'p') h += 12; return h <= 23 ? h : null; }
   m = /^(\d{1,2}):00$/.exec(t);
@@ -72,16 +72,22 @@ export function findGrid(img, words) {
     const yb = above.length ? above[above.length - 1] : l.yc - rowPx * 0.25;
     return { y: yb, m: l.h * 60 };
   });
-  // least squares: minutes = a * y + b
-  const n = pts.length, sx = pts.reduce((s, p) => s + p.y, 0), sy = pts.reduce((s, p) => s + p.m, 0);
-  const sxx = pts.reduce((s, p) => s + p.y * p.y, 0), sxy = pts.reduce((s, p) => s + p.y * p.m, 0);
-  const a = (n * sxy - sx * sy) / (n * sxx - sx * sx), b = (sy - a * sx) / n;
+  // robust fit, minutes = a * y + b: the median of pairwise slopes (Theil-Sen), so one misread label cannot
+  // tilt the scale; then the median intercept
+  const slopes = [];
+  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) if (pts[j].y !== pts[i].y) slopes.push((pts[j].m - pts[i].m) / (pts[j].y - pts[i].y));
+  slopes.sort((p, q) => p - q);
+  const a = slopes[Math.floor(slopes.length / 2)];
+  const ints = pts.map((p) => p.m - a * p.y).sort((p, q) => p - q);
+  const b = ints[Math.floor(ints.length / 2)];
   if (!(a > 0)) return null;
   rowPx = 60 / a;
   return { days, top, left, right: days[days.length - 1].x1, rowPx, minuteAt: (y) => a * y + b };
 }
 
-const hhmm = (min) => { const m = Math.max(0, Math.min(23 * 60 + 55, Math.round(min / 5) * 5)); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+// Block edges snap to 15 minutes: borders and anti-aliasing move an edge a few pixels, and class times sit on
+// quarter hours.
+const hhmm = (min) => { const m = Math.max(0, Math.min(23 * 60 + 45, Math.round(min / 15) * 15)); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
 
 // Colored blocks inside the grid: connected regions of saturated color, on a 2 px lattice.
 export function findBlocks(img, grid) {
@@ -118,13 +124,54 @@ export function findBlocks(img, grid) {
       if (xb - xa < minW || yb - ya < minH) continue;
       if (area < 0.4 * (xb - xa + 1) * (yb - ya + 1)) continue; // a block is mostly filled
       const box = { x0: xa * S, y0: ya * S, x1: xb * S + S - 1, y1: yb * S + S - 1 };
+      // a bar across several days is an all-day banner (a course title, an exam week), not a weekly class
+      const colW = grid.days[0].x1 - grid.days[0].x0;
+      if (box.x1 - box.x0 > colW * 1.5) continue;
       const cx = (box.x0 + box.x1) / 2;
       const col = grid.days.find((d) => cx >= d.x0 && cx < d.x1);
       if (!col) continue;
-      out.push({ ...box, day: col.day, start: hhmm(grid.minuteAt(box.y0)), end: hhmm(grid.minuteAt(box.y1 + 1)) });
+      const color = px(img, Math.min(img.width - 1, box.x0 + 6), Math.min(img.height - 1, box.y0 + 6));
+      out.push({ ...box, color, day: col.day, start: hhmm(grid.minuteAt(box.y0)), end: hhmm(grid.minuteAt(box.y1 + 1)) });
     }
   }
   return out.sort((p, q) => p.y0 - q.y0 || p.x0 - q.x0);
+}
+
+// The rectangle to read inside a block: a little in from its edges, so thick borders do not hide the text.
+export function insetRect(bk) {
+  const d = Math.max(3, Math.round(Math.min(bk.x1 - bk.x0, bk.y1 - bk.y0) * 0.06));
+  return { left: bk.x0 + d, top: bk.y0 + d, width: Math.max(4, bk.x1 - bk.x0 + 1 - 2 * d), height: Math.max(4, bk.y1 - bk.y0 + 1 - 2 * d) };
+}
+
+// Course codes as text recognition reads them: "TCHNCLCM3q0" -> TCHNCLCM 300, "ECS498" -> EECS 498.
+const SUBJECTS = ['EECS', 'MATH', 'PHYSICS', 'CHEM', 'STATS', 'ECON', 'PSYCH', 'BIOLOGY', 'ENGLISH', 'HISTORY', 'ENGR', 'MECHENG',
+  'AEROSP', 'NURS', 'FIN', 'MKT', 'ACC', 'MUSIC', 'THEORY', 'CLCIV', 'TCHNCLCM', 'SPANISH', 'FRENCH', 'ASIAN', 'COMM', 'POLSCI', 'SOC', 'PHIL',
+  'IOE', 'CEE', 'ROB', 'DATASCI', 'SI', 'LING', 'ASTRO', 'EARTH', 'EEB', 'MCDB', 'BIOLCHEM', 'ANTHRCUL', 'WRITING', 'NEURO', 'ARCH', 'ART'];
+export function courseCode(text) {
+  const t = String(text || '').toUpperCase().replace(/[“”"'`]/g, '');
+  const m = /([A-Z]{2,9})\s?-?\s?([0-9OQILSZ]{3})(?![0-9A-Z])/.exec(t);
+  if (!m) return null;
+  const num = m[2].replace(/[OQ]/g, '0').replace(/[IL]/g, '1').replace(/S/g, '5').replace(/Z/g, '2');
+  if (!/^\d{3}$/.test(num)) return null;
+  let subj = m[1];
+  if (!SUBJECTS.includes(subj)) {
+    // common OCR slips (VI for M, RN for M, 0 for O), then one letter added, dropped or changed
+    const swap = subj.replace(/VI/g, 'M').replace(/RN/g, 'M').replace(/0/g, 'O').replace(/5/g, 'S');
+    const fix = SUBJECTS.includes(swap) ? swap : SUBJECTS.find((x) => x.length >= 3 && editDist1(x, subj));
+    if (fix) subj = fix;
+  }
+  return `${subj} ${num}`;
+}
+
+function editDist1(a, b) {
+  if (Math.abs(a.length - b.length) > 1 || a === b) return false;
+  let i = 0, j = 0, d = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (++d > 1) return false;
+    if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; }
+  }
+  return d + (a.length - i) + (b.length - j) <= 1;
 }
 
 const ampm = (s) => { const [h, m] = s.split(':').map(Number); return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')}${h < 12 ? 'AM' : 'PM'}`; };
@@ -133,10 +180,18 @@ const ampm = (s) => { const [h, m] = s.split(':').map(Number); return `${((h + 1
 // these like a registrar list. Exams (MID, FIN, section 999) are left out: they are not weekly.
 export function blockLines(blocks) {
   const groups = new Map();
+  const near = (a, b) => a && b && Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 40;
+  for (const b of blocks) {
+    if (!courseCode(b.text)) {
+      const twin = blocks.find((x) => x !== b && courseCode(x.text) && x.start === b.start && x.end === b.end && near(x.color, b.color));
+      if (twin) b.text = twin.text;
+    }
+  }
   for (const b of blocks) {
     const t = String(b.text || '').replace(/\s+/g, ' ').trim();
-    const m = /\b([A-Z]{2,8})\s?-?\s?(\d{3})\b/.exec(t.toUpperCase().replace(/[O](?=\d)/g, '0'));
-    if (!m) continue;
+    const code = courseCode(t);
+    if (!code) continue;
+    const m = [null, ...code.split(' ')];
     const comp = (/\b(LEC|DIS|LAB|SEM|REC|MID|FIN|EXAM)\b/i.exec(t)?.[1] || '').toUpperCase();
     if (/MID|FIN|EXAM/.test(comp) || /\(?9{3}\)?/.test(t)) continue;
     const key = `${m[1]} ${m[2]}|${comp}|${b.start}|${b.end}`;

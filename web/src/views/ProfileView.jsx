@@ -8,6 +8,10 @@ import { useProfile, useSaved } from '../student/store.js';
 import { fileText } from '../student/files.js';
 import { go } from '../student/parts.jsx';
 import WeekRows from '../student/WeekRows.jsx';
+import { useConsent, forgetConsent } from '../student/Consent.jsx';
+import AssistantBox from '../student/AssistantBox.jsx';
+import { assistantStatus, lastStatus } from '../student/assistant.js';
+import { applyAssistant } from '../student/applyAssistant.js';
 import Calendar from '../student/Calendar.jsx';
 import TourPanel from '../student/TourPanel.jsx';
 import { useTours, tourOptions } from '../student/tours.js';
@@ -50,15 +54,32 @@ function useFileInput(onFiles) {
   return [input, () => ref.current?.click()];
 }
 
+function Chip({ label, why, onX, soft }) {
+  return (
+    <span className={`st-pill ${soft ? 'typ' : 'mine'} pf-chip`} title={why ? `From: "${why}"` : undefined}>
+      {label}{onX && <button type="button" aria-label={`Remove ${label}`} onClick={onX}>x</button>}
+    </span>
+  );
+}
+
 export default function ProfileView({ api }) {
   const P = useProfile(api);
   const saved = useSaved();
   const T = useTours();
+  const [askShare, consentModal] = useConsent('profile');
+  useEffect(() => { assistantStatus(); }, []);
+  // With the local AI on, free text (a resume, notes, the first box) is read by the model; calendars and
+  // schedule screenshots stay with the exact readers.
+  const viaAI = async (name, t) => {
+    const res = await applyAssistant({ api, P, T, saved, text: `Uploaded ${name}:\n${t.slice(0, 6000)}`, model: lastStatus.model });
+    P.addSource('file', name, t, { viaAI: true });
+    return res;
+  };
   const tourId = new URLSearchParams(splitHash(window.location.hash).query || '').get('tour');
   const tourHome = tourId ? api.data.homeById.get(tourId) : null;
   const [chosen, setChosen] = useState(null);
   const [opts, setOpts] = useState(null);
-  const tourSig = JSON.stringify([tourId, P.profile?.entries?.map((e) => [e.id, e.days, e.start, e.end, e.place]), P.profile?.modes, T.list.map((t) => [t.homeId, t.day, t.start])]);
+  const tourSig = JSON.stringify([tourId, P.profile?.scheduled?.map((e) => [e.id, e.days, e.start, e.end, e.place]), P.profile?.modes, T.list.map((t) => [t.homeId, t.day, t.start])]);
   useEffect(() => {
     if (!tourHome || !P.profile) { setOpts(null); return undefined; }
     const id = setTimeout(() => { try { setOpts(tourOptions(api, P.profile, tourHome, T.list)); } catch (e) { console.error(e); setOpts(null); } }, 20);
@@ -68,28 +89,44 @@ export default function ProfileView({ api }) {
   const [msg, setMsg] = useState(null);
   const [over, setOver] = useState(false);
 
-  const addFiles = async (files) => {
+  // exact: read with the rules even when the local AI is on (the built-in sample, so the demo numbers hold)
+  const addFiles = async (files, exact = false) => {
+    if (!files.length) return;
+    if (!exact && !(await askShare({ items: files.map((f) => f.name) }))) { setMsg({ text: 'Nothing was shared.' }); return; }
     for (const f of files) {
       setMsg({ text: `Reading ${f.name}...` });
       try {
         const t = await fileText(f, (x, what) => setMsg({ text: `${what || `Reading ${f.name}`}... ${Math.round((x || 0) * 100)}%` }));
-        P.addSource('file', f.name, t);
-        setMsg({ text: `Read ${f.name}.` });
+        const structured = /\.(ics|ical|png|jpe?g|webp|bmp|gif)$/i.test(f.name) || /^Class schedule \(read from a week calendar\)/.test(t);
+        if (lastStatus.ok && !structured && !exact) {
+          setMsg({ text: `Local AI is reading ${f.name}...` });
+          const res = await viaAI(f.name, t);
+          setMsg({ text: `Read ${f.name}. ${res.changes.length} change${res.changes.length === 1 ? '' : 's'}${res.notes.length ? `; ${res.notes.length} skipped` : ''}.` });
+        } else {
+          P.addSource('file', f.name, t);
+          setMsg({ text: `Read ${f.name}.` });
+        }
       } catch (e) { setMsg({ text: String(e.message || e), bad: true }); }
     }
   };
   const [fileInput, pick] = useFileInput(addFiles);
-  const addText = () => {
+  const addText = async () => {
     const t = text.trim();
     if (!t) return;
-    P.addSource('text', t.length > 48 ? `${t.slice(0, 45).trim()}...` : t, t);
-    setText(''); setMsg(null);
+    if (!(await askShare({ items: [t.length > 80 ? `${t.slice(0, 77)}...` : t] }))) return;
+    const name = t.length > 48 ? `${t.slice(0, 45).trim()}...` : t;
+    if (lastStatus.ok) {
+      setMsg({ text: 'Local AI is reading this...' });
+      try { const res = await applyAssistant({ api, P, T, saved, text: t, model: lastStatus.model }); P.addSource('text', name, t, { viaAI: true }); setMsg({ text: res.reply || 'Done.' }); }
+      catch (e) { P.addSource('text', name, t); setMsg({ text: `Local AI failed (${String(e.message || e)}); read with the rules instead.` }); }
+    } else P.addSource('text', name, t);
+    setText('');
   };
   const trySample = async () => {
     try {
       const r = await fetch('./samples/sample_resume.pdf');
       const b = await r.blob();
-      await addFiles([new File([b], 'Sample resume (fictional student).pdf', { type: 'application/pdf' })]);
+      await addFiles([new File([b], 'Sample resume (fictional student).pdf', { type: 'application/pdf' })], true);
     } catch (e) { setMsg({ text: String(e.message || e), bad: true }); }
   };
   // #profile?sample=1 (Home's "Try it with a sample student"): load the sample once, only into an empty profile.
@@ -108,6 +145,7 @@ export default function ProfileView({ api }) {
     return (
       <div className="st">
         {fileInput}
+        {consentModal}
         <div className="st-head">
           <div>
             <h1>My profile</h1>
@@ -149,6 +187,7 @@ export default function ProfileView({ api }) {
   return (
     <div className="st">
       {fileInput}
+      {consentModal}
       <div className="st-head">
         <div>
           <h1>My profile</h1>
@@ -176,9 +215,9 @@ export default function ProfileView({ api }) {
           {tourHome && <TourPanel api={api} home={tourHome} profile={p} opts={opts} chosen={chosen} setChosen={setChosen} T={T} />}
 
           <div className="st-card pf-sec">
-            <h2>My calendar <span className="st-sub">{tourHome ? 'Blue: open tour times. Click one.' : 'Booked tours show in blue.'}</span></h2>
-            {p.entries.length || T.list.length ? (
-              <Calendar entries={p.entries} placeById={placeById}
+            <h2>My calendar <span className="st-sub">{tourHome ? 'Gold: open tour times. Click one.' : 'Booked tours show in gold.'}</span></h2>
+            {p.scheduled.length || T.list.length ? (
+              <Calendar entries={p.scheduled} placeById={placeById}
                 tours={T.list.filter((t) => !(tourHome && chosen && t.homeId === tourHome.id))}
                 options={tourHome && opts ? opts.options : []} chosen={chosen} onPick={(o) => setChosen(o.key)} />
             ) : <p className="st-sub">Your calendar fills in when you add classes or a schedule with days and times.</p>}
@@ -205,34 +244,25 @@ export default function ProfileView({ api }) {
             </div>
           </div>
 
-          {(p.likes.length > 0 || p.notes.length > 0 || p.courses.length > 0 || p.links.length > 0) && (
+          {(p.reqs.length + p.wants.length + p.near.length + p.likes.length + p.notes.length + p.courses.length + p.links.length + (p.minSqft ? 1 : 0)) > 0 && (
             <div className="st-card pf-sec">
-              <h2>Also noted</h2>
-              <div className="st-stack" style={{ gap: 12 }}>
-                {(p.likes.length > 0 || p.notes.length > 0) && (
-                  <div className="pf-chips">
-                    {p.likes.map((l) => <span key={l.key} className="st-pill mine" title={`From: "${l.why}"`}>{l.label}</span>)}
-                    {p.notes.map((n) => <span key={n.key} className="st-pill typ" title={`From: "${n.why}"`}>{n.label}</span>)}
-                  </div>
-                )}
-                {p.courses.length > 0 && <p className="st-sub">Courses: {p.courses.slice(0, 8).join(', ')}</p>}
-                {p.links.length > 0 && <p className="st-sub">Links (kept, not opened): {p.links.map((l) => l.host).join(', ')}</p>}
+              <h2>What you want <span className="st-sub">Browse checks each home against these. Remove any that are wrong.</span></h2>
+              <div className="pf-chips">
+                {p.reqs.map((r) => <Chip key={`req:${r.label}`} label={r.label} why={`${r.field} ${r.op} ${r.value}`} onX={() => P.dropPref(`req:${r.label}`)} />)}
+                {p.near.map((n) => <Chip key={`near:${n.place}`} label={`Near ${n.label}`} why={n.why} onX={() => P.dropPref(`near:${n.place}`)} />)}
+                {p.minSqft ? <Chip label={`Room over ${p.minSqft} sq ft`} why={p.minSqftWhy} /> : null}
+                {p.wants.map((w) => <Chip key={`want:${w.key}`} label={w.label} why={w.why} onX={() => P.dropPref(`want:${w.key}`)} />)}
+                {p.likes.map((l) => <Chip key={`like:${l.key}`} label={l.label} why={l.why} onX={() => P.dropPref(`like:${l.key}`)} />)}
+                {p.notes.map((n) => <Chip key={`note:${n.key}`} label={n.label} why={n.why} soft onX={() => P.dropPref(`note:${n.key}`)} />)}
               </div>
+              {p.courses.length > 0 && <p className="st-sub" style={{ marginTop: 10 }}>Courses: {p.courses.slice(0, 8).join(', ')}</p>}
+              {p.links.length > 0 && <p className="st-sub">Links (kept, not opened): {p.links.map((l) => l.host).join(', ')}</p>}
             </div>
           )}
         </div>
 
         <aside className="pf-side">
-          <div className="st-card pf-add">
-            <h2 style={{ fontSize: 15, fontWeight: 600 }}>Add more</h2>
-            <textarea value={text} onChange={(e) => setText(e.target.value)} aria-label="Add more about you"
-              placeholder="Anything else: a job, where you study, your budget, links..." />
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button variant="primary" small onClick={addText} disabled={!text.trim()}>Add</Button>
-              <Button small onClick={pick}>Attach a file</Button>
-            </div>
-            {msg && <p className={`pf-msg${msg.bad ? ' bad' : ''}`}>{msg.text}</p>}
-          </div>
+          <AssistantBox api={api} P={P} T={T} saved={saved} pick={pick} msg={msg} askShare={askShare} />
           <div className="st-card">
             <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>What you added</h2>
             <ul className="pf-src">
@@ -247,7 +277,7 @@ export default function ProfileView({ api }) {
             <p className="st-sub" style={{ marginTop: 10 }}>
               Kept only in this browser.{kept.emails + kept.phones > 0 ? ` Dropped ${[kept.emails && `${kept.emails} email${kept.emails > 1 ? 's' : ''}`, kept.phones && `${kept.phones} phone number${kept.phones > 1 ? 's' : ''}`].filter(Boolean).join(' and ')}.` : ''}
             </p>
-            <button type="button" className="textlink" style={{ marginTop: 8 }} onClick={() => { P.clear(); setMsg(null); }}>Clear my profile</button>
+            <button type="button" className="textlink" style={{ marginTop: 8 }} onClick={() => { P.clear(); forgetConsent(); setMsg(null); }}>Clear my profile</button>
           </div>
         </aside>
       </div>

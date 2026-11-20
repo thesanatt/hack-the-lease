@@ -277,5 +277,41 @@
   "lat": 42.239429,
   "lon": -83.766349,
   "source": "OSM way 303682819 (Meijer), Geofabrik extract 2026-11-19T21:22:20Z"
+ },
+ {
+  "id": "weiser",
+  "label": "Weiser Hall",
+  "area": "Central",
+  "kind": "class",
+  "lat": 42.276465,
+  "lon": -83.735079,
+  "source": "mguide.app U-M building directory (building coordinates), looked up 2026-11-20; 500 Church St"
+ },
+ {
+  "id": "easthall",
+  "label": "East Hall",
+  "area": "Central",
+  "kind": "class",
+  "lat": 42.27571,
+  "lon": -83.73531,
+  "source": "mguide.app U-M building directory (building coordinates), looked up 2026-11-20; 530 Church St"
+ },
+ {
+  "id": "mason",
+  "label": "Mason Hall",
+  "area": "Central",
+  "kind": "class",
+  "lat": 42.27711,
+  "lon": -83.73951,
+  "source": "mguide.app U-M building directory (building coordinates), looked up 2026-11-20; 419 State St"
+ },
+ {
+  "id": "mlb",
+  "label": "Modern Languages Building",
+  "area": "Central",
+  "kind": "class",
+  "lat": 42.27989,
+  "lon": -83.73909,
+  "source": "mguide.app U-M building directory (building coordinates), looked up 2026-11-20; 812 Washington St"
  }
 ]

@@ -21,11 +21,13 @@ const VIEWS = [
   { id: 'profile', label: 'My profile', file: 'Profile', Comp: lazyView('Profile') },
   { id: 'browse', label: 'Browse', file: 'Browse', Comp: lazyView('Browse') },
   { id: 'saved', label: 'Saved', file: 'Saved', Comp: lazyView('Saved') },
-  // In the top bar's More menu; their hash links (#next, #group, #evidence, #pitch) work as before.
+  { id: 'roommate', label: 'Roommates', file: 'Roommate', Comp: lazyView('Roommate') },
+  // In the top bar's More menu; their hash links (#next, #evidence, #pitch) work as before.
   { id: 'next', label: 'Next semester', file: 'Next', Comp: lazyView('Next'), more: true },
-  { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group'), more: true },
   { id: 'evidence', label: 'How we know', file: 'Evidence', Comp: lazyView('Evidence'), more: true },
   { id: 'pitch', label: 'Pitch', file: 'Pitch', Comp: lazyView('Pitch'), more: true },
+  // The fair rent split: the next step from Roommates ("Split the rent fairly"), open by #group.
+  { id: 'group', label: 'Your group', file: 'Group', Comp: lazyView('Group'), hidden: true },
   // Off the top bar, still reachable by link for Q&A: the full You view, the post paster, the owners view.
   { id: 'me', label: 'You (detail)', file: 'Me', Comp: MeView, hidden: true },
   { id: 'listings', label: 'Paste a post', file: 'Listings', Comp: lazyView('Listings'), hidden: true },

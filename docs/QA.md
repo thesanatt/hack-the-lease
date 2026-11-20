@@ -485,3 +485,16 @@ The three best (least travel, no tight connections) are numbered; every open slo
 Dates are the next one on that weekday, skipping Thanksgiving and the day after. The .ics file is made in the
 browser. Contact landlord drafts a message from the profile (move-in, budget, pets, parking, the tour time); the
 student copies it or opens it in their own mail app. Contacts are fictional (example.com, 555-01xx).
+
+**Is there AI in it now?** One optional piece. Files, screenshots and pasted text are still read by our own rules
+and text recognition (Tesseract). The **Tell Quorum** box can use a language model (Llama 3.2 3B) running in
+Ollama on this laptop: it turns "club meeting Thursday 2 to 3 at the Union" into a proposed change in a fixed JSON
+format. The app checks every change (real days, times, one of the 31 buildings, an existing calendar row, an open
+tour slot from the timetable planner) before applying it, says what it skipped and why, and offers Undo. Nothing
+is sent off the laptop. Rankings, routes, tours and the fair split never come from the model.
+
+**Roommate profiles: who are the other students?** FICTIONAL sample students (the app's personas), labeled on screen.
+There is no server, so a student's own roommate profile stays on their laptop in this demo. Nothing is shared until
+they switch it on or say so ("make my calendar public"). The match score is transparent: budget (30), daily rhythm,
+night owl or early bird from their calendars (30), campus (20), saved homes in common (20). The local model can
+re-order the list with one reason per person; ids it invents are dropped.

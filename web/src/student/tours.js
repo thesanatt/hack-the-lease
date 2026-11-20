@@ -22,9 +22,11 @@ export function useTours() {
     forHome: (id) => list.find((t) => t.homeId === id) || null,
     book: (t) => write([...read().filter((x) => x.homeId !== t.homeId), t]),
     cancel: (homeId) => write(read().filter((x) => x.homeId !== homeId)),
+    replace: (list) => write(list),
   };
 }
 
+const toMinS = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return (h * 60 + m) * 60; };
 const DAY_IX = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
 const LONG = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 // U-M breaks, inclusive ISO dates: no tours offered, the slot rolls to the same weekday the week after.
@@ -57,8 +59,11 @@ export function tourOptions(api, profile, home, booked = []) {
   const best = tours.findTourSlots(api.planner, args);
   const all = tours.findTourSlots(api.planner, { ...args, opts: { top: 1000, gapMin: 0 } });
   const key = (x) => `${x.day}-${x.start}`;
-  const rank = new Map(best.slots.map((x, i) => [key(x), i + 1]));
-  const options = all.slots.map((x) => ({
+  const rank = new Map(best.slots.filter((x) => !(profile.timeOnly || []).some((e) => e.days.includes(x.day) && toMinS(e.start) < x.end && toMinS(e.end) > x.start)).map((x, i) => [key(x), i + 1]));
+  // time-only events (no building) still make the student busy
+  const toMin = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
+  const blocked = (day, s0, e0) => (profile.timeOnly || []).some((e) => e.days.includes(day) && toMin(e.start) < e0 && toMin(e.end) > s0);
+  const options = all.slots.filter((x) => !blocked(x.day, x.start / 60, x.end / 60)).map((x) => ({
     key: key(x), day: x.day, start: hm(x.start), end: hm(x.end), rank: rank.get(key(x)) || null,
     to: x.members[0]?.to || null, back: x.members[0]?.back || null,
   }));

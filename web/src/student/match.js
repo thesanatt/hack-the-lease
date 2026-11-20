@@ -6,6 +6,7 @@
 //   matchHome({ api, home, profile, item, medianWeekMin }) -> { yes: [Line], no: [Line], unknown: [string], asked, met }
 //   Line = { key, text }   asked/met count only what the student asked for (not the always-on time line).
 import { money, hoursText, fromPrice } from './rank.js';
+import { checkRequirements } from './listing.js';
 
 const NEAR_MIN = 15;         // "close to" means a walk of 15 minutes or less
 const CLASS_MIN = 20;        // a class trip of 20 minutes or less door to door is short
@@ -97,7 +98,41 @@ export function matchHome({ api, home, profile, item, medianWeekMin, anchor }) {
       add(ok, 'time', ok ? `Less travel than most homes (${hoursText(week.weeklyMin)} a week)` : `More travel than most homes (${hoursText(week.weeklyMin)} a week)`, false);
     }
   }
-  // 7. pets, parking, quiet: from the sample listing details when there are any, else listed as unknown
+  // 7. listing preferences, from the room data and the sample listing details
+  const dd = api.data.detailsById?.get(home.id);
+  for (const w of profile.wants || []) {
+    const f = dd?.flags || {};
+    switch (w.key) {
+      case 'furnished': if (dd) add(f.furnished, w.key, f.furnished ? dd.furnished : 'Unfurnished'); else unknown.push('furniture'); break;
+      case 'laundry': if (dd) add(f.laundryFree, w.key, dd.laundry); else unknown.push('laundry'); break;
+      case 'ac': if (dd) { const has = !/no air/i.test(dd.heatCool); add(has, w.key, has ? dd.heatCool.split(', ').pop().replace(/^\w/, (c) => c.toUpperCase()) : 'No air conditioning'); } else unknown.push('air conditioning'); break;
+      case 'dishwasher': if (dd) add(f.dishwasher, w.key, f.dishwasher ? 'Dishwasher' : 'No dishwasher'); else unknown.push('dishwasher'); break;
+      case 'internet': if (dd) add(f.internet, w.key, dd.internet); else unknown.push('internet'); break;
+      case 'outdoor': if (dd) { const has = !/^No /.test(dd.outdoor); add(has, w.key, has ? dd.outdoor : 'No outdoor space'); } else unknown.push('outdoor space'); break;
+      case 'house': add(home.kind === 'house', w.key, home.kind === 'house' ? 'A house' : 'An apartment, not a house'); break;
+      case 'apartment': add(home.kind === 'apartment', w.key, home.kind === 'apartment' ? 'An apartment' : 'A house, not an apartment'); break;
+      case 'lease8': if (dd) { const ok8 = /^8 months/.test(dd.lease); add(ok8, w.key, ok8 ? 'School-year lease (8 months)' : `Lease is ${dd.lease.split(',')[0]}`); } else unknown.push('lease length'); break;
+      case 'lease12': if (dd) { const ok12 = /^12 months/.test(dd.lease); add(ok12, w.key, ok12 ? '12-month lease' : `Lease is ${dd.lease.split(',')[0]}`); } else unknown.push('lease length'); break;
+      case 'newer': if (dd) add(dd.built >= 1995, w.key, dd.built >= 1995 ? `Built in ${dd.built}` : `Older building (${dd.built})`); else unknown.push('building age'); break;
+      case 'notBasement': { const rm = rooms.find((r) => r.id === item?.roomId) || rooms[0]; const base = rm?.floor === 'basement'; add(!base, w.key, base ? `Your best room (${rm.label}) is in the basement` : `Your best room is on the ${rm?.floor === 'attic' ? 'attic' : `${rm?.floor === '1' ? '1st' : rm?.floor === '2' ? '2nd' : rm?.floor} floor`}`); break; }
+      case 'smokeFree': if (dd) add(true, w.key, 'Smoke-free'); break;
+      case 'moveIn': if (dd) { const d0 = new Date(`${dd.available} 12:00`); const want = new Date(`${w.value}T12:00`); const ok = d0 <= want; add(ok, w.key, ok ? `Move-in ${dd.available.replace(/, \d{4}$/, '')}` : `Move-in ${dd.available.replace(/, \d{4}$/, '')}, after your date`); } else unknown.push('move-in date'); break;
+      case 'classMin': {
+        const t = anchor && week ? (week.trips || []).filter((x) => x.place === anchor.id && x.kind === 'arriveBy' && x.sec).sort((a, b) => a.sec - b.sec)[0] : null;
+        if (t) { const m = Math.round(t.sec / 60); add(m <= w.value, w.key, m <= w.value ? `${m} min to ${short(anchor.label)}, within your ${w.value}` : `${m} min to ${short(anchor.label)}, over your ${w.value}`); }
+        break;
+      }
+      default: break;
+    }
+  }
+
+  // 8. wishes the local model wrote as field tests (student/listing.js)
+  if (profile.reqs?.length) {
+    const r = checkRequirements(api, home, item, profile.reqs);
+    yes.push(...r.yes); no.push(...r.no); unknown.push(...r.unknown); asked += r.asked; met += r.met;
+  }
+
+  // 9. pets, parking, quiet: from the sample listing details when there are any, else listed as unknown
   const keys = new Set((profile.notes || []).map((n) => n.key));
   const d = api.data.detailsById?.get(home.id);
   if (keys.has('pet')) { if (d) add(d.flags.pets, 'pet', d.flags.pets ? d.pets : 'No pets allowed'); else unknown.push('pet rules'); }
