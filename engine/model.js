@@ -9,6 +9,8 @@
 //
 // Priors are stated assumptions; picks dominate them after a few answers.
 
+import { CONFIG } from './config.js';
+
 export const WEEKS_PER_MONTH = 52 / 12;
 
 export const PARAMS = ['vTime', 'vDark', 'vStrand', 'wBath', 'wSize', 'wLight'];
@@ -22,23 +24,38 @@ export const PARAM_INFO = {
   wLight: { label: 'Daylight', unit: '$/month per window level', prior: { median: 20, sigma: 0.8 } },
 };
 
-// Prior: independent log-normals around the medians above.
-export function samplePrior(r) {
+// Prior: independent log-normals around the medians above (prior = output of priorFor()).
+export function samplePrior(r, prior = null) {
   const theta = {};
   for (const k of PARAMS) {
-    const { median, sigma } = PARAM_INFO[k].prior;
+    const { median, sigma } = prior ? prior[k] : PARAM_INFO[k].prior;
     theta[k] = median * Math.exp(sigma * r.normal());
   }
   return theta;
 }
 
-// week: output of week.evaluateWeek for one home (see CONTRACTS.md)
-export function travelFeatures(week) {
+// week: output of week.evaluateWeek for one home (see CONTRACTS.md).
+// Generalized time: walking and waiting minutes are weighted above riding minutes (Wardman et al. 2016).
+// Dark minutes are term-weighted inside week.js (darkWalkMin etc. are already averaged over cfg.termDates).
+export function travelFeatures(week, cfg = CONFIG) {
+  const gen = (week.rideMin ?? 0) + cfg.slackWeight * (week.slackMin ?? 0) + cfg.mWalk * (week.walkMin ?? 0)
+    + cfg.mWait * (week.waitMin ?? 0) + cfg.mBike * (week.bikeMin ?? 0);
+  const dark = (week.darkWalkMin ?? 0) + cfg.darkBikeFactor * (week.darkBikeMin ?? 0) + (week.darkLongWaitMin ?? 0);
   return {
-    hoursPerMonth: (week.weeklyMin / 60) * WEEKS_PER_MONTH,
-    darkHoursPerMonth: (week.darkWalkMin / 60) * WEEKS_PER_MONTH,
-    strandedPerMonth: week.stranded.length * WEEKS_PER_MONTH,
+    hoursPerMonth: (gen / 60) * WEEKS_PER_MONTH,
+    darkHoursPerMonth: (dark / 60) * WEEKS_PER_MONTH,
+    strandedPerMonth: (week.stranded?.length ?? 0) * WEEKS_PER_MONTH,
   };
+}
+
+// Prior with optional per-parameter overrides: { vTime: { median, sigma } }.
+// A wage, when entered, sets the vTime median to half of it (Small 2012: commute value of time
+// is about one half of the gross wage).
+export function priorFor({ wage = null, overrides = {} } = {}) {
+  const p = {};
+  for (const k of PARAMS) p[k] = { ...PARAM_INFO[k].prior, ...(overrides[k] || {}) };
+  if (wage && !overrides.vTime?.median) p.vTime.median = 0.5 * wage;
+  return p;
 }
 
 const BATH = { private: 1, half: 0.5, shared: 0 };

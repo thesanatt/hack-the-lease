@@ -151,3 +151,20 @@ roomPricing({ home, groups, renovation? }) -> per room: fair rent distribution (
 demandMap({ homes, population }) -> per home: top3Share, archetypes it wins, fitPremium
 makePopulation({ n, seed }) -> synthetic students from archetypes (labeled SYNTHETIC)
 ```
+
+## FINAL AMENDMENTS (binding, Thu 21:50)
+
+Read `docs/SYSTEM_DESIGN.md` section 6 (interface amendments) and section 10 (final decisions). Both override the
+older text above. In short:
+- `config.js` holds every constant (`CONFIG`, `withOverrides`). Every engine function that uses a constant takes an
+  optional `cfg`. `model.js` now has `travelFeatures(week, cfg)` on generalized minutes and `priorFor({wage,
+  overrides})`; `samplePrior(r, prior)`.
+- WeekResult adds `slackMin`, `darkBikeMin`, `darkLongWaitMin`, `genMin`, `darkByDate`; dark fields are averaged
+  over `cfg.termDates`. `evaluateWeek(planner, routine, homeIds, opts)` with `opts.cfg`.
+- prefs: `update(post, optA, optB, choice)` with choice 'A' | 'B' | 'skip'; `nextPair` returns `{i, j, ig, mu, s2}`;
+  `summary` returns `{median, lo, hi, priorRatio, mostlyPrior}`; new `shouldStop(...)`; jitter, not Metropolis.
+- fair: `simplex.solveLP({c, Aub, bub, Aeq, beq, lb, ub})` maximizes; `solveHouse(problem, opts)` per section 6
+  plus section 10 item 5 (`robustSlack` from the maxislack LP, `margins`, common-space rule).
+- decide: `meRank` returns `{homeId, roomId, expRegret, pBest, meanU, lo, hi, dots}` sorted by expRegret;
+  `breakEven`; `evpi` (scalar plus nothing else); `groupRank`. No SUCRA, maxRegret, EVPPI, scenarioSplit.
+- operator: `makePopulation({n, seed, marginals})` with independent draws; `roomPricing` with `renovationDelta`.
